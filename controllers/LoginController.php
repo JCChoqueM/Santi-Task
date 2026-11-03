@@ -181,7 +181,7 @@ class LoginController
     public static function reestablecer(Router $router)
     {
 
-        $token = s($_GET['token']);
+        $token = (isset($_GET['token']) && is_string($_GET['token'])) ? s($_GET['token']) : '';
         $mostrar = true;
 
 
@@ -196,11 +196,14 @@ class LoginController
             Usuario::setAlerta('error', 'Token no valido');
             $mostrar = false;
         }
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        // Sin usuario (token no válido) no hay nada que guardar
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && $usuario) {
             verificarCsrf();
 
-            //añadir nuevo pasword
-            $usuario->sincronizar($_POST);
+            // Solo se acepta el password nuevo. No se usa sincronizar($_POST): el cliente
+            // podría fijar id, rol, email... y escribir sobre otra cuenta.
+            $nuevo = $_POST['password'] ?? '';
+            $usuario->password = is_string($nuevo) ? $nuevo : '';
 
             //Validar el password
             $alertas = $usuario->validarPassword();
