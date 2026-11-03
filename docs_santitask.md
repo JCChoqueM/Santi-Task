@@ -124,51 +124,59 @@ No existen roles distintos entre usuarios: todos tienen las mismas capacidades s
 
 ## 3.1 Requisitos funcionales
 
-| ID    | Requisito                                                               | Prioridad | Dónde se implementa                                       |
-| ----- | ----------------------------------------------------------------------- | --------- | --------------------------------------------------------- |
-| RF-01 | Registrar cuenta con nombre, email, contraseña (mín. 6) y repetición    | Alta      | `LoginController::crear`, `Usuario::validarNuevaCuenta`   |
-| RF-02 | Confirmar la cuenta mediante enlace con token enviado por correo        | Alta      | `LoginController::confirmar`, `Email::enviarConfirmacion` |
-| RF-03 | Iniciar sesión con email y contraseña (solo cuentas confirmadas)        | Alta      | `LoginController::login`                                  |
-| RF-04 | Cerrar sesión                                                           | Alta      | `LoginController::logout`                                 |
-| RF-05 | Recuperar contraseña: solicitar enlace y definir una nueva              | Media     | `LoginController::olvide`, `reestablecer`                 |
-| RF-06 | Listar los proyectos del usuario                                        | Alta      | `DashboardController::index`                              |
-| RF-07 | Crear proyecto con nombre obligatorio y URL única                       | Alta      | `DashboardController::crear_proyecto`                     |
-| RF-08 | Abrir un proyecto (solo su propietario)                                 | Alta      | `DashboardController::proyecto`                           |
-| RF-09 | Editar perfil (nombre y email, email único)                             | Media     | `DashboardController::perfil`                             |
-| RF-10 | Cambiar contraseña verificando la actual                                | Media     | `DashboardController::cambiar_password`                   |
-| RF-11 | Listar las tareas de un proyecto en JSON                                | Alta      | `TareaController::index`                                  |
-| RF-12 | Crear tarea desde un modal                                              | Alta      | `TareaController::crear`, `tareas.js`                     |
-| RF-13 | Editar el nombre de una tarea (doble clic en el nombre)                 | Media     | `TareaController::actualizar`                             |
-| RF-14 | Cambiar el estado Pendiente/Completa (doble clic en el botón de estado) | Alta      | `TareaController::actualizar`                             |
-| RF-15 | Eliminar tarea con confirmación (doble clic en Eliminar)                | Media     | `TareaController::eliminar`, SweetAlert2                  |
-| RF-16 | Filtrar tareas por Todas, Completadas, Pendientes                       | Media     | `tareas.js::filtrarTareas`                                |
-| RF-17 | Menú lateral desplegable en móvil                                       | Baja      | `src/js/app.js`                                           |
+| ID    | Requisito                                                                                                          | Prioridad | Dónde se implementa                                                       |
+| ----- | ------------------------------------------------------------------------------------------------------------------ | --------- | ------------------------------------------------------------------------- |
+| RF-01 | Registrar una cuenta de tutor con nombre, correo, contraseña (6 a 72 caracteres) y repetición                      | Alta      | `LoginController::crear`, `Usuario::validarNuevaCuenta`                   |
+| RF-02 | Confirmar la cuenta con un enlace enviado por correo; el enlace no caduca                                          | Alta      | `LoginController::confirmar`, `Email::enviarConfirmacion`                 |
+| RF-03 | Iniciar sesión con correo (tutor) o alias (tutelado); bloquear 30 segundos tras 5 intentos fallidos                | Alta      | `LoginController::login`, `IntentoLogin`                                  |
+| RF-04 | Cerrar sesión                                                                                                      | Alta      | `LoginController::logout`                                                 |
+| RF-05 | Recuperar la contraseña de un tutor con un enlace que caduca en 1 hora                                             | Media     | `LoginController::olvide` y `reestablecer`, `Usuario::crearTokenRecuperacion` |
+| RF-06 | Crear un tutelado: el sistema genera su alias (nombre y número) y el tutor fija su contraseña inicial             | Alta      | `TutorController::crear_tutelado`, `Usuario::generarAlias`                |
+| RF-07 | Restablecer la contraseña de un tutelado                                                                           | Media     | `TutorController::reset_password`                                         |
+| RF-08 | Vincular a otro tutor con un tutelado y desvincularlo; solo el responsable quita a otros                           | Media     | `TutorController::vincular` y `desvincular`, `Vinculo`                    |
+| RF-09 | Asignar una tarea a un tutelado vinculado, con título, descripción, fecha límite y una o más partes (máximo 50)     | Alta      | `TareaController::crear`, `views/tutor/nueva-tarea.php`, `nueva-tarea.js` |
+| RF-10 | Editar una tarea y sus partes (añadir, renombrar, reordenar y quitar)                                              | Media     | `TareaController::actualizar`, `ParteController::crear`                   |
+| RF-11 | Duplicar una tarea a otros tutelados del tutor, con las partes en pendiente                                        | Baja      | `TareaController::duplicar`                                               |
+| RF-12 | Eliminar una tarea con sus partes y su historial, con confirmación                                                 | Media     | `TareaController::eliminar`                                               |
+| RF-13 | Listar las tareas y filtrarlas por tutelado y por «solo por revisar»; marcar las vencidas                          | Alta      | `TareaController::index`, `Tarea::vencida`, `tutor.js`                    |
+| RF-14 | Marcar una parte como hecha (solo el tutelado dueño de la tarea)                                                   | Alta      | `ParteController::marcar_hecha`, `alumno.js`                              |
+| RF-15 | Revisar una parte: aprobar, devolver con comentario o reabrir (solo un tutor vinculado)                            | Alta      | `ParteController::revisar`, `Parte::transicionar`                         |
+| RF-16 | Consultar el historial de cada tarea: quién hizo qué y cuándo                                                      | Media     | `TareaController::historial`, `Historial::registrar`, `comun.js`          |
+| RF-17 | Editar el perfil (nombre; el correo solo en tutores) y cambiar la contraseña verificando la actual                 | Media     | `PerfilController::perfil` y `cambiar_password`                           |
+| RF-18 | Menú lateral desplegable en móvil                                                                                  | Baja      | `src/js/app.js`                                                           |
 
 ## 3.2 Requisitos no funcionales
 
-| ID     | Categoría      | Requisito                               | Cómo se cumple en el código                                                          |
-| ------ | -------------- | --------------------------------------- | ------------------------------------------------------------------------------------ |
-| RNF-01 | Seguridad      | Contraseñas almacenadas con hash        | `Usuario::hashPassword` usa `password_hash` con `PASSWORD_BCRYPT`                    |
-| RNF-02 | Seguridad      | Acceso restringido a la zona privada    | `isAuth()` y comparación `propietarioId` con `$_SESSION['id']` (con fallas, ver 7.3) |
-| RNF-03 | Seguridad      | Escapar datos al escribir en la BD      | `ActiveRecord::sanitizarAtributos` usa `escape_string` (solo en escritura)           |
-| RNF-04 | Integridad     | Borrado en cascada                      | Claves foráneas `ON DELETE CASCADE` en `proyectos` y `tareas`                        |
-| RNF-05 | Portabilidad   | Entorno reproducible                    | `docker-compose.yml` con PHP/Apache y MySQL                                          |
-| RNF-06 | Configuración  | Secretos fuera del código               | Variables en `.env` leídas con `vlucas/phpdotenv`                                    |
-| RNF-07 | Compatibilidad | Móvil, tableta y escritorio             | Mixins con puntos de quiebre 480, 768 y 1024 px                                      |
-| RNF-08 | Usabilidad     | Modo oscuro automático                  | `@media (prefers-color-scheme: dark)` en `_darkmode.scss`                            |
-| RNF-09 | Usabilidad     | Retroalimentación al usuario            | Alertas en vistas y SweetAlert2 en tareas                                            |
-| RNF-10 | Mantenibilidad | Código organizado por responsabilidades | MVC, autoload PSR-4 en `composer.json`                                               |
-| RNF-11 | Rendimiento    | Evitar recargas al trabajar con tareas  | Una carga inicial y actualización en memoria del arreglo `tareas`                    |
+| ID     | Categoría      | Requisito                                                        | Cómo se cumple en el código                                                                                                     |
+| ------ | -------------- | ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| RNF-01 | Seguridad      | Contraseñas almacenadas con hash                                 | `Usuario::hashPassword` usa `password_hash` con `PASSWORD_BCRYPT`                                                               |
+| RNF-02 | Seguridad      | Acceso por rol y por vínculo                                     | `isAuth`, `isTutor`, `isTutelado` y `Vinculo::existe`; la API responde JSON 403 sin sesión o sin permiso                         |
+| RNF-03 | Seguridad      | Entradas y consultas controladas                                 | Token CSRF en cada POST (`verificarCsrf`); campos leídos solo como texto; `escape_string` y columnas en lista blanca (`columnaSegura`) |
+| RNF-04 | Seguridad      | Protección del navegador y de la sesión                          | CSP por entorno con nonce, `nosniff`, `Referrer-Policy`, cookie de sesión `HttpOnly` y `SameSite=Lax`; en producción los errores van al registro |
+| RNF-05 | Seguridad      | Base de datos con el mínimo permiso                              | La aplicación usa `claudetask_app`, con solo `SELECT`, `INSERT`, `UPDATE` y `DELETE`; MySQL solo escucha en `127.0.0.1`          |
+| RNF-06 | Integridad     | Borrado en cascada                                               | Claves foráneas `ON DELETE CASCADE`: al borrar una tarea caen sus partes y su historial; al borrar un usuario, sus vínculos      |
+| RNF-07 | Portabilidad   | Entorno reproducible                                             | `docker-compose.yml` con PHP/Apache y MySQL; instalación desde cero comprobada (P-34)                                           |
+| RNF-08 | Configuración  | Secretos fuera del código                                        | Variables en `.env` (fuera del repositorio) leídas con `vlucas/phpdotenv`; `.env.example` como plantilla                        |
+| RNF-09 | Continuidad    | Respaldo y restauración de la base                               | `docker/respaldo.sh` y `docker/restaurar.sh`                                                                                    |
+| RNF-10 | Compatibilidad | Móvil, tableta y escritorio                                      | SCSS con puntos de quiebre y menú móvil                                                                                         |
+| RNF-11 | Usabilidad     | Modo claro y modo oscuro automáticos                             | `@media (prefers-color-scheme: dark)` y `color-scheme` en los estilos                                                           |
+| RNF-12 | Usabilidad     | Retroalimentación al usuario                                     | Alertas en las vistas y avisos emergentes (`toast`) en el panel                                                                 |
+| RNF-13 | Mantenibilidad | Código organizado por responsabilidades                          | MVC propio, autoload PSR-4 en `composer.json`                                                                                   |
+| RNF-14 | Rendimiento    | Paneles sin recarga de página                                    | El panel carga las tareas una vez como JSON (`/api/tareas`) y se actualiza con el resultado de cada acción                       |
 
 ## 3.3 Restricciones y supuestos
 
-| Tipo        | Descripción                                                                                         |
-| ----------- | --------------------------------------------------------------------------------------------------- |
-| Restricción | Requiere PHP con `mysqli`, MySQL 8 y un servidor SMTP                                               |
-| Restricción | Los recursos (CSS/JS) se sirven con Vite en desarrollo y compilados en `public/build` en producción |
-| Restricción | SweetAlert2 y las fuentes se cargan desde CDN (necesita internet)                                   |
-| Supuesto    | El servidor SMTP está configurado en `.env`                                                         |
-| Supuesto    | La contraseña de MySQL de `docker-compose.yml` es solo para desarrollo                              |
+| Tipo        | Descripción                                                                                                                |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------- |
+| Restricción | Requiere Docker con Compose v2; la aplicación usa PHP con `mysqli` y MySQL 8                                               |
+| Restricción | Un servidor SMTP es obligatorio: si el correo de confirmación no sale, la cuenta no se crea                                |
+| Restricción | El envío SMTP es síncrono: registrar y recuperar contraseña tardan de 3 a 5 segundos                                       |
+| Restricción | Los recursos (CSS y JS) se sirven con Vite en desarrollo y compilados en `public/build` en producción                      |
+| Restricción | Las fuentes se cargan desde Google Fonts (necesita internet en el navegador)                                               |
+| Restricción | Los tutelados no tienen correo: no pueden recuperar su contraseña por sí mismos, la restablece un tutor                    |
+| Supuesto    | El servidor SMTP está configurado en `.env`                                                                                |
+| Supuesto    | Las claves de `.env` son propias de cada instalación; las de `.env.example` son solo un marcador                           |
+| Supuesto    | En producción hay un servidor o proxy con HTTPS delante del puerto 8082; la aplicación no termina TLS                      |
 
 ---
 
@@ -181,91 +189,139 @@ No existen roles distintos entre usuarios: todos tienen las mismas capacidades s
 ```mermaid
 flowchart LR
     V([Visitante])
-    U([Usuario autenticado])
+    T([Tutor])
+    A([Tutelado])
     M([Servidor SMTP])
 
-    subgraph Sistema["UpTask"]
+    subgraph Sistema["ClaudeTask"]
         CU01("CU-01 Registrar cuenta")
         CU02("CU-02 Confirmar cuenta")
         CU03("CU-03 Iniciar sesión")
-        CU05("CU-05 Recuperar contraseña")
         CU04("CU-04 Cerrar sesión")
-        CU06("CU-06 Ver proyectos")
-        CU07("CU-07 Crear proyecto")
-        CU08("CU-08 Abrir proyecto")
-        CU09("CU-09 Editar perfil")
-        CU10("CU-10 Cambiar contraseña")
-        CU11("CU-11 Gestionar tareas")
-        CU12("CU-12 Filtrar tareas")
+        CU05("CU-05 Recuperar contraseña")
+        CU06("CU-06 Crear tutelado")
+        CU07("CU-07 Restablecer contraseña del tutelado")
+        CU08("CU-08 Vincular y desvincular tutores")
+        CU09("CU-09 Asignar tarea")
+        CU10("CU-10 Editar, duplicar y eliminar tarea")
+        CU11("CU-11 Revisar partes")
+        CU12("CU-12 Marcar parte como hecha")
+        CU13("CU-13 Consultar y filtrar tareas")
+        CU14("CU-14 Ver historial")
+        CU15("CU-15 Gestionar perfil y contraseña")
     end
 
     V --- CU01
     V --- CU02
     V --- CU03
     V --- CU05
-    U --- CU04
-    U --- CU06
-    U --- CU07
-    U --- CU08
-    U --- CU09
-    U --- CU10
-    U --- CU11
-    U --- CU12
+    T --- CU03
+    T --- CU04
+    T --- CU06
+    T --- CU07
+    T --- CU08
+    T --- CU09
+    T --- CU10
+    T --- CU11
+    T --- CU13
+    T --- CU14
+    T --- CU15
+    A --- CU03
+    A --- CU04
+    A --- CU12
+    A --- CU13
+    A --- CU14
+    A --- CU15
     CU01 -.- M
     CU05 -.- M
-    CU08 -. include .-> CU11
-    CU11 -. extend .-> CU12
+    CU09 -. requiere .-> CU06
 ```
 
-*Leyenda: óvalo = caso de uso; forma redondeada exterior = actor; línea punteada = relación con el servidor de correo o entre casos.*
+*Leyenda: óvalo = caso de uso o actor; línea punteada = relación con el servidor de correo o entre casos. El visitante que se registra o recupera su contraseña es siempre un tutor: los tutelados no se registran ni usan correo, los crea un tutor.*
 
 ### Ficha CU-01: Registrar cuenta
 
-| Campo               | Contenido                                                                                                                                                                                                                                                                 |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **ID / Nombre**     | CU-01 Registrar cuenta                                                                                                                                                                                                                                                    |
-| **Actor**           | Visitante (actor secundario: servidor SMTP)                                                                                                                                                                                                                               |
-| **Requisito**       | RF-01                                                                                                                                                                                                                                                                     |
-| **Precondiciones**  | El visitante está en `/crear`                                                                                                                                                                                                                                             |
-| **Postcondiciones** | Se crea un usuario con `confirmado = 0`, contraseña con hash y un token; se envía el correo de confirmación; se redirige a `/mensaje`                                                                                                                                     |
-| **Flujo principal** | 1. Completa nombre, email, contraseña y repetición. 2. El sistema valida los campos. 3. Comprueba que el email no exista. 4. Aplica el hash a la contraseña. 5. Genera el token. 6. Guarda el usuario. 7. Envía el correo. 8. Muestra «Hemos enviado las instrucciones…». |
-| **Flujos alternos** | 2a. Campo vacío, contraseña menor de 6 o contraseñas distintas: alerta de error. 3a. Email ya registrado: «El usuario ya esta registrado».                                                                                                                                |
+| Campo               | Contenido                                                                                                                                                                                                                               |
+| ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **ID / Nombre**     | CU-01 Registrar cuenta                                                                                                                                                                                                                  |
+| **Actor**           | Visitante (actor secundario: servidor SMTP)                                                                                                                                                                                             |
+| **Requisito**       | RF-01                                                                                                                                                                                                                                   |
+| **Precondiciones**  | El visitante está en `/crear`                                                                                                                                                                                                           |
+| **Postcondiciones** | Se crea un usuario con rol `tutor`, `confirmado = 0`, contraseña con hash y un token aleatorio; se envía el correo de confirmación y se redirige a `/mensaje`                                                                            |
+| **Flujo principal** | 1. Escribe nombre, correo, contraseña y repetición. 2. El sistema valida los campos. 3. Comprueba que el correo no exista. 4. Aplica el hash a la contraseña. 5. Genera el token y guarda el usuario. 6. Envía el correo. 7. Muestra el aviso. |
+| **Flujos alternos** | 2a. Campo vacío, nombre de más de 100 caracteres, contraseña fuera de 6 a 72 caracteres o contraseñas distintas: alerta de error. 3a. Correo ya registrado: «El usuario ya esta registrado». 6a. El correo no sale: se borra la cuenta y se avisa para reintentar. |
 
 ### Ficha CU-03: Iniciar sesión
 
-| Campo               | Contenido                                                                                                                                                                                  |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **ID / Nombre**     | CU-03 Iniciar sesión                                                                                                                                                                       |
-| **Actor**           | Visitante                                                                                                                                                                                  |
-| **Requisito**       | RF-03                                                                                                                                                                                      |
-| **Precondiciones**  | La cuenta existe y está confirmada                                                                                                                                                         |
-| **Postcondiciones** | Se crea la sesión con `id`, `nombre`, `email` y `login = true`; se redirige a `/dashboard`                                                                                                 |
-| **Flujo principal** | 1. Escribe email y contraseña. 2. El sistema valida el formato. 3. Busca el usuario por email. 4. Verifica `confirmado`. 5. Compara con `password_verify`. 6. Inicia la sesión y redirige. |
-| **Flujos alternos** | 2a. Email o contraseña vacíos, o email inválido. 4a. Usuario inexistente o sin confirmar: «El Usuario no existe o no esta confirmado». 5a. «Password incorrecto».                          |
+| Campo               | Contenido                                                                                                                                                                                                                                                  |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **ID / Nombre**     | CU-03 Iniciar sesión                                                                                                                                                                                                                                       |
+| **Actor**           | Tutor o tutelado (en el momento de entrar, un visitante)                                                                                                                                                                                                   |
+| **Requisito**       | RF-03                                                                                                                                                                                                                                                      |
+| **Precondiciones**  | La cuenta existe y está confirmada                                                                                                                                                                                                                         |
+| **Postcondiciones** | Se regenera el identificador de sesión y se guardan `id`, `nombre`, `rol` y `login`; el tutor va a `/dashboard` y el tutelado a `/mis-tareas`                                                                                                              |
+| **Flujo principal** | 1. Escribe correo (tutor) o alias (tutelado) y contraseña. 2. El sistema consulta el contador de intentos de ese identificador. 3. Si el texto lleva `@` busca por correo y exige rol tutor; si no, busca por alias y exige rol tutelado. 4. Compara con `password_verify`. 5. Borra el contador, inicia la sesión y redirige. |
+| **Flujos alternos** | 1a. Identificador o contraseña vacíos: alerta. 2a. Bloqueado: «Demasiados intentos. Espera N segundos». 4a. Cuenta inexistente, sin confirmar, de otro rol o contraseña incorrecta: el mismo mensaje «Usuario o contraseña incorrectos», y se suma un intento; al quinto se bloquea 30 segundos. |
 
 ### Ficha CU-05: Recuperar contraseña
 
-| Campo               | Contenido                                                                                                                                                                                                                                                                    |
-| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **ID / Nombre**     | CU-05 Recuperar contraseña                                                                                                                                                                                                                                                   |
-| **Actor**           | Visitante (actor secundario: servidor SMTP)                                                                                                                                                                                                                                  |
-| **Requisito**       | RF-05                                                                                                                                                                                                                                                                        |
-| **Precondiciones**  | La cuenta existe y está confirmada                                                                                                                                                                                                                                           |
-| **Postcondiciones** | Se genera un token y se envía el enlace; al usar el enlace se guarda la nueva contraseña con hash y el token queda en `null`                                                                                                                                                 |
-| **Flujo principal** | 1. En `/olvide` escribe su email. 2. El sistema genera un token y lo guarda. 3. Envía el correo con el enlace `/reestablecer?token=...`. 4. El usuario abre el enlace y escribe la nueva contraseña (mín. 6). 5. El sistema guarda el hash, borra el token y redirige a `/`. |
-| **Flujos alternos** | 1a. Email inválido o cuenta inexistente o sin confirmar: alerta de error. 4a. Token no válido: «Token no valido» y no se muestra el formulario.                                                                                                                              |
+| Campo               | Contenido                                                                                                                                                                                                                                                              |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **ID / Nombre**     | CU-05 Recuperar contraseña                                                                                                                                                                                                                                             |
+| **Actor**           | Visitante que es un tutor (actor secundario: servidor SMTP)                                                                                                                                                                                                            |
+| **Requisito**       | RF-05                                                                                                                                                                                                                                                                  |
+| **Precondiciones**  | La cuenta es de tutor y está confirmada                                                                                                                                                                                                                                |
+| **Postcondiciones** | Se guarda un token con caducidad (`token_expira`, 1 hora) y se envía el enlace; al usarlo se guarda la nueva contraseña con hash y `token` y `token_expira` quedan en `NULL`                                                                                           |
+| **Flujo principal** | 1. En `/olvide` escribe su correo. 2. El sistema genera el token y lo guarda. 3. Envía el enlace `/reestablecer?token=...`. 4. El tutor lo abre y escribe la nueva contraseña (6 a 72). 5. El sistema guarda el hash y limpia el token.                                  |
+| **Flujos alternos** | 1a. Correo inválido, inexistente, sin confirmar o de un tutelado: alerta de error. 3a. El correo no sale: alerta para reintentar. 4a. Token que no es de recuperación (por ejemplo, el de confirmar): «Token no valido». 4b. Token caducado: «El enlace ha caducado. Pide uno nuevo.» |
 
-### Ficha CU-11: Gestionar tareas (cambiar estado)
+### Ficha CU-06: Crear tutelado
 
-| Campo                                | Contenido                                                                                                                                                                                                                                                                     |
-| ------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **ID / Nombre**                      | CU-11 Gestionar tareas                                                                                                                                                                                                                                                        |
-| **Actor**                            | Usuario autenticado                                                                                                                                                                                                                                                           |
-| **Requisitos**                       | RF-12, RF-13, RF-14, RF-15                                                                                                                                                                                                                                                    |
-| **Precondiciones**                   | El usuario es propietario del proyecto abierto                                                                                                                                                                                                                                |
-| **Postcondiciones**                  | La tarea se crea, se modifica o se elimina en la tabla `tareas`; la lista en pantalla se actualiza                                                                                                                                                                            |
-| **Flujo principal (cambiar estado)** | 1. Hace doble clic en el botón de estado de una tarea. 2. `tareas.js` invierte el estado (`0`/`1`). 3. Envía `POST /api/tarea/actualizar`. 4. El servidor verifica que el proyecto sea del usuario. 5. Guarda el cambio. 6. El cliente actualiza la lista y muestra un aviso. |
-| **Flujos alternos**                  | 4a. El proyecto no existe o no es del usuario: JSON con `tipo = error`. En crear, el nombre vacío se bloquea solo en el cliente. En eliminar, aparece una confirmación de SweetAlert2.                                                                                        |
+| Campo               | Contenido                                                                                                                                                                                                                  |
+| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **ID / Nombre**     | CU-06 Crear tutelado                                                                                                                                                                                                       |
+| **Actor**           | Tutor                                                                                                                                                                                                                      |
+| **Requisito**       | RF-06                                                                                                                                                                                                                      |
+| **Precondiciones**  | Sesión de tutor; el tutor está en `/tutelados`                                                                                                                                                                             |
+| **Postcondiciones** | Se crea un usuario con rol `tutelado`, ya confirmado, con alias único y `creado_por` igual al tutor; se crea el vínculo entre ambos; el tutor ve el alias y la contraseña **una sola vez**                                  |
+| **Flujo principal** | 1. Escribe nombre, curso (opcional) y contraseña (mínimo 6). 2. El sistema valida. 3. Genera el alias (primer nombre sin acentos más un número no predecible). 4. Guarda el usuario con hash y crea el vínculo. 5. Muestra los datos. |
+| **Flujos alternos** | 2a. Nombre vacío o de más de 100 caracteres, curso de más de 60 o contraseña corta: JSON de error. 3a. No hay alias libre o el nombre no tiene letras: JSON de error.                                                     |
+
+### Ficha CU-09: Asignar tarea
+
+| Campo               | Contenido                                                                                                                                                                                                                                                                  |
+| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **ID / Nombre**     | CU-09 Asignar tarea                                                                                                                                                                                                                                                        |
+| **Actor**           | Tutor                                                                                                                                                                                                                                                                      |
+| **Requisito**       | RF-09                                                                                                                                                                                                                                                                      |
+| **Precondiciones**  | El tutor tiene al menos un tutelado vinculado                                                                                                                                                                                                                              |
+| **Postcondiciones** | Se crea una tarea con `url` aleatoria y sus partes en estado `pendiente`, en el orden escrito                                                                                                                                                                              |
+| **Flujo principal** | 1. En `/crear-tarea` elige el tutelado, escribe título, descripción y fecha límite, y añade las partes. 2. `nueva-tarea.js` envía `POST /api/tarea`. 3. El servidor comprueba el vínculo y valida los campos. 4. Guarda la tarea y cada parte. 5. Responde `exito`.        |
+| **Flujos alternos** | 3a. Tutelado no vinculado: 403. 3b. Título vacío o de más de 255 caracteres, descripción de más de 5000, fecha inválida, ninguna parte, más de 50 partes o una parte de más de 255 caracteres: 400 con el mensaje.                                                          |
+
+### Ficha CU-11: Revisar partes
+
+| Campo               | Contenido                                                                                                                                                                                                                                                            |
+| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **ID / Nombre**     | CU-11 Revisar partes                                                                                                                                                                                                                                                 |
+| **Actor**           | Tutor vinculado al tutelado                                                                                                                                                                                                                                          |
+| **Requisito**       | RF-15                                                                                                                                                                                                                                                                |
+| **Precondiciones**  | La parte está *Por revisar* (para aprobar o devolver) o *Aprobada* (para reabrir)                                                                                                                                                                                    |
+| **Postcondiciones** | La parte cambia de estado, guarda el comentario (hasta 500 caracteres) y quién la revisó, y se añade una fila al historial                                                                                                                                           |
+| **Flujo principal** | 1. En el panel pulsa **Aprobar**, **Devolver** o **Reabrir**, con comentario opcional. 2. `tutor.js` envía `POST /api/parte/revisar`. 3. El servidor comprueba el vínculo. 4. `Parte::transicionar` aplica la regla. 5. Guarda, registra el historial y devuelve el progreso. |
+| **Flujos alternos** | 3a. Tutor no vinculado: 403. 4a. Transición no permitida (por ejemplo, aprobar algo que no está por revisar) o acción desconocida: 400 con el mensaje.                                                                                                               |
+
+### Ficha CU-12: Marcar parte como hecha
+
+| Campo               | Contenido                                                                                                                                                                                                                       |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **ID / Nombre**     | CU-12 Marcar parte como hecha                                                                                                                                                                                                   |
+| **Actor**           | Tutelado dueño de la tarea                                                                                                                                                                                                      |
+| **Requisito**       | RF-14                                                                                                                                                                                                                           |
+| **Precondiciones**  | La parte está en estado `pendiente` (nueva o devuelta)                                                                                                                                                                          |
+| **Postcondiciones** | La parte pasa a `hecha` («Esperando al tutor»), se borra el comentario anterior y se añade una fila al historial                                                                                                                |
+| **Flujo principal** | 1. En `/mis-tareas` pulsa **Ya lo hice** en una parte. 2. `alumno.js` envía `POST /api/parte/hecha`. 3. El servidor comprueba que la tarea es suya y que la parte sigue pendiente. 4. Guarda y registra el historial. 5. Responde `exito`. |
+| **Flujos alternos** | 3a. La tarea es de otro alumno: 403. 3b. La parte ya no está pendiente: 400. Un tutor que intente esta acción recibe 403.                                                                                                       |
 
 ## 4.2 Diagrama de flujo (proceso de negocio)
 
@@ -273,112 +329,195 @@ flowchart LR
 
 ```mermaid
 flowchart TD
-    A(["Visitante"]) --> B["Crea cuenta con nombre, email y password"]
-    B --> C["El sistema guarda el usuario con token y confirmado = 0"]
-    C --> D["El sistema envía el correo de confirmación"]
-    D --> E["El usuario abre /confirmar con su token"]
-    E --> F{"¿Token válido?"}
-    F -- "No" --> G["Mensaje: Token no valido"]
-    F -- "Sí" --> H["confirmado = 1 y token vacío"]
-    H --> I["Inicia sesión"]
-    I --> J{"¿Datos correctos y cuenta confirmada?"}
-    J -- "No" --> K["Muestra alerta de error"]
+    A(["Visitante"]) --> B["Se registra como tutor"]
+    B --> C["Recibe el correo y confirma la cuenta"]
+    C --> D["Inicia sesión con su correo"]
+    D --> E["Crea un tutelado: el sistema genera el alias"]
+    E --> F["Entrega alias y contraseña al alumno"]
+    F --> G["Asigna una tarea dividida en partes"]
+    G --> H["El alumno inicia sesión con su alias"]
+    H --> I["Marca una parte como hecha"]
+    I --> J{"¿El tutor la aprueba?"}
+    J -- "Devolver, con comentario" --> K["La parte vuelve a pendiente"]
     K --> I
-    J -- "Sí" --> L["Dashboard con sus proyectos"]
-    L --> M["Crea un proyecto"]
-    M --> N["Abre el proyecto"]
-    N --> O["Gestiona tareas: crear, editar, estado, eliminar, filtrar"]
-    O --> P(["Cierra sesión"])
+    J -- "Aprobar" --> L{"¿Todas las partes aprobadas?"}
+    L -- "No" --> I
+    L -- "Sí" --> M(["Tarea completa"])
 ```
 
 ## 4.3 Diagramas de estados
 
-**Figura 3. Estados de una cuenta de usuario.**
+**Figura 3. Estados de una cuenta de tutor.** Un tutelado nace ya confirmado y sin token: no pasa por este diagrama.
 
 ```mermaid
 stateDiagram-v2
-    [*] --> SinConfirmar: registro con confirmado 0 y token
+    [*] --> SinConfirmar: registro con confirmado 0 y token sin caducidad
     SinConfirmar --> Confirmada: enlace de confirmación, confirmado 1 y token nulo
-    Confirmada --> ConTokenRecuperacion: solicita recuperar password, nuevo token
-    ConTokenRecuperacion --> Confirmada: define nuevo password, token nulo
+    Confirmada --> ConTokenRecuperacion: pide recuperar, token con caducidad de 1 hora
+    ConTokenRecuperacion --> Confirmada: define nueva contraseña, token nulo
+    ConTokenRecuperacion --> ConTokenRecuperacion: caduca o se pide otro enlace, el token se reemplaza
 ```
 
-**Figura 4. Estados de una tarea.**
+**Figura 4. Estados de una parte de tarea.**
 
 ```mermaid
 stateDiagram-v2
-    [*] --> Pendiente: crear tarea con estado 0
-    Pendiente --> Completa: doble clic en el botón de estado
-    Completa --> Pendiente: doble clic en el botón de estado
-    Pendiente --> [*]: eliminar
-    Completa --> [*]: eliminar
+    [*] --> Pendiente: se crea la parte
+    Pendiente --> PorRevisar: el tutelado pulsa Ya lo hice
+    PorRevisar --> Aprobada: el tutor aprueba
+    PorRevisar --> Pendiente: el tutor devuelve con comentario
+    Aprobada --> Pendiente: el tutor reabre
 ```
+
+Los estados de la base de datos son `pendiente`, `hecha` y `aprobada`; en pantalla `hecha` se muestra como *Por revisar* (al tutor) o *Esperando al tutor* (al alumno). La tarea no tiene estado propio: se calcula con sus partes.
+
+| Estado de la tarea | Cómo se calcula (`Tarea::progreso` y `Tarea::vencida`)                                                  |
+| ------------------ | -------------------------------------------------------------------------------------------------------- |
+| En curso           | Tiene al menos una parte que no está aprobada                                                            |
+| Completa           | Tiene partes y todas están en estado `aprobada`                                                          |
+| Vencida            | Tiene fecha límite anterior a hoy y no está completa (se muestra además del estado anterior)             |
 
 ## 4.4 Modelo de datos
 
-**Figura 5. Diagrama entidad-relación (tomado de `uptask.sql`).**
+**Figura 5. Diagrama entidad-relación (tomado de `claudetask.sql`).**
 
 ```mermaid
 erDiagram
-    USUARIOS ||--o{ PROYECTOS : "es propietario de"
-    PROYECTOS ||--o{ TAREAS : contiene
+    USUARIOS ||--o{ VINCULOS : "tutor_id"
+    USUARIOS ||--o{ VINCULOS : "tutelado_id"
+    USUARIOS ||--o{ TAREAS : "tutelado_id"
+    USUARIOS ||--o{ TAREAS : "creada_por"
+    TAREAS ||--o{ PARTES : contiene
+    TAREAS ||--o{ HISTORIAL : registra
+    USUARIOS ||--o{ HISTORIAL : "por"
+    USUARIOS |o--o{ PARTES : "revisada_por"
+    USUARIOS |o--o{ USUARIOS : "creado_por"
 
     USUARIOS {
         int id PK
+        enum rol "tutor o tutelado"
         string nombre
-        string email UK
+        string email UK "solo tutores"
+        string alias UK "solo tutelados"
+        string curso
         string password "hash bcrypt"
         string token "puede ser nulo"
-        boolean confirmado "0 o 1"
+        int token_expira "solo recuperación"
+        boolean confirmado
+        int creado_por FK
     }
-    PROYECTOS {
-        int id PK
-        string proyecto "nombre"
-        string url UK "md5 de uniqid"
-        int propietarioId FK
+    VINCULOS {
+        int tutor_id PK, FK
+        int tutelado_id PK, FK
     }
     TAREAS {
         int id PK
-        string nombre
-        boolean estado "0 pendiente, 1 completa"
-        int proyectoId FK
+        string url UK "md5 de uniqid"
+        int tutelado_id FK
+        int creada_por FK
+        string titulo
+        text descripcion
+        date fecha_limite
+    }
+    PARTES {
+        int id PK
+        int tarea_id FK
+        string titulo
+        int orden
+        enum estado "pendiente, hecha, aprobada"
+        string comentario
+        boolean devuelta
+        int revisada_por FK
+    }
+    HISTORIAL {
+        int id PK
+        int tarea_id FK
+        string parte
+        enum accion "hecha, aprobar, devolver, reabrir"
+        int por FK
+        datetime creado_en
+    }
+    INTENTOS_LOGIN {
+        int id PK
+        string clave UK
+        int intentos
+        int bloqueado_hasta
     }
 ```
 
-*Leyenda: PK = clave primaria, FK = clave foránea, UK = valor único. Las claves foráneas usan `ON DELETE CASCADE`: al borrar un usuario se borran sus proyectos y las tareas de estos.*
+*Leyenda: PK = clave primaria, FK = clave foránea, UK = valor único. `INTENTOS_LOGIN` no se relaciona con otras tablas: su `clave` es el correo o el alias escrito en el acceso. `VINCULOS` une tutores con tutelados (relación de muchos a muchos). Borrados: al borrar una tarea caen sus partes y su historial; al borrar un usuario caen sus vínculos, sus tareas y su historial; `creado_por` y `revisada_por` pasan a `NULL`.*
 
 ### Diccionario de datos
 
 **Tabla `usuarios`**
 
-| Campo      | Tipo SQL     | Nulo | Restricción         | Descripción                          |
-| ---------- | ------------ | ---- | ------------------- | ------------------------------------ |
-| id         | int unsigned | No   | PK, autoincremental | Identificador                        |
-| nombre     | varchar(255) | No   | -                   | Nombre visible                       |
-| email      | varchar(255) | No   | UNIQUE              | Usuario de acceso                    |
-| password   | varchar(255) | No   | -                   | Hash bcrypt                          |
-| token      | varchar(255) | Sí   | Por defecto NULL    | Token de confirmación o recuperación |
-| confirmado | tinyint(1)   | No   | Por defecto 0       | 1 si la cuenta fue confirmada        |
+| Campo        | Tipo SQL                  | Nulo | Restricción                                  | Descripción                                                             |
+| ------------ | ------------------------- | ---- | -------------------------------------------- | ----------------------------------------------------------------------- |
+| id           | int unsigned              | No   | PK, autoincremental                          | Identificador                                                           |
+| rol          | enum('tutor','tutelado')  | No   | -                                            | Tipo de cuenta                                                          |
+| nombre       | varchar(255)              | No   | -                                            | Nombre visible (la aplicación admite hasta 100 caracteres)              |
+| email        | varchar(255)              | Sí   | UNIQUE                                       | Acceso del tutor; `NULL` en tutelados                                   |
+| alias        | varchar(60)               | Sí   | UNIQUE                                       | Acceso del tutelado (nombre y número); `NULL` en tutores                |
+| curso        | varchar(60)               | Sí   | -                                            | Curso del tutelado (opcional)                                           |
+| password     | varchar(255)              | No   | -                                            | Hash bcrypt                                                             |
+| token        | varchar(255)              | Sí   | -                                            | Token de confirmación o de recuperación                                 |
+| token_expira | int unsigned              | Sí   | -                                            | Hora Unix en que caduca el token de recuperación; `NULL` en el de confirmación |
+| confirmado   | tinyint(1)                | No   | Por defecto 0                                | 1 si la cuenta está confirmada (los tutelados se crean con 1)           |
+| creado_por   | int unsigned              | Sí   | FK → `usuarios.id`, ON DELETE SET NULL       | Tutor responsable del tutelado                                          |
 
-**Tabla `proyectos`**
+**Tabla `vinculos`**
 
-| Campo         | Tipo SQL     | Nulo | Restricción                           | Descripción                            |
-| ------------- | ------------ | ---- | ------------------------------------- | -------------------------------------- |
-| id            | int unsigned | No   | PK, autoincremental                   | Identificador interno                  |
-| proyecto      | varchar(255) | No   | -                                     | Nombre del proyecto                    |
-| url           | varchar(255) | No   | UNIQUE                                | Identificador usado en `/proyecto?id=` |
-| propietarioId | int unsigned | No   | FK → `usuarios.id`, ON DELETE CASCADE | Dueño del proyecto                     |
+| Campo       | Tipo SQL     | Nulo | Restricción                                  | Descripción      |
+| ----------- | ------------ | ---- | -------------------------------------------- | ---------------- |
+| tutor_id    | int unsigned | No   | PK compuesta, FK → `usuarios.id`, CASCADE    | Tutor vinculado  |
+| tutelado_id | int unsigned | No   | PK compuesta, FK → `usuarios.id`, CASCADE    | Tutelado         |
 
 **Tabla `tareas`**
 
-| Campo      | Tipo SQL     | Nulo | Restricción                            | Descripción               |
-| ---------- | ------------ | ---- | -------------------------------------- | ------------------------- |
-| id         | int unsigned | No   | PK, autoincremental                    | Identificador             |
-| nombre     | varchar(255) | No   | -                                      | Texto de la tarea         |
-| estado     | tinyint(1)   | No   | Por defecto 0                          | 0 pendiente, 1 completa   |
-| proyectoId | int unsigned | No   | FK → `proyectos.id`, ON DELETE CASCADE | Proyecto al que pertenece |
+| Campo        | Tipo SQL     | Nulo | Restricción                              | Descripción                              |
+| ------------ | ------------ | ---- | ---------------------------------------- | ---------------------------------------- |
+| id           | int unsigned | No   | PK, autoincremental                      | Identificador interno                    |
+| url          | varchar(255) | No   | UNIQUE                                   | Identificador que usa la API             |
+| tutelado_id  | int unsigned | No   | FK → `usuarios.id`, ON DELETE CASCADE    | Alumno al que se asigna                  |
+| creada_por   | int unsigned | No   | FK → `usuarios.id`, ON DELETE CASCADE    | Tutor que la creó                        |
+| titulo       | varchar(255) | No   | -                                        | Título                                   |
+| descripcion  | text         | Sí   | -                                        | Descripción (hasta 5000 en la aplicación)|
+| fecha_limite | date         | Sí   | -                                        | Fecha límite opcional                    |
 
-*Charset: `utf8mb4` con colación `utf8mb4_unicode_ci`, motor InnoDB. El volcado no contiene datos.*
+**Tabla `partes`**
+
+| Campo        | Tipo SQL                              | Nulo | Restricción                                | Descripción                                         |
+| ------------ | ------------------------------------- | ---- | ------------------------------------------ | --------------------------------------------------- |
+| id           | int unsigned                          | No   | PK, autoincremental                        | Identificador                                       |
+| tarea_id     | int unsigned                          | No   | FK → `tareas.id`, ON DELETE CASCADE        | Tarea a la que pertenece                            |
+| titulo       | varchar(255)                          | No   | -                                          | Texto de la parte                                   |
+| orden        | int                                   | No   | Por defecto 0                              | Posición dentro de la tarea                         |
+| estado       | enum('pendiente','hecha','aprobada')  | No   | Por defecto `pendiente`                    | Estado de la parte                                  |
+| comentario   | varchar(500)                          | No   | Por defecto vacío                          | Comentario del tutor al devolver o aprobar          |
+| devuelta     | tinyint(1)                            | No   | Por defecto 0                              | 1 si la última revisión fue una devolución          |
+| revisada_por | int unsigned                          | Sí   | FK → `usuarios.id`, ON DELETE SET NULL     | Último tutor que revisó                             |
+
+**Tabla `historial`**
+
+| Campo     | Tipo SQL                                        | Nulo | Restricción                              | Descripción                       |
+| --------- | ----------------------------------------------- | ---- | ---------------------------------------- | --------------------------------- |
+| id        | int unsigned                                    | No   | PK, autoincremental                      | Identificador                     |
+| tarea_id  | int unsigned                                    | No   | FK → `tareas.id`, ON DELETE CASCADE      | Tarea                             |
+| parte     | varchar(255)                                    | No   | -                                        | Título de la parte en ese momento |
+| accion    | enum('hecha','aprobar','devolver','reabrir')    | No   | -                                        | Qué ocurrió                       |
+| por       | int unsigned                                    | No   | FK → `usuarios.id`, ON DELETE CASCADE    | Quién lo hizo                     |
+| creado_en | datetime                                        | No   | Por defecto `CURRENT_TIMESTAMP`          | Cuándo                            |
+
+**Tabla `intentos_login`**
+
+| Campo           | Tipo SQL     | Nulo | Restricción         | Descripción                                          |
+| --------------- | ------------ | ---- | ------------------- | ---------------------------------------------------- |
+| id              | int unsigned | No   | PK, autoincremental | Identificador                                        |
+| clave           | varchar(255) | No   | UNIQUE              | Correo o alias escrito, en minúsculas                |
+| intentos        | int          | No   | Por defecto 0       | Fallos seguidos (se reinicia al bloquear)            |
+| bloqueado_hasta | int unsigned | No   | Por defecto 0       | Hora Unix hasta la que está bloqueado (0 = no)       |
+
+*Charset: `utf8mb4` con colación `utf8mb4_unicode_ci`, motor InnoDB. `claudetask.sql` solo contiene el esquema, sin datos.*
 
 ## 4.5 Diagramas de secuencia
 
@@ -395,7 +534,7 @@ sequenceDiagram
     participant E as Email
     participant S as Servidor SMTP
 
-    V->>R: POST /crear con nombre, email y passwords
+    V->>R: POST /crear con nombre, correo y contraseñas
     R->>L: crear()
     L->>U: validarNuevaCuenta()
     L->>DB: where email
@@ -403,49 +542,128 @@ sequenceDiagram
     L->>U: hashPassword() y crearToken()
     L->>DB: guardar() INSERT en usuarios
     L->>E: enviarConfirmacion()
-    E->>S: envía correo con enlace y token
-    L-->>V: redirige a /mensaje
+    E->>S: envía el correo con el enlace
+    alt el correo sale
+        L-->>V: redirige a /mensaje
+    else el correo falla
+        L->>DB: eliminar() la cuenta recién creada
+        L-->>V: alerta para reintentar
+    end
     V->>R: GET /confirmar con token
     R->>L: confirmar()
     L->>DB: where token
-    L->>DB: guardar() confirmado 1 y token nulo
-    L-->>V: Cuenta confirmada correctamente
+    alt no existe o es un token de recuperación
+        L-->>V: Token no valido
+    else token de confirmación
+        L->>DB: guardar() confirmado 1 y token nulo
+        L-->>V: Cuenta confirmada correctamente
+    end
 ```
 
-**Figura 7. Cambiar el estado de una tarea.**
+**Figura 7. Inicio de sesión con bloqueo por intentos.**
 
 ```mermaid
 sequenceDiagram
     autonumber
-    actor U as Usuario
-    participant JS as tareas.js
-    participant R as Router
-    participant T as TareaController
-    participant P as Proyecto
-    participant K as Tarea
+    actor P as Tutor o tutelado
+    participant L as LoginController
+    participant I as IntentoLogin
+    participant U as Usuario
     participant DB as MySQL
 
-    U->>JS: doble clic en el botón de estado
-    JS->>JS: cambiarEstadoTarea invierte 0 y 1
-    JS->>R: POST /api/tarea/actualizar con id, nombre, estado y proyectoId
-    R->>T: actualizar()
-    T->>P: where url igual a proyectoId
-    P->>DB: SELECT en proyectos
-    DB-->>P: proyecto
-    alt el proyecto no existe o no es del usuario
-        T-->>JS: JSON tipo error
-    else el proyecto es del usuario
-        T->>K: new Tarea con POST y guardar()
-        K->>DB: UPDATE en tareas
-        T-->>JS: JSON respuesta tipo exito
-        JS->>JS: actualiza la lista en memoria y muestra SweetAlert
+    P->>L: POST / con correo o alias y contraseña
+    L->>L: verificarCsrf()
+    L->>I: deClave(identificador)
+    I->>DB: where clave
+    alt bloqueado
+        L-->>P: Demasiados intentos, espera N segundos
+    else sin bloqueo
+        L->>U: where email (si lleva @) o where alias
+        U->>DB: SELECT en usuarios
+        alt rol esperado, confirmado y password_verify correcto
+            L->>I: limpiar()
+            L->>L: session_regenerate_id y guarda la sesión
+            L-->>P: redirige a /dashboard o a /mis-tareas
+        else cualquier otro caso
+            L->>I: fallar() suma un intento, al quinto bloquea 30 s
+            L-->>P: Usuario o contraseña incorrectos
+        end
     end
-    Note over T,K: No se comprueba que la tarea pertenezca a ese proyecto
+```
+
+**Figura 8. El tutelado marca una parte como hecha.**
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor A as Tutelado
+    participant JS as alumno.js
+    participant R as Router
+    participant PC as ParteController
+    participant PA as Parte
+    participant TA as Tarea
+    participant H as Historial
+    participant DB as MySQL
+
+    A->>JS: pulsa Ya lo hice
+    JS->>R: POST /api/parte/hecha con id y csrf
+    R->>PC: marcar_hecha()
+    PC->>PC: isTutelado y verificarCsrf
+    PC->>PA: find(id)
+    PC->>TA: find(tarea_id)
+    alt la tarea no es del tutelado
+        PC-->>JS: JSON 403 Esa tarea no es tuya
+    else la parte no está pendiente
+        PC-->>JS: JSON 400 Esta parte ya no está pendiente
+    else
+        PC->>PA: estado hecha, comentario vacío, guardar()
+        PA->>DB: UPDATE en partes
+        PC->>H: registrar(tarea, parte, hecha, tutelado)
+        H->>DB: INSERT en historial
+        PC-->>JS: JSON exito
+        JS->>JS: vuelve a cargar las tareas y muestra el aviso
+    end
+```
+
+**Figura 9. El tutor revisa una parte.**
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor T as Tutor
+    participant JS as tutor.js
+    participant R as Router
+    participant PC as ParteController
+    participant V as Vinculo
+    participant PA as Parte
+    participant H as Historial
+    participant DB as MySQL
+
+    T->>JS: pulsa Aprobar, Devolver o Reabrir (con comentario)
+    JS->>R: POST /api/parte/revisar con id, accion, comentario y csrf
+    R->>PC: revisar()
+    PC->>PC: isTutor y verificarCsrf
+    PC->>V: existe(tutor, tutelado de la tarea)
+    alt sin vínculo
+        PC-->>JS: JSON 403 No tienes permiso
+    else con vínculo
+        PC->>PA: transicionar(accion, tutor, comentario)
+        alt transición no permitida
+            PA-->>PC: excepción con el motivo
+            PC-->>JS: JSON 400
+        else permitida
+            PC->>PA: guardar()
+            PA->>DB: UPDATE en partes
+            PC->>H: registrar(tarea, parte, accion, tutor)
+            H->>DB: INSERT en historial
+            PC-->>JS: JSON exito con el progreso
+        end
+    end
 ```
 
 ## 4.6 Diagrama de clases
 
-**Figura 8. Clases del sistema (modelos, controladores, router y correo).**
+**Figura 10. Clases del sistema (modelos, controladores, router y correo).**
 
 ```mermaid
 classDiagram
@@ -462,43 +680,82 @@ classDiagram
         +find(id)
         +where(columna, valor)
         +belongsTo(columna, valor)
-        +sincronizar(args)
+        +SQL(consulta)
         +setAlerta(tipo, mensaje)
         +getAlertas()
     }
     class Usuario {
+        +rol
         +nombre
         +email
+        +alias
+        +curso
         +password
-        +password2
-        +password_actual
-        +password_nuevo
         +token
+        +token_expira
         +confirmado
-        +validarLogin()
+        +creado_por
+        +validarLoginDual()
         +validarNuevaCuenta()
-        +validarEmail()
-        +validarPassword()
+        +validarTutelado()
         +validar_perfil()
         +nuevo_password()
         +comprobar_password()
         +hashPassword()
         +crearToken()
-    }
-    class Proyecto {
-        +proyecto
-        +url
-        +propietarioId
-        +validarProyecto()
+        +crearTokenRecuperacion()
+        +esTokenRecuperacion()
+        +tokenCaducado()
+        +generarAlias(nombre)
     }
     class Tarea {
-        +nombre
+        +url
+        +tutelado_id
+        +creada_por
+        +titulo
+        +descripcion
+        +fecha_limite
+        +partes()
+        +progreso()
+        +vencida()
+        +generarUrl()
+    }
+    class Parte {
+        +tarea_id
+        +titulo
+        +orden
         +estado
-        +proyectoId
+        +comentario
+        +devuelta
+        +revisada_por
+        +transicionar(accion, tutor, comentario)
+    }
+    class Vinculo {
+        +tutor_id
+        +tutelado_id
+        +existe(tutor, tutelado)
+        +crearVinculo(tutor, tutelado)
+        +quitar(tutor, tutelado)
+        +tutoresDe(tutelado)
+        +tuteladosDe(tutor)
+    }
+    class Historial {
+        +tarea_id
+        +parte
+        +accion
+        +por
+        +registrar(tarea, parte, accion, por)
+    }
+    class IntentoLogin {
+        +clave
+        +intentos
+        +bloqueado_hasta
+        +deClave(clave)
+        +segundosRestantes()
+        +fallar()
+        +limpiar()
     }
     class Router {
-        +getRoutes
-        +postRoutes
         +get(url, fn)
         +post(url, fn)
         +comprobarRutas()
@@ -513,10 +770,19 @@ classDiagram
         +mensaje()
         +confirmar()
     }
-    class DashboardController {
+    class TutorController {
         +index()
-        +crear_proyecto()
-        +proyecto()
+        +crear_tarea()
+        +tutelados()
+        +crear_tutelado()
+        +reset_password()
+        +vincular()
+        +desvincular()
+    }
+    class AlumnoController {
+        +index()
+    }
+    class PerfilController {
         +perfil()
         +cambiar_password()
     }
@@ -525,60 +791,80 @@ classDiagram
         +crear()
         +actualizar()
         +eliminar()
+        +duplicar()
+        +historial()
+    }
+    class ParteController {
+        +marcar_hecha()
+        +revisar()
+        +crear()
     }
     class Email {
-        -email
-        -nombre
-        -token
         +enviarConfirmacion()
         +enviarInstrucciones()
     }
 
     ActiveRecord <|-- Usuario
-    ActiveRecord <|-- Proyecto
     ActiveRecord <|-- Tarea
-    Usuario "1" --> "0..*" Proyecto : propietarioId
-    Proyecto "1" *-- "0..*" Tarea : proyectoId
+    ActiveRecord <|-- Parte
+    ActiveRecord <|-- Vinculo
+    ActiveRecord <|-- Historial
+    ActiveRecord <|-- IntentoLogin
+    Tarea "1" *-- "1..*" Parte : tarea_id
+    Tarea "1" *-- "0..*" Historial : tarea_id
+    Usuario "1" --> "0..*" Tarea : tutelado_id
+    Vinculo ..> Usuario : tutor_id, tutelado_id
     LoginController ..> Usuario
+    LoginController ..> IntentoLogin
     LoginController ..> Email
-    DashboardController ..> Usuario
-    DashboardController ..> Proyecto
-    TareaController ..> Proyecto
+    TutorController ..> Usuario
+    TutorController ..> Vinculo
+    PerfilController ..> Usuario
     TareaController ..> Tarea
+    TareaController ..> Parte
+    TareaController ..> Vinculo
+    TareaController ..> Historial
+    ParteController ..> Parte
+    ParteController ..> Tarea
+    ParteController ..> Vinculo
+    ParteController ..> Historial
     Router ..> LoginController : invoca
-    Router ..> DashboardController : invoca
+    Router ..> TutorController : invoca
+    Router ..> AlumnoController : invoca
+    Router ..> PerfilController : invoca
     Router ..> TareaController : invoca
+    Router ..> ParteController : invoca
 ```
 
 ## 4.7 Arquitectura
 
-**Figura 9. Arquitectura por capas.**
+**Figura 11. Arquitectura por capas.**
 
 ```mermaid
 flowchart TB
     subgraph Cliente["Navegador"]
         HTMLV["HTML generado por PHP"]
         JSA["app.js: menú móvil"]
-        JST["tareas.js: fetch a la API y render dinámico"]
-        SWAL["SweetAlert2 desde CDN"]
+        JSP["tutor.js, alumno.js, tutelados.js, nueva-tarea.js: fetch a la API y pantalla dinámica"]
+        JSC["modules/comun.js: post, get, toast, historial"]
     end
     subgraph Servidor["Contenedor PHP con Apache"]
         FC["public/index.php: controlador frontal y rutas"]
         RT["Router"]
-        CT["Controllers: Login, Dashboard, Tarea"]
-        MD["Models: ActiveRecord, Usuario, Proyecto, Tarea"]
+        CT["Controllers: Login, Tutor, Alumno, Perfil, Tarea, Parte"]
+        MD["Models: ActiveRecord, Usuario, Tarea, Parte, Vinculo, Historial, IntentoLogin"]
         VW["Views: layout y plantillas PHP"]
         ML["Classes/Email: PHPMailer"]
         CF["includes: app, database, funciones"]
     end
     subgraph Datos["Datos y servicios"]
-        DB[("MySQL: base uptask")]
+        DB[("MySQL: base claudetask")]
         ENV["Archivo .env"]
         SMTP["Servidor SMTP externo"]
     end
 
     HTMLV --> FC
-    JST -->|"fetch JSON"| FC
+    JSP -->|"fetch JSON"| FC
     FC --> RT
     RT --> CT
     CT --> MD
@@ -590,132 +876,160 @@ flowchart TB
     CF --> DB
     VW --> HTMLV
     HTMLV --> JSA
-    HTMLV --> JST
-    JST --> SWAL
+    HTMLV --> JSP
+    JSP --> JSC
 ```
 
 **Decisiones de arquitectura:**
 
-| Decisión                                | Alternativa                        | Motivo                                              |
-| --------------------------------------- | ---------------------------------- | --------------------------------------------------- |
-| MVC propio con Router mínimo            | Framework (Laravel)                | Proyecto de aprendizaje, sin dependencias pesadas   |
-| Active Record propio                    | ORM o PDO con consultas preparadas | Simplicidad; implica riesgos de seguridad (ver 7.3) |
-| API JSON para tareas                    | Formularios con recarga            | Experiencia fluida sin recargar                     |
-| Estado de tareas en memoria del cliente | Consultar tras cada acción         | Menos peticiones                                    |
-| Vite + SCSS                             | CSS a mano o Gulp                  | Recarga en caliente y compilación de recursos       |
-| Docker Compose                          | Instalación manual de PHP y MySQL  | Entorno reproducible                                |
+| Decisión                                              | Alternativa                          | Motivo                                                                  |
+| ----------------------------------------------------- | ------------------------------------ | ----------------------------------------------------------------------- |
+| MVC propio con Router mínimo                          | Framework (Laravel)                  | Proyecto de aprendizaje, sin dependencias pesadas                       |
+| Active Record propio con `escape_string` y columnas en lista blanca | ORM o PDO con consultas preparadas | Simplicidad; la defensa depende de escapar y validar cada entrada       |
+| Dos roles con vínculo muchos a muchos                 | Un solo propietario por tarea        | Varios tutores pueden atender al mismo tutelado                         |
+| La tarea se divide en partes con revisión del tutor   | Estado único por tarea               | El tutor valida el avance paso a paso                                   |
+| Estado de la tarea calculado desde sus partes         | Columna de estado en `tareas`        | Un solo origen de verdad: el estado de las partes                       |
+| API JSON para tareas y partes, con CSRF en cada POST  | Formularios con recarga              | Paneles fluidos sin recargar                                            |
+| Vite + SCSS                                           | CSS a mano o Gulp                    | Recarga en caliente y compilación de recursos                           |
+| Docker Compose con usuario de base de solo datos      | Instalación manual, usuario root     | Entorno reproducible y mínimo permiso                                   |
 
 ### Rutas de la aplicación
 
-| Método    | Ruta                    | Controlador y método                    | Acceso      | Descripción             |
-| --------- | ----------------------- | --------------------------------------- | ----------- | ----------------------- |
-| GET, POST | `/`                     | `LoginController::login`                | Público     | Iniciar sesión          |
-| GET       | `/logout`               | `LoginController::logout`               | Sesión      | Cerrar sesión           |
-| GET, POST | `/crear`                | `LoginController::crear`                | Público     | Registro                |
-| GET, POST | `/olvide`               | `LoginController::olvide`               | Público     | Solicitar recuperación  |
-| GET, POST | `/reestablecer`         | `LoginController::reestablecer`         | Con token   | Nueva contraseña        |
-| GET       | `/mensaje`              | `LoginController::mensaje`              | Público     | Aviso de correo enviado |
-| GET       | `/confirmar`            | `LoginController::confirmar`            | Con token   | Confirmar cuenta        |
-| GET       | `/dashboard`            | `DashboardController::index`            | Sesión      | Lista de proyectos      |
-| GET, POST | `/crear-proyecto`       | `DashboardController::crear_proyecto`   | Sesión      | Crear proyecto          |
-| GET       | `/proyecto?id=`         | `DashboardController::proyecto`         | Propietario | Ver proyecto            |
-| GET, POST | `/perfil`               | `DashboardController::perfil`           | Sesión      | Editar perfil           |
-| GET, POST | `/cambiar-password`     | `DashboardController::cambiar_password` | Sesión      | Cambiar contraseña      |
-| GET       | `/api/tareas?id=`       | `TareaController::index`                | Propietario | Listar tareas (JSON)    |
-| POST      | `/api/tarea`            | `TareaController::crear`                | Propietario | Crear tarea             |
-| POST      | `/api/tarea/actualizar` | `TareaController::actualizar`           | Propietario | Editar nombre o estado  |
-| POST      | `/api/tarea/eliminar`   | `TareaController::eliminar`             | Propietario | Eliminar tarea          |
+| Método    | Ruta                    | Controlador y método                    | Acceso                    | Descripción                          |
+| --------- | ----------------------- | --------------------------------------- | ------------------------- | ------------------------------------ |
+| GET, POST | `/`                     | `LoginController::login`                | Público                   | Iniciar sesión                       |
+| GET       | `/logout`               | `LoginController::logout`               | Público                   | Cerrar sesión                        |
+| GET, POST | `/crear`                | `LoginController::crear`                | Público                   | Registro de tutores                  |
+| GET, POST | `/olvide`               | `LoginController::olvide`               | Público                   | Solicitar recuperación               |
+| GET, POST | `/reestablecer`         | `LoginController::reestablecer`         | Con token de recuperación | Nueva contraseña                     |
+| GET       | `/mensaje`              | `LoginController::mensaje`              | Público                   | Aviso de correo enviado              |
+| GET       | `/confirmar`            | `LoginController::confirmar`            | Con token de confirmación | Confirmar cuenta                     |
+| GET       | `/dashboard`            | `TutorController::index`                | Tutor                     | Panel de tareas del tutor            |
+| GET       | `/crear-tarea`          | `TutorController::crear_tarea`          | Tutor                     | Formulario de nueva tarea            |
+| GET       | `/tutelados`            | `TutorController::tutelados`            | Tutor                     | Gestión de tutelados y vínculos      |
+| GET       | `/mis-tareas`           | `AlumnoController::index`               | Tutelado                  | Panel de tareas del alumno           |
+| GET, POST | `/perfil`               | `PerfilController::perfil`              | Sesión                    | Editar perfil                        |
+| GET, POST | `/cambiar-password`     | `PerfilController::cambiar_password`    | Sesión                    | Cambiar contraseña                   |
+| GET       | `/api/tareas`           | `TareaController::index`                | Sesión (según rol)        | Listar tareas (JSON)                 |
+| POST      | `/api/tarea`            | `TareaController::crear`                | Tutor vinculado           | Crear tarea con partes               |
+| POST      | `/api/tarea/actualizar` | `TareaController::actualizar`           | Tutor vinculado           | Editar tarea y partes                |
+| POST      | `/api/tarea/eliminar`   | `TareaController::eliminar`             | Tutor vinculado           | Eliminar tarea                       |
+| POST      | `/api/tarea/duplicar`   | `TareaController::duplicar`             | Tutor vinculado           | Duplicar a otros tutelados           |
+| GET       | `/api/historial`        | `TareaController::historial`            | Dueño o tutor vinculado   | Historial de una tarea               |
+| POST      | `/api/parte`            | `ParteController::crear`                | Tutor vinculado           | Añadir una parte a una tarea         |
+| POST      | `/api/parte/hecha`      | `ParteController::marcar_hecha`         | Tutelado dueño            | Marcar una parte como hecha          |
+| POST      | `/api/parte/revisar`    | `ParteController::revisar`              | Tutor vinculado           | Aprobar, devolver o reabrir          |
+| POST      | `/api/tutelado`         | `TutorController::crear_tutelado`       | Tutor                     | Crear tutelado                       |
+| POST      | `/api/tutelado/password`| `TutorController::reset_password`       | Tutor vinculado           | Restablecer su contraseña            |
+| POST      | `/api/vinculo`          | `TutorController::vincular`             | Tutor vinculado           | Vincular a otro tutor                |
+| POST      | `/api/vinculo/eliminar` | `TutorController::desvincular`          | Tutor vinculado           | Quitar un vínculo                    |
 
-### Contrato de la API de tareas
+*Una ruta que no existe responde 404 con la vista `404`. Las páginas protegidas redirigen a `/` sin sesión o con el rol equivocado; la API responde JSON con código 403.*
 
-| Endpoint                     | Parámetros                                   | Respuesta correcta                                   | Respuesta de error                             |
-| ---------------------------- | -------------------------------------------- | ---------------------------------------------------- | ---------------------------------------------- |
-| `GET /api/tareas`            | `id` (url del proyecto)                      | `{ "tareas": [ {id, nombre, estado, proyectoId} ] }` | Redirección sin `exit` (ver ERR-04)            |
-| `POST /api/tarea`            | `nombre`, `proyectoId` (url)                 | `{ tipo: "exito", id, mensaje, proyectoId }`         | `{ tipo: "error", mensaje }`                   |
-| `POST /api/tarea/actualizar` | `id`, `nombre`, `estado`, `proyectoId` (url) | `{ respuesta: { tipo, id, proyectoId, mensaje } }`   | `{ tipo: "error", mensaje }` (sin `respuesta`) |
-| `POST /api/tarea/eliminar`   | `id`, `proyectoId` (url)                     | `{ resultado, mensaje, tipo, id, proyectoId }`       | `{ tipo: "error", mensaje }`                   |
+### Contrato de la API
+
+Todos los POST llevan el campo `csrf` (o la cabecera `X-CSRF-Token`); sin él responden 403. Las respuestas son JSON; en un error llevan `{ "tipo": "error", "mensaje": "..." }` con el código 400, 403 o 404.
+
+| Endpoint                         | Parámetros                                                         | Respuesta correcta                                                                   |
+| -------------------------------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------------------ |
+| `GET /api/tareas`                | `tutelado` (opcional), `porRevisar` (opcional)                     | `{ "tareas": [ { url, titulo, descripcion, fecha_limite, tutelado_id, vencida, progreso: {ok, total, completa}, partes: [ {id, titulo, estado, comentario, devuelta} ] } ] }` |
+| `POST /api/tarea`                | `tutelado_id`, `titulo`, `descripcion`, `fecha_limite`, `partes[]` | `{ tipo: "exito", url, mensaje }`                                                    |
+| `POST /api/tarea/actualizar`     | `url`, `titulo`, `descripcion`, `fecha_limite`, `partes` (JSON `[{id, titulo}]`) | `{ tipo: "exito", mensaje }`                                           |
+| `POST /api/tarea/eliminar`       | `url`                                                              | `{ tipo: "exito", mensaje }`                                                         |
+| `POST /api/tarea/duplicar`       | `url`, `destinos[]` (ids de tutelados)                             | `{ tipo: "exito", copiadas }`                                                        |
+| `GET /api/historial`             | `url`                                                              | `{ "historial": [ { parte, accion, por, cuando } ] }`                                |
+| `POST /api/parte`                | `url`, `titulo`                                                    | `{ tipo: "exito", id }`                                                              |
+| `POST /api/parte/hecha`          | `id`                                                               | `{ tipo: "exito", mensaje }`                                                         |
+| `POST /api/parte/revisar`        | `id`, `accion` (`aprobar`, `devolver`, `reabrir`), `comentario`    | `{ tipo: "exito", progreso: {ok, total, completa} }`                                 |
+| `POST /api/tutelado`             | `nombre`, `curso`, `password`                                      | `{ tipo: "exito", nombre, alias, password }` (la contraseña solo se devuelve aquí)   |
+| `POST /api/tutelado/password`    | `id`, `password`                                                   | `{ tipo: "exito", mensaje }`                                                         |
+| `POST /api/vinculo`              | `tutelado_id`, `correo`                                            | `{ tipo: "exito", mensaje }`                                                         |
+| `POST /api/vinculo/eliminar`     | `tutelado_id`, `tutor_id`                                          | `{ tipo: "exito", mensaje }`                                                         |
 
 ## 4.8 Despliegue
 
-**Figura 10. Diagrama de despliegue con Docker.**
+**Figura 12. Diagrama de despliegue con Docker.**
 
 ```mermaid
 flowchart LR
     NAV["Navegador del usuario"]
     SMTP["Servidor SMTP externo"]
-    CDN["Google Fonts y jsDelivr"]
+    CDN["Google Fonts"]
 
     subgraph Host["Equipo o servidor con Docker"]
-        subgraph PHP["Contenedor uptask_php: php 8.5.12 con Apache"]
+        subgraph PHP["Contenedor claudetask_php: php 8.5.12 con Apache"]
             AP["Apache: DocumentRoot public con mod_rewrite"]
             APP["PHP: index.php, controllers, models, views"]
-            VT["Vite dev server en puerto 5173"]
+            VT["Vite dev server en puerto 5173 (solo desarrollo)"]
         end
-        subgraph MY["Contenedor uptask_mysql: mysql 8.0"]
-            DB[("Base de datos uptask")]
+        subgraph MY["Contenedor claudetask_mysql: mysql 8.0"]
+            DB[("Base de datos claudetask")]
         end
-        VOL[("Volumen uptask_mysql_data")]
+        VOL[("Volumen claudetask_mysql_data")]
     end
 
     NAV -->|"HTTP puerto 8082"| AP
     NAV -->|"HTTP puerto 5173 solo en desarrollo"| VT
     AP --> APP
-    APP -->|"TCP 3306 por la red uptask_network"| DB
+    APP -->|"TCP 3306 por la red claudetask_network"| DB
     DB --- VOL
     APP -->|"SMTP"| SMTP
     NAV -->|"HTTPS"| CDN
 ```
 
+*En el primer arranque, con el volumen vacío, MySQL ejecuta `01-claudetask.sql` (esquema) y `02-usuario.sh` (crea `claudetask_app` con permisos solo de datos). Las claves salen de `.env`.*
+
 ## 4.9 Diagrama de red
 
-**Figura 11. Puertos y comunicaciones.**
+**Figura 13. Puertos y comunicaciones.**
 
 ```mermaid
 flowchart LR
     NAV["Navegador"]
-    subgraph Docker["Red Docker: uptask_network"]
-        WEB["uptask_php: puerto 80"]
-        SQL["uptask_mysql: puerto 3306"]
+    subgraph Docker["Red Docker: claudetask_network"]
+        WEB["claudetask_php: puerto 80"]
+        SQL["claudetask_mysql: puerto 3306"]
     end
-    ADM["Cliente SQL del equipo anfitrión"]
-    EXT["SMTP y CDN en Internet"]
+    ADM["Cliente SQL del propio equipo"]
+    EXT["SMTP y Google Fonts en Internet"]
 
     NAV -->|"8082 a 80"| WEB
     NAV -->|"5173 a 5173 Vite"| WEB
     WEB -->|"3306"| SQL
-    ADM -->|"3308 a 3306"| SQL
+    ADM -->|"127.0.0.1:3308 a 3306"| SQL
     WEB --> EXT
     NAV --> EXT
 ```
 
-| Puerto del equipo | Contenedor            | Uso                                                   |
-| ----------------- | --------------------- | ----------------------------------------------------- |
-| 8082              | `uptask_php` (80)     | Aplicación web                                        |
-| 5173              | `uptask_php` (5173)   | Servidor de desarrollo de Vite                        |
-| 3308              | `uptask_mysql` (3306) | Acceso a la base de datos desde herramientas externas |
+| Puerto del equipo | Contenedor                | Uso                                                                  |
+| ----------------- | ------------------------- | -------------------------------------------------------------------- |
+| 8082              | `claudetask_php` (80)     | Aplicación web                                                       |
+| 5173              | `claudetask_php` (5173)   | Servidor de desarrollo de Vite (se quita en producción)              |
+| 127.0.0.1:3308    | `claudetask_mysql` (3306) | Base de datos, accesible solo desde el propio equipo                 |
 
-*No hay HTTPS configurado en esta composición.*
+*No hay HTTPS en esta composición: en producción va un servidor o proxy con HTTPS delante del puerto 8082.*
 
 ## 4.10 Diseño de interfaz
 
-| Pantalla             | Ruta                   | Contenido                                                        |
-| -------------------- | ---------------------- | ---------------------------------------------------------------- |
-| Iniciar sesión       | `/`                    | Email, contraseña, enlaces a crear cuenta y olvidé               |
-| Crear cuenta         | `/crear`               | Nombre, email, contraseña y repetición                           |
-| Olvidé mi contraseña | `/olvide`              | Email                                                            |
-| Reestablecer         | `/reestablecer?token=` | Nueva contraseña (solo si el token es válido)                    |
-| Mensaje              | `/mensaje`             | Aviso de correo enviado                                          |
-| Confirmar cuenta     | `/confirmar?token=`    | Resultado de la confirmación                                     |
-| Proyectos            | `/dashboard`           | Barra lateral, lista de proyectos o aviso «No hay Proyectos aún» |
-| Crear proyecto       | `/crear-proyecto`      | Nombre del proyecto                                              |
-| Proyecto             | `/proyecto?id=`        | Botón «Nueva Tarea», filtros, lista de tareas                    |
-| Modal de tarea       | (en `/proyecto`)       | Formulario para crear o editar el nombre                         |
-| Perfil               | `/perfil`              | Nombre, email, enlace a cambiar contraseña                       |
-| Cambiar contraseña   | `/cambiar-password`    | Contraseña actual y nueva                                        |
+| Pantalla                | Ruta                   | Contenido                                                                                             |
+| ----------------------- | ---------------------- | ----------------------------------------------------------------------------------------------------- |
+| Iniciar sesión          | `/`                    | Correo o alias, contraseña, enlaces a crear cuenta y olvidé                                           |
+| Crear cuenta            | `/crear`               | Nombre, correo, contraseña y repetición                                                               |
+| Olvidé mi contraseña    | `/olvide`              | Correo                                                                                                |
+| Reestablecer            | `/reestablecer?token=` | Nueva contraseña (solo si el token es válido y no caducó)                                             |
+| Mensaje                 | `/mensaje`             | Aviso de correo enviado                                                                               |
+| Confirmar cuenta        | `/confirmar?token=`    | Resultado de la confirmación                                                                          |
+| Tareas (tutor)          | `/dashboard`           | Filtro por tutelado, casilla «Solo por revisar», tarjetas con partes, avance y acciones               |
+| Nueva tarea             | `/crear-tarea`         | Tutelado, título, descripción, fecha límite y partes (**+ Añadir parte**)                             |
+| Tutelados               | `/tutelados`           | Alta de tutelado, datos de acceso (una sola vez), lista con tutores, vincular, quitar y restablecer   |
+| Mis tareas (tutelado)   | `/mis-tareas`          | Tarjetas con sus partes: **Ya lo hice**, *Esperando al tutor*, comentario del tutor, historial        |
+| Perfil                  | `/perfil`              | Nombre y correo (tutor) o alias (tutelado, solo lectura); enlace a cambiar contraseña                 |
+| Cambiar contraseña      | `/cambiar-password`    | Contraseña actual y nueva                                                                             |
+| Ventanas del panel      | (en `/dashboard`)      | Editar tarea, Duplicar tarea, Historial; el historial también está en `/mis-tareas`                   |
 
-**Elementos comunes:** barra lateral con Proyectos, Crear Proyecto y Perfil; barra superior con el nombre del usuario y «Cerrar Sesión»; menú desplegable en móvil; modo oscuro automático.
+**Elementos comunes:** barra lateral con las opciones del rol (el tutor ve Tareas, Nueva tarea, Tutelados y Perfil; el tutelado, Mis tareas y Perfil); barra superior con el nombre, el rol y **Cerrar Sesión**; menú desplegable en móvil; modo claro y oscuro automáticos.
 
-> **[Completar]** Inserta capturas de cada pantalla: `![Figura 12. Pantalla de proyecto](img/proyecto.png)`
+> **[Completar]** Inserta capturas de cada pantalla: `![Figura 14. Panel de tareas del tutor](img/panel-tutor.png)`
 
 ---
 
