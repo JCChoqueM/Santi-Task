@@ -59,6 +59,12 @@ class Usuario extends ActiveRecord
         if (!trim($this->nombre)) {
             self::$alertas['error'][] = 'Escribe el nombre del tutelado';
         }
+        if (mb_strlen(trim($this->nombre)) > 100) {
+            self::$alertas['error'][] = 'El nombre es demasiado largo (máximo 100 caracteres)';
+        }
+        if ($this->curso !== null && mb_strlen($this->curso) > 60) {
+            self::$alertas['error'][] = 'El curso es demasiado largo (máximo 60 caracteres)';
+        }
         if (strlen($this->password) < 6) {
             self::$alertas['error'][] = 'La contraseña necesita al menos 6 caracteres';
         }
@@ -70,7 +76,7 @@ class Usuario extends ActiveRecord
     {
         $primero = explode(' ', trim($nombre))[0] ?? '';
         $ascii = iconv('UTF-8', 'ASCII//TRANSLIT', $primero) ?: '';
-        $base = ucfirst(strtolower(preg_replace('/[^A-Za-z]/', '', $ascii)));
+        $base = substr(ucfirst(strtolower(preg_replace('/[^A-Za-z]/', '', $ascii))), 0, 30); // alias <= 34 de 60
         if ($base === '') {
             throw new \Exception('Escribe un nombre con letras.');
         }

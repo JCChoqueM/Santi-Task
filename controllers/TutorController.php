@@ -8,6 +8,13 @@ use MVC\Router;
 
 class TutorController
 {
+    /** Lee un campo de $_POST como texto; si llega un arreglo u otro tipo, devuelve ''. */
+    private static function texto(string $clave): string
+    {
+        $v = $_POST[$clave] ?? '';
+        return is_string($v) ? $v : '';
+    }
+
     // GET /dashboard
     public static function index(Router $router)
     {
@@ -53,15 +60,14 @@ class TutorController
     // POST /api/tutelado
     public static function crear_tutelado()
     {
-        isAuth();
         isTutor(true);
         verificarCsrf(true);
 
         $t = new Usuario([
             'rol' => 'tutelado',
-            'nombre' => trim($_POST['nombre'] ?? ''),
-            'curso' => trim($_POST['curso'] ?? '') ?: null,
-            'password' => $_POST['password'] ?? '',
+            'nombre' => trim(self::texto('nombre')),
+            'curso' => trim(self::texto('curso')) ?: null,
+            'password' => self::texto('password'),
             'confirmado' => 1,
             'creado_por' => $_SESSION['id'],
         ]);
@@ -102,12 +108,11 @@ class TutorController
     // POST /api/tutelado/password
     public static function reset_password()
     {
-        isAuth();
         isTutor(true);
         verificarCsrf(true);
 
-        $al = self::alumnoDelTutor((int) ($_POST['id'] ?? 0));
-        $nueva = $_POST['password'] ?? '';
+        $al = self::alumnoDelTutor((int) self::texto('id'));
+        $nueva = self::texto('password');
         if (strlen($nueva) < 6) {
             responderJson(['tipo' => 'error', 'mensaje' => 'La contraseña necesita al menos 6 caracteres.'], 400);
         }
@@ -120,15 +125,14 @@ class TutorController
     // POST /api/vinculo
     public static function vincular()
     {
-        isAuth();
         isTutor(true);
         verificarCsrf(true);
 
-        $al = self::alumnoDelTutor((int) ($_POST['tutelado_id'] ?? 0));
-        $correo = strtolower(trim($_POST['correo'] ?? ''));
+        $al = self::alumnoDelTutor((int) self::texto('tutelado_id'));
+        $correo = strtolower(trim(self::texto('correo')));
         $otro = Usuario::where('email', $correo);
 
-        if (!$otro || $otro->rol !== 'tutor') {
+        if (!$otro || $otro->rol !== 'tutor' || !$otro->confirmado) {
             responderJson(['tipo' => 'error', 'mensaje' => 'No existe un tutor con ese correo.'], 404);
         }
         if (Vinculo::existe((int) $otro->id, (int) $al->id)) {
@@ -141,13 +145,12 @@ class TutorController
     // POST /api/vinculo/eliminar
     public static function desvincular()
     {
-        isAuth();
         isTutor(true);
         verificarCsrf(true);
 
         $yo = (int) $_SESSION['id'];
-        $al = self::alumnoDelTutor((int) ($_POST['tutelado_id'] ?? 0));
-        $tutorId = (int) ($_POST['tutor_id'] ?? 0);
+        $al = self::alumnoDelTutor((int) self::texto('tutelado_id'));
+        $tutorId = (int) self::texto('tutor_id');
 
         if (!Vinculo::existe($tutorId, (int) $al->id)) {
             responderJson(['tipo' => 'error', 'mensaje' => 'Ese tutor no está vinculado.'], 400);

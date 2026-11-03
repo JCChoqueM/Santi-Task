@@ -61,5 +61,11 @@ $router->post('/api/parte', [ParteController::class, 'crear']);
 $router->post('/api/parte/hecha', [ParteController::class, 'marcar_hecha']);
 $router->post('/api/parte/revisar', [ParteController::class, 'revisar']);
 
+// API de tutelados y vínculos
+$router->post('/api/tutelado', [TutorController::class, 'crear_tutelado']);
+$router->post('/api/tutelado/password', [TutorController::class, 'reset_password']);
+$router->post('/api/vinculo', [TutorController::class, 'vincular']);
+$router->post('/api/vinculo/eliminar', [TutorController::class, 'desvincular']);
+
 // Comprueba y valida las rutas, que existan y les asigna las funciones del Controlador
 $router->comprobarRutas();
