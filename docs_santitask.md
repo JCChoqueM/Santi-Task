@@ -44,7 +44,7 @@
 - [7. Calidad](#7-calidad)
 - [8. Entrega y uso](#8-entrega-y-uso)
 - [9. Cierre](#9-cierre)
-- [10. Plan de corrección y endurecimiento](#10-plan-de-corrección-y-endurecimiento)
+- [10. Registro de correcciones aplicadas](#10-registro-de-correcciones-aplicadas)
 - [11. Matriz de trazabilidad](#11-matriz-de-trazabilidad)
 - [12. Lista de figuras](#12-lista-de-figuras)
 - [13. Pruebas de ClaudeTask (Paso 8)](#13-pruebas-de-claudetask-paso-8)
@@ -1392,28 +1392,36 @@ Hay dos roles. El manual completo está en [`README.md`](README.md): sección 2 
 
 ## 9.1 Resultados frente a los objetivos
 
-El estado se basa en la lectura del código; falta ejecutar el plan de pruebas.
+Evaluación al 2026-11-03 de los objetivos de la sección 2.1, contra las pruebas P-01 a P-35 (sección 13). «Verificado en el código» significa que se leyó el código y no hay una prueba numerada que lo registre.
 
-| Objetivo                      | Estado según el código                                                   |
-| ----------------------------- | ------------------------------------------------------------------------ |
-| OE1 Registro con confirmación | Implementado, con la falla ERR-02 (omitir la confirmación)               |
-| OE2 Proyectos privados        | Implementado para proyectos; con fallas ERR-01 y ERR-04                  |
-| OE3 Tareas sin recargar       | Implementado; con fallas ERR-03 y ERR-14                                 |
-| OE4 Recuperación de acceso    | Implementado; el correo no llega al usuario real (ERR-08)                |
-| OE5 Entorno reproducible      | Implementado con Docker; requiere `.env` y la importación manual del SQL |
+| Objetivo                                        | Estado                    | Evidencia                                                                                                                                                                                                                               |
+| ----------------------------------------------- | ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| OE1 Registro de tutores con confirmación        | Cumplido                  | Registro, correo, confirmación y token de un solo uso: P-23, P-24, P-26, P-35 y el recorrido de P-34. Que solo las cuentas con `confirmado = 1` entren se verificó en el código (`LoginController::login`); no hay prueba numerada (RF-03). El tutelado nace con `confirmado = 1` y alias generado (`TutorController::crear_tutelado`, `Usuario::generarAlias`): verificado en el código y recorrido en P-34 |
+| OE2 Acceso por rol y por vínculo                | Cumplido                  | P-01 a P-06 (un tutor sin vínculo no ve ni modifica), P-08 a P-11 (un tutelado no usa funciones de tutor y solo ve lo suyo), P-12 y P-13 (sesión) y P-07 (CSRF)                                                                          |
+| OE3 Asignación y revisión de tareas por partes  | Cumplido en lo probado    | P-34 recorre asignar con partes, marcar, aprobar y devolver; P-01, P-02, P-08 y P-09 comprueban los rechazos. Reabrir con éxito y el cierre de la tarea con todas las partes aprobadas no tienen prueba numerada                         |
+| OE4 Trazabilidad en el historial                | Cumplido en lo probado    | La tabla `historial` guarda tarea, parte, acción, autor (`por`) y fecha (`creado_en`), verificado en `claudetask.sql` y `models/Historial.php`. P-17 registra que el historial crece (7 a 9) y P-05 y P-20 cubren el permiso y el modal  |
+| OE5 Recuperación de acceso                      | Parcial                   | El tutor restablece su contraseña con un enlace de 1 hora: P-25, P-26. Que un tutor restablezca la de un tutelado (RF-07) no tiene prueba numerada                                                                                      |
+| OE6 Entorno reproducible y con respaldo         | Cumplido                  | Instalación desde cero con solo el README: P-34 (y P-28 para el arranque de la base). Respaldo y restauración: P-32. Falta que otra persona repita el ciclo sola con el README (Versión 1.0)                                              |
+
+**Resumen:** 4 cumplidos, 2 cumplidos en lo probado y 1 parcial según la evidencia; ninguno incumplido. Las lagunas son de prueba, no de funcionamiento conocido, y están listadas en 7.1 como candidatas a P-36 en adelante.
 
 ## 9.2 Limitaciones
 
-Ver sección 7.3. Además: no se pueden editar ni eliminar proyectos, no hay colaboración, y las acciones sobre tareas usan doble clic, lo que dificulta el uso en pantallas táctiles.
+- Las limitaciones de seguridad y operación están en 7.3 (LIM-01 a LIM-09).
+- Lo que el alcance excluye (sección 2.2): correo y recuperación propia para los tutelados, reenviar la confirmación, notificaciones por correo de tareas o revisiones, rol de administrador, prioridades y etiquetas, pruebas automáticas y HTTPS configurado por la aplicación.
+- Pruebas: todas son manuales o con `curl`; no se probó en Safari (WebKit); falta la prueba de usabilidad con otra persona (7.2).
 
 ## 9.3 Mejoras futuras
 
-- Editar y eliminar proyectos.
-- Fechas límite, prioridades y etiquetas en tareas.
-- Compartir proyectos con otros usuarios.
-- Botones visibles (en lugar de doble clic) para móviles.
+Son propuestas que salen de lo que el alcance excluye (2.2) y de las limitaciones abiertas (7.3); no hay compromiso de fechas.
+
+- «Reenviar confirmación» (LIM-05).
+- Envío de correo asíncrono, para quitar los 3 a 5 segundos de LIM-07.
+- Notificaciones por correo de tareas y revisiones.
+- Prioridades y etiquetas en las tareas.
+- Consultas preparadas en lugar de escape de valores (7.4).
 - Pruebas automáticas (PHPUnit) y migraciones de base de datos.
-- Notificaciones por correo.
+- Registrar las pruebas P-36 en adelante de 7.1 (bloqueo de intentos, restablecer clave de tutelado, desvincular, duplicar con éxito, filtros y vencidas, perfil).
 
 ## 9.4 Conclusiones y lecciones aprendidas
 
@@ -1424,9 +1432,9 @@ Ver sección 7.3. Además: no se pueden editar ni eliminar proyectos, no hay col
 - Documentación de PHP: `mysqli`, `password_hash`, sesiones. [PHP: Prefacio - Manual](https://www.php.net/manual)
 - OWASP Top 10 y hojas de referencia (CSRF, XSS, SQL Injection). [OWASP Foundation - The Open Source Foundation for Application Security](https://owasp.org)
 - Documentación de Vite. [Vite | Next Generation Frontend Tooling](https://vitejs.dev)
+- Documentación de phpdotenv. [GitHub - vlucas/phpdotenv](https://github.com/vlucas/phpdotenv)
 - Documentación de PHPMailer. [GitHub - PHPMailer/PHPMailer: The classic email sending library for PHP · GitHub](https://github.com/PHPMailer/PHPMailer)
 - Documentación de Docker Compose. [Docker Compose | Docker Docs](https://docs.docker.com/compose)
-- Documentación de SweetAlert2. [SweetAlert2 - beautiful, accessible JavaScript popup boxes](https://sweetalert2.github.io)
 - Documentación de Mermaid. [Mermaid | Diagramming and charting tool](https://mermaid.js.org)
 
 ## 9.6 Anexos
@@ -1434,102 +1442,40 @@ Ver sección 7.3. Además: no se pueden editar ni eliminar proyectos, no hay col
 | Anexo | Contenido                                                                                           |
 | ----- | --------------------------------------------------------------------------------------------------- |
 | A     | Capturas de pantalla [Completar]                                                                    |
-| B     | Código crítico: `ActiveRecord::where`, `TareaController::actualizar`, `DashboardController::perfil` |
-| C     | Resultados de las pruebas [Completar]                                                               |
+| B     | Código crítico: `ActiveRecord::where`, `TareaController::actualizar`, `PerfilController::perfil`    |
+| C     | Resultados de las pruebas: sección 13 (P-01 a P-35)                                                 |
 
 ---
 
-# 10. Plan de corrección y endurecimiento
+# 10. Registro de correcciones aplicadas
 
-Orden sugerido, de mayor a menor riesgo. Los fragmentos son ejemplos que se adaptan al código actual.
+Esta sección reemplaza el «Plan de corrección y endurecimiento» que se redactó para UpTask. Aquel plan tenía diez pasos con fragmentos de código de proyectos, `tareas.js` y `uptask.sql`; todos se aplicaron al reescribir el sistema como ClaudeTask, así que los fragmentos ya no describen el código. Aquí queda cada paso con los commits y las pruebas que lo respaldan. Los commits y las pruebas se toman de la sección 7.3 (revisada el 2026-11-03); el detalle de cada hallazgo está allí.
 
-**1. Detener la ejecución tras cada redirección (ERR-04)**
+| Paso del plan                                   | Hallazgo      | Commits                                       | Pruebas             | Estado   |
+| ----------------------------------------------- | ------------- | --------------------------------------------- | ------------------- | -------- |
+| 1. Detener la ejecución tras cada redirección   | ERR-04        | `c1b2931`                                     | P-12                | Resuelto |
+| 2. Escapar valores en las consultas de lectura  | ERR-01        | `c1b2931`                                     | P-17                | Resuelto |
+| 3. Permitir solo los campos esperados           | ERR-02        | `d9850e0`, `1da09e5`, `98a7151`               | P-22                | Resuelto |
+| 4. Verificar que la tarea pertenece al usuario  | ERR-03        | `d9850e0` (el permiso es por vínculo)         | P-01 a P-06, P-09   | Resuelto |
+| 5. Escapar la salida                            | ERR-05        | `d9850e0`, `1da09e5`                          | P-16 a P-20, P-30   | Resuelto |
+| 6. Tokens seguros con caducidad                 | ERR-07        | `1da09e5`, `c1a2919`                          | P-24, P-26, P-35    | Resuelto |
+| 7. Correo al destinatario real                  | ERR-08        | `c978a1f`                                     | P-23, P-25          | Resuelto |
+| 8. CSRF y sesión                                | ERR-06, ERR-09 | `c1b2931`, `7bfa426`                         | P-07, P-13, P-29    | ERR-06 resuelto; ERR-09 parcial (LIM-02) |
+| 9. Docker y producción                          | ERR-16, ERR-19 | `2f334a3`, `7bfa426`                         | P-27 a P-31, P-34   | Resuelto |
+| 10. Ejecutar las pruebas tras corregir          | -             | -                                             | P-01 a P-35         | Hecho: las 35 pasan (7.1) |
 
-```php
-function isAuth(): void
-{
-    if (!isset($_SESSION['login'])) {
-        header('Location: /');
-        exit;
-    }
-}
-```
+**Lo que no es un paso del plan y también se cerró:** ERR-10 (`98a7151`), ERR-11 (`c3401ed`), ERR-12 (`c1b2931`), ERR-17 (`5b581aa`) y ERR-20 (`c1b2931`). ERR-14 y ERR-15 quedaron obsoletos al reescribir el cliente en el Paso 4; se atribuyen a `d9850e0` por su mensaje, sin haber comprobado el hash exacto.
 
-Añadir `exit;` después de cada `header('Location: ...')` en los controladores.
+**Lo que queda abierto**
 
-**2. Escapar valores en las consultas de lectura (ERR-01)**
-
-```php
-public static function where($columna, $valor)
-{
-    $valor = self::$db->escape_string((string) $valor);
-    $query = "SELECT * FROM " . static::$tabla . " WHERE {$columna} = '{$valor}'";
-    $resultado = self::consultarSQL($query);
-    return array_shift($resultado);
-}
-```
-
-Hacer lo mismo en `find`, `get` y `belongsTo`. Lo ideal es migrar a consultas preparadas.
-
-**3. Permitir solo los campos esperados (ERR-02)**
-
-```php
-// En perfil
-$usuario->sincronizar([
-    'nombre' => $_POST['nombre'] ?? null,
-    'email'  => $_POST['email'] ?? null,
-]);
-```
-
-Aplicar el mismo criterio en `crear`, `cambiar_password` y `reestablecer`.
-
-**4. Verificar que la tarea pertenece al proyecto (ERR-03)**
-
-```php
-$tarea = Tarea::find((int) $_POST['id']);
-if (!$tarea || (int) $tarea->proyectoId !== (int) $proyecto->id) {
-    echo json_encode(['tipo' => 'error', 'mensaje' => 'Tarea no válida']);
-    return;
-}
-```
-
-Usar este bloque en `actualizar` y `eliminar` antes de modificar la tarea.
-
-**5. Escapar la salida (ERR-05)**
-
-```php
-<?= s($proyecto->proyecto) ?>
-<input value="<?= s($usuario->nombre) ?>">
-```
-
-En `tareas.js`, construir el input con `createElement` y asignar `value` por propiedad en lugar de usar `innerHTML` con datos del usuario.
-
-**6. Tokens seguros con caducidad (ERR-07)**
-
-```php
-$this->token = bin2hex(random_bytes(16));
-```
-
-Añadir una columna `token_expira` y comprobarla al confirmar o restablecer.
-
-**7. Correo al destinatario real (ERR-08)**
-
-```php
-$mail->addAddress($this->email, $this->nombre);
-```
-
-**8. CSRF y sesión (ERR-06, ERR-09)**
-
-- Generar un token por sesión, incluirlo en los formularios y en las peticiones `fetch`, y validarlo en el servidor.
-- Llamar a `session_regenerate_id(true)` al iniciar sesión y a `session_destroy()` al cerrarla.
-
-**9. Docker y producción (ERR-16, ERR-19)**
-
-- Mover la contraseña de MySQL a variables de entorno y retirar el montaje de todo el proyecto en el contenedor MySQL.
-- Importar `uptask.sql` automáticamente copiándolo directo a `/docker-entrypoint-initdb.d/`.
-- Ajustar la CSP y habilitar HTTPS para producción.
-
-**10. Después de corregir:** ejecutar CP-01 a CP-24 y registrar los resultados.
+| Qué                                                                                                    | Referencia                          |
+| ------------------------------------------------------------------------------------------------------ | ----------------------------------- |
+| `logout` solo vacía `$_SESSION`                                                                        | ERR-09 parcial, LIM-02 (aceptada)   |
+| Vincular, `olvide` y `crear` revelan si un correo existe                                               | ERR-13 parcial, LIM-01 (aceptada)   |
+| Menciones a UpTask como origen en el README y en esta documentación                                    | ERR-18 parcial (se ajusta en 10c)   |
+| `ActiveRecord::get($limite)` no escapa; ningún código lo llama                                         | Residuo de ERR-01                   |
+| Consultas preparadas en lugar de escape de valores                                                     | Mejora futura (7.4)                 |
+| Antes de publicar: `ENVIRONMENT=production`, `APP_URL` con https y revisar la CSP si hay un proxy      | LIM-08 (abierta)                    |
 
 ---
 
@@ -1692,6 +1638,6 @@ Abiertos:
 - [ ] Insertar capturas de pantalla
 - [x] Los CP-01 a CP-24 (UpTask) se retiraron; los resultados están en P-01 a P-35 (secciones 7.1, 11 y 13)
 - [x] Cada error ERR-01 a ERR-20 confirmado, resuelto o descartado (sección 7.3, 2026-11-03)
-- [ ] Aplicar el plan de la sección 10 antes de publicar
+- [x] El plan de corrección de UpTask está aplicado y registrado en la sección 10; quedan las limitaciones de 7.3
 - [x] Revisar el texto `Sopilote22` de `views/templates/nombre-sitio.php` (quitado en `941e8d1`)
 - [ ] Confirmar que lo documentado coincide con el sistema
