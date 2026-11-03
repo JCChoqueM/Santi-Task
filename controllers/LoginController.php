@@ -294,7 +294,8 @@ class LoginController
         $usuario = Usuario::where('token', $token);
         // debuguear($usuario);
 
-        if (empty($usuario)) {
+        // Un token de recuperación (con caducidad) no confirma cuentas ni se gasta aquí
+        if (empty($usuario) || $usuario->esTokenRecuperacion()) {
             //No se encontro al usuario
             Usuario::setAlerta('error', 'Token no valido');
         } else {

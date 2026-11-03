@@ -19,7 +19,7 @@
 | Campo                     | Contenido                                            |
 | ------------------------- | ---------------------------------------------------- |
 | **Título**                | UpTask (SantiTask): gestor web de proyectos y tareas |
-| **Autor / Equipo**        | [Completar]                                          |
+| **Autor / Equipo**        | Julio Cesar Choque Mamani                            |
 | **Institución**           | [Completar]                                          |
 | **Fecha**                 | 02/11/2026                                           |
 | **Versión del documento** | 1.0                                                  |
@@ -29,7 +29,7 @@
 
 | Versión | Fecha      | Autor       | Cambios                                            |
 | ------- | ---------- | ----------- | -------------------------------------------------- |
-| 1.0     | 02/11/2026 | [Completar] | Primera documentación completa a partir del código |
+| 1.0     | 02/11/2026 | Julio Cesar Choque Mamani | Primera documentación completa a partir del código |
 
 ---
 
@@ -924,7 +924,7 @@ Hallazgos obtenidos al leer el código. Se recomienda confirmarlos con las prueb
 | ERR-15 | La respuesta de error de `actualizar` no trae la clave `respuesta`, y el cliente lee `resultado.respuesta.tipo`, lo que lanza una excepción. Además, SweetAlert muestra el mismo texto como título y cuerpo                                                                                                      | Baja     | `TareaController`, `tareas.js`                                     |
 | ERR-16 | `docker-compose.yml`: contraseña root `1234` en claro; se monta todo el proyecto (incluido `.env`) dentro del contenedor MySQL; `uptask.sql` queda en la subcarpeta `host/`, por lo que MySQL normalmente no lo importa solo (verificar)                                                                         | Media    | `docker-compose.yml`                                               |
 | ERR-17 | No hay `.env.example` ni README; las variables solo se deducen del código                                                                                                                                                                                                                                        | Baja     | Raíz                                                               |
-| ERR-18 | Marca inconsistente (UpTask, Uptask, SantiTask); el texto accidental `Sopilote22` de `nombre-sitio.php` ya se quitó (`941e8d1`); `<html lang="en">` con contenido en español; `author` en `package.json` es «Tu nombre»                                                                                      | Baja     | `views/`, `package.json`                                           |
+| ERR-18 | Marca inconsistente (UpTask, Uptask, SantiTask); el texto accidental `Sopilote22` de `nombre-sitio.php` ya se quitó (`941e8d1`); `<html lang="en">` con contenido en español (ya es `es` en `layout.php`); `author` de `package.json` ya es el autor del proyecto                                                                                      | Baja     | `views/`, `package.json`                                           |
 | ERR-19 | La CSP de Apache está pensada para desarrollo (`unsafe-inline`, `unsafe-eval`, `localhost:5173`)                                                                                                                                                                                                                 | Media    | `docker/apache.conf`                                               |
 | ERR-20 | Las rutas inexistentes muestran texto plano, y se redirige a `/404`, que no existe                                                                                                                                                                                                                               | Baja     | `Router.php`, `TareaController`                                    |
 
@@ -1233,6 +1233,7 @@ Misma fecha (2026-11-03) y mismo método que el Paso 8. Los commits son los del 
 | P-32 | Respaldo (9e)        | `docker/respaldo.sh`; cancelar con `no`; restaurar con `si` en un MySQL desechable y comparar con la base real                                              | Archivo con permisos 600, 6 `CREATE TABLE`, `token_expira` presente y `respaldos/` fuera de `git status`; cancelar da `exit=1` sin tocar nada; restaurado = real en contadores y en el hash de contraseñas (`tareas=3 partes=6 usuarios=6 historial=7 vinculos=4`) | Pasa |
 | P-33 | Archivos públicos (9e) | `/build/.vite/manifest.json`, un CSS de `/build/assets/` y `/`                                                                                            | 404, 200 y 200                                                                                                                            | Falló la primera vez (200): el contenedor veía una copia antigua de `docker/apache.conf` montada como archivo único. Tras reiniciar `claudetask_php` pasa |
 | P-34 | Instalación desde cero (9f) | Copia limpia del commit `941e8d1` con `git archive HEAD` en otra carpeta (sin `.env`, `vendor` ni `node_modules`), con su propio volumen de MySQL; solo los pasos 1 a 4 de `README.md`; después el «Primer uso» y los manuales: registrar tutor, confirmar por correo, iniciar sesión, crear tutelado, asignar tarea con partes, entrar como alumno, marcar, aprobar y devolver | `docker compose up -d --build` termina sin errores (listo a los 40 s); `/` da 200 y `/build/.vite/manifest.json` da 404; el usuario `claudetask_app` solo tiene `SELECT, INSERT, UPDATE, DELETE` sobre `claudetask`; 0 usuarios al inicio; el flujo completo funciona como lo describe el README | Pasa. El primer intento falló por el procedimiento de la prueba, no por el código: los contenedores de la instalación habitual, aunque detenidos, conservan los nombres fijos `claudetask_php` y `claudetask_mysql`; hubo que renombrarlos antes y devolverles el nombre después. El recorrido en el navegador lo hizo el usuario y no se anotó resultado por paso; el README no necesitó cambios |
+| P-35 | Tokens en `/confirmar` (9f) | Con un usuario confirmado de la base: poner un token de recuperación (con `token_expira` a 1 hora) y visitar `/confirmar?token=...`; después un token de confirmación (`token_expira` NULL, `confirmado=0`) y visitar lo mismo; restaurar el usuario | El token de recuperación da «Token no valido» y no se gasta; el de confirmación confirma la cuenta, deja `token` NULL y `confirmado=1` | Pasa. Antes del cambio, el mismo guion mostró el fallo: el token de recuperación confirmaba y se gastaba. Usuario restaurado (`NULL NULL 1`) |
 
 ## Decisiones de diseño aceptadas
 
@@ -1260,7 +1261,7 @@ Abiertos:
 - [x] Secciones 8.1 a 8.4 actualizadas; la instalación y los manuales de tutor y tutelado están en `README.md`.
 - [ ] El envío SMTP es síncrono: registrar y recuperar contraseña tardan de 3 a 5 segundos (limitación conocida).
 - [ ] Tras editar el `.env` o `docker/apache.conf` hay que reiniciar `claudetask_php`: el contenedor ve una copia antigua (comprobado de nuevo en 9e con `apache.conf`, que se monta como archivo único). Con `apache2ctl graceful` no basta.
-- [ ] `/confirmar` acepta también un token de recuperación: lo gasta y deja `token_expira` sin limpiar. No abre ningún acceso.
+- [x] `/confirmar` ya no acepta un token de recuperación (el que lleva `token_expira`): da «Token no valido» y no lo gasta (P-35).
 - [ ] Antes de publicar, poner `ENVIRONMENT=production`, `APP_URL` con https y, si hay un proxy, revisar la CSP (`form-action` y `connect-src` están en `'self'`).
 
 ---

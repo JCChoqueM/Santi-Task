@@ -2,7 +2,7 @@
   "name": "claudetask",
   "version": "1.0.0",
   "description": "ClaudeTask MVC",
-  "author": "Tu nombre",
+  "author": "Julio Cesar Choque Mamani",
   "main": "index.js",
   "type": "module",
   "scripts": {
