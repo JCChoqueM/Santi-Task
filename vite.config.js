@@ -44,7 +44,7 @@ export default defineConfig({
     build: {
         outDir: 'public/build',
         manifest: true,
-        sourcemap: true,
+        sourcemap: false,
         rollupOptions: {
             input: {
                 ...jsEntries,

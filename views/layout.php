@@ -1,13 +1,10 @@
 <?php
-$isDev = $_ENV['ENVIRONMENT'] === 'development';
-$manifest = null;
+$isDev = esDesarrollo();
+$cssProd = '';
 if (!$isDev) {
-    $manifestPath = __DIR__ . '/../public/build/.vite/manifest.json';
-    if (file_exists($manifestPath)) {
-        $manifest = json_decode(file_get_contents($manifestPath), true);
-    } else {
-        // Si no existe manifest, fallback a dev
-        $isDev = true;
+    $cssProd = manifestVite()['src/scss/app.scss']['file'] ?? '';
+    if ($cssProd === '') {
+        error_log("Vite: falta public/build/.vite/manifest.json o la entrada src/scss/app.scss (falta npm run prod?)");
     }
 }
 ?>
@@ -23,8 +20,8 @@ if (!$isDev) {
     <?php if ($isDev): ?>
         <script type="module" src="http://localhost:5173/@vite/client"></script>
         <link rel="stylesheet" href="http://localhost:5173/src/scss/app.scss">
-    <?php else: ?>
-        <link rel="stylesheet" href="/build/<?= $manifest['src/scss/app.scss']['file'] ?? '' ?>">
+    <?php elseif ($cssProd !== ''): ?>
+        <link rel="stylesheet" href="/build/<?= s($cssProd) ?>">
     <?php endif ?>
 </head>
 <body>
