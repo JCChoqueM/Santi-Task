@@ -1,7 +1,7 @@
 # CLAUDETASK: DOCUMENTACIÓN DEL PROYECTO
 
 > Documento técnico de ClaudeTask. Lo descrito coincide con lo que el código del repositorio hace.  
-> Los campos marcados como **[Completar]** son datos que solo conoce el autor (institución, fechas reales, capturas).  
+> Los campos marcados como **[Completar]** son datos que solo conoce el autor (capturas, servidor SMTP y dominio de publicación).  
 > Los diagramas están en Mermaid: se ven en GitHub, VS Code (extensión Markdown Preview Mermaid Support), Obsidian y Typora.
 
 ### Alcance del documento
@@ -20,8 +20,8 @@
 | ------------------------- | ---------------------------------------------------- |
 | **Título**                | ClaudeTask: gestor web de tareas para tutores y tutelados |
 | **Autor / Equipo**        | Julio Cesar Choque Mamani                            |
-| **Institución**           | [Completar]                                          |
-| **Fecha**                 | 02/11/2026                                           |
+| **Institución**           | CaesarDev                                            |
+| **Fecha**                 | 03/11/2026                                           |
 | **Versión del documento** | 1.0                                                  |
 | **Versión del sistema**   | 1.0.0 (según `package.json`)                         |
 
@@ -1053,59 +1053,63 @@ flowchart LR
 
 ## 5.1 Metodología
 
-[Completar] (por ejemplo, Kanban o Scrum con sprints de 1 o 2 semanas).
+No se aplicó una metodología formal. El proceso real fue un desarrollo incremental de una sola persona: cada paso (del Paso 1 al Paso 10) cambió una parte del sistema, se probó y se cerró con un commit, y las pruebas quedaron registradas en la sección 13. De las metodologías conocidas, la más parecida es un Kanban personal, sin sprints ni estimaciones.
 
 ## 5.2 Plan y cronograma
 
-**Figura 13. Plan propuesto para corregir, probar y publicar.** Las fechas son una propuesta; ajústalas. El desarrollo ya realizado no incluye fechas porque no constan en los archivos.
+Git registra los 28 commits del proyecto hasta `56c8534` con la misma fecha, 2026-11-03, así que no se puede reconstruir un cronograma con duraciones y no se inventa uno. La tabla muestra el orden real de los pasos con sus commits.
 
-```mermaid
-gantt
-    title Plan propuesto de endurecimiento y publicación
-    dateFormat  YYYY-MM-DD
-    axisFormat  %d/%m
+| Paso | Contenido                                                                          | Commits                                                                               |
+| ---- | ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| 1    | Base renombrada a ClaudeTask                                                       | `19d6614`                                                                             |
+| 2    | Consultas seguras, NULL real, 404, sesión única, CSRF                              | `c1b2931`                                                                             |
+| 3    | Roles, login por correo o alias, bloqueo de intentos                               | `044f268`                                                                             |
+| 4    | Tareas y partes, API, vínculos, panel del tutor                                    | `d9850e0`                                                                             |
+| 5    | Flujo de estados, historial y vista del alumno                                     | `b2bd296`                                                                             |
+| 6    | Tutelados, vínculos y endurecimiento de entradas                                   | `d01b229`, `98a7151` (parche)                                                         |
+| 7    | Interfaz en modo claro y modo oscuro                                               | `f03a7b1`, `7e375cf`                                                                  |
+| -    | Endurecimiento de `TareaController` y de la cuenta                                 | `c3401ed`, `1da09e5`                                                                  |
+| 8    | Lista de pruebas P-01 a P-25                                                       | `a3f03d4`, `97a16f7`                                                                  |
+| 9    | Errores y correo, tokens, usuario de base, CSP, respaldo, README, P-26 a P-35      | `c978a1f`, `c1a2919`, `2f334a3`, `7bfa426`, `f7414b2`, `6aa6283`, `5b581aa`, `941e8d1`, `563e2ff`, `6a96305` |
+| 10   | Documentación alineada con el sistema real (10a, 10b, 10c)                         | `6f9a8b9`, `1fe904c`, `73e90ac`, `5b54f42`, `56c8534`                                |
 
-    section Seguridad crítica
-    Corregir SQL mass assignment IDOR y exit :s1, 2026-11-03, 7d
-    Corregir XSS y añadir CSRF               :s2, after s1, 7d
-
-    section Funcionalidad
-    Correo al destinatario real y tokens seguros :f1, after s2, 5d
-    Filtros y respuestas de API consistentes     :f2, after f1, 5d
-
-    section Calidad
-    Ejecutar plan de pruebas y corregir :q1, after f2, 7d
-
-    section Publicación
-    HTTPS y variables de producción :p1, after q1, 7d
-    Manuales y entrega final        :p2, after p1, 5d
-```
+**Pendiente para la Versión 1.0:** que otra persona haga el ciclo solo con el `README.md` (7.2), insertar las capturas (4.10) y publicar el sistema (5.4, R6 y R7).
 
 ## 5.3 Roles y responsabilidades
 
-| Integrante  | Rol                     | Responsabilidades         |
-| ----------- | ----------------------- | ------------------------- |
-| [Completar] | Desarrollo              | Backend, base de datos    |
-| [Completar] | Frontend                | Vistas, SCSS, `tareas.js` |
-| [Completar] | Calidad y documentación | Pruebas, manuales         |
+Un rol es la tarea de la que alguien responde en el proyecto. Como el autor es una sola persona, ella cubre todos.
+
+| Integrante                                | Rol                                       | Responsabilidades                                                              |
+| ----------------------------------------- | ----------------------------------------- | ------------------------------------------------------------------------------ |
+| Julio Cesar Choque Mamani (CaesarDev)     | Desarrollo, frontend, calidad y documentación | Backend y base de datos; vistas, SCSS y JavaScript del cliente; pruebas y manuales |
 
 ## 5.4 Riesgos
 
-| ID  | Riesgo                                                       | Probabilidad | Impacto | Mitigación                                                     |
-| --- | ------------------------------------------------------------ | ------------ | ------- | -------------------------------------------------------------- |
-| R1  | Uso malicioso por fallos de seguridad (ERR-01 a ERR-06)      | Alta         | Alto    | Aplicar el plan de la sección 10 antes de publicar             |
-| R2  | Los correos no llegan al usuario (destinatario fijo, ERR-08) | Alta         | Alto    | Usar el email real del usuario y un proveedor SMTP             |
-| R3  | Pérdida de datos si se borra el volumen de MySQL             | Media        | Alto    | Respaldos periódicos con `mysqldump`                           |
-| R4  | Versiones de dependencias que cambien o no existan           | Media        | Medio   | Fijar versiones y verificar las etiquetas de imagen y paquetes |
-| R5  | Un solo desarrollador conoce el sistema                      | Media        | Medio   | Mantener esta documentación actualizada                        |
+Probabilidad e impacto son una estimación del autor al 2026-11-03, no una medición.
+
+| ID  | Riesgo                                                                                                    | Probabilidad | Impacto | Mitigación                                                                                                          |
+| --- | --------------------------------------------------------------------------------------------------------- | ------------ | ------- | ------------------------------------------------------------------------------------------------------------------- |
+| R1  | Uso malicioso por fallos de seguridad que no se hayan encontrado (los conocidos están resueltos, sección 10) | Baja         | Alto    | Las 35 pruebas pasan; quedan LIM-01 y LIM-02 (7.3); registrar las pruebas de 7.1 que faltan                         |
+| R2  | Los correos de confirmación y recuperación tardan o no salen (SMTP síncrono, LIM-07)                      | Media        | Alto    | Un SMTP real antes de publicar; probar el envío en el servidor; en el plan gratuito de DOM Cloud ver R7            |
+| R3  | Pérdida de datos si se borra el volumen de MySQL o la cuenta del servidor                                 | Media        | Alto    | `docker/respaldo.sh` y `docker/restaurar.sh` (P-32) en Docker; en el servidor de publicación definir otro método   |
+| R4  | Versiones de dependencias que cambien o no existan                                                        | Media        | Medio   | `composer.lock` y `package-lock.json` fijan los paquetes; el `Dockerfile` fija `php:8.5.12-apache` y la base es `mysql:8.0` |
+| R5  | Un solo desarrollador conoce el sistema                                                                   | Media        | Medio   | Mantener esta documentación actualizada y la prueba de usabilidad con otra persona (7.2)                            |
+| R6  | El servidor de publicación (DOM Cloud) no usa Docker, Apache ni MySQL 8, y el sistema depende de ellos      | Alta         | Alto    | Ver abajo                                                                                                           |
+| R7  | Límites del plan gratuito de DOM Cloud                                                                    | Media        | Medio   | Ver abajo                                                                                                           |
+
+**R6.** Según la documentación de DOM Cloud (consultada el 2026-11-03), sus servidores no usan Docker, funcionan con NGINX y Passenger e instalan MariaDB, no MySQL. En ClaudeTask, la reescritura de todas las rutas a `index.php`, el 404 para rutas que empiezan por punto, `nosniff`, `Referrer-Policy` y el bloqueo del listado de directorios están en `docker/apache.conf`, y `public/` no tiene `.htaccess` (solo `index.php`). Esas reglas hay que llevarlas a la configuración de NGINX del servidor. Lo que no se verificó: que haya PHP 8.5 en DOM Cloud y que `claudetask.sql` cargue sin cambios en MariaDB. Mitigación: repetir P-27, P-29, P-30 y P-33 en el servidor real antes de dar por publicado el sistema, y los scripts `docker/respaldo.sh`, `docker/restaurar.sh` y `docker/crear-usuario-bd.sh` no sirven allí tal cual (LIM-10).
+
+**R7.** Según la misma documentación, el plan gratuito: pide un código de invitación (o una cuenta de GitHub con más de 6 meses y un seguidor, o una mejora de pago de 4,5 USD una sola vez); da 1,5 GB de almacenamiento y 2 GB de transferencia mensual; muestra un aviso en el dominio gratuito `*.dom.my.id`; borra los datos si la cuenta caduca y no se entra en 14 días más (se renueva al iniciar sesión al menos cada 60 días); y mantiene siempre activo un cortafuegos que bloquea las conexiones salientes salvo a una lista de sitios. Esa lista no se revisó, así que no se sabe si el SMTP elegido cabe en ella; el puerto 25 está bloqueado para todos, y el aviso de DOM Cloud recomienda un relay por el puerto 587 o una API REST. Mitigación: dominio propio, entrar al menos cada 60 días, respaldos fuera del servidor y, si el cortafuegos bloquea el SMTP, pasar a un plan de pago.
 
 ## 5.5 Recursos y costos
 
-| Recurso                               | Costo       |
-| ------------------------------------- | ----------- |
-| Desarrollo local con Docker           | 0 USD       |
-| Servidor SMTP                         | [Completar] |
-| Alojamiento y dominio (si se publica) | [Completar] |
+| Recurso                                   | Costo                                                                                                  |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| Desarrollo local con Docker               | 0 USD                                                                                                  |
+| Pruebas de correo (Ethereal)              | 0 USD                                                                                                  |
+| Alojamiento: DOM Cloud, plan gratuito     | 0 USD, con los límites de R7; la mejora de pago única indicada en su documentación es de 4,5 USD       |
+| Servidor SMTP para publicar               | [Completar]                                                                                            |
+| Dominio propio (opcional)                 | [Completar]                                                                                            |
 
 ---
 
@@ -1317,6 +1321,7 @@ Los ERR-01 a ERR-20 se redactaron al leer el código de UpTask, la base de Claud
 | LIM-07 | El envío SMTP es síncrono: registrar y recuperar contraseña tardan de 3 a 5 segundos                                                          | Abierta  |
 | LIM-08 | Antes de publicar: `ENVIRONMENT=production`, `APP_URL` con https y, si hay un proxy, revisar la CSP (`form-action` y `connect-src` están en `'self'`) | Abierta  |
 | LIM-09 | Tras editar `.env` o `docker/apache.conf` hay que reiniciar `claudetask_php`; con `apache2ctl graceful` no basta                              | Conocida |
+| LIM-10 | El destino previsto, DOM Cloud, no usa Docker ni Apache y trae MariaDB: las reglas de `docker/apache.conf` y los scripts de `docker/` no se aplican allí (5.4, R6) | Abierta  |
 
 ## 7.4 Seguridad
 
@@ -1434,6 +1439,7 @@ Son propuestas que salen de lo que el alcance excluye (2.2) y de las limitacione
 - Documentación de Vite. [Vite | Next Generation Frontend Tooling](https://vitejs.dev)
 - Documentación de phpdotenv. [GitHub - vlucas/phpdotenv](https://github.com/vlucas/phpdotenv)
 - Documentación de PHPMailer. [GitHub - PHPMailer/PHPMailer: The classic email sending library for PHP · GitHub](https://github.com/PHPMailer/PHPMailer)
+- Documentación de DOM Cloud: [Our Free Plan](https://domcloud.co/docs/intro/free-plan), [Security Services](https://domcloud.co/docs/features/security) y [Self Hosting](https://domcloud.co/docs/intro/self-hosting) (consultadas el 2026-11-03).
 - Documentación de Docker Compose. [Docker Compose | Docker Docs](https://docs.docker.com/compose)
 - Documentación de Mermaid. [Mermaid | Diagramming and charting tool](https://mermaid.js.org)
 
@@ -1476,6 +1482,7 @@ Esta sección reemplaza el «Plan de corrección y endurecimiento» que se redac
 | `ActiveRecord::get($limite)` no escapa; ningún código lo llama                                         | Residuo de ERR-01                   |
 | Consultas preparadas en lugar de escape de valores                                                     | Mejora futura (7.4)                 |
 | Antes de publicar: `ENVIRONMENT=production`, `APP_URL` con https y revisar la CSP si hay un proxy      | LIM-08 (abierta)                    |
+| Publicar en DOM Cloud: reglas de NGINX, MariaDB, respaldos y SMTP                                      | LIM-10 (abierta), 5.4 R6 y R7       |
 
 ---
 
@@ -1634,7 +1641,7 @@ Abiertos:
 
 ## Lista de verificación final
 
-- [ ] Completar autor, institución, metodología y roles
+- [x] Completar autor, institución, metodología y roles (la metodología y los roles son descripciones del proceso real, confirmar con el autor)
 - [ ] Insertar capturas de pantalla
 - [x] Los CP-01 a CP-24 (UpTask) se retiraron; los resultados están en P-01 a P-35 (secciones 7.1, 11 y 13)
 - [x] Cada error ERR-01 a ERR-20 confirmado, resuelto o descartado (sección 7.3, 2026-11-03)
