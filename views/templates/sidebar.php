@@ -3,7 +3,9 @@
     <div class="contenedor-sidebar">
         <h2>ClaudeTask</h2>
         <div class="cerrar-menu">
-            <img id="cerrar-menu" src="build/img/cerrar.svg" alt="imagen cerrar menu">
+            <button type="button" id="cerrar-menu" class="icono-btn" aria-label="Cerrar menú">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+            </button>
         </div>
     </div>
     <nav class="sidebar-nav">

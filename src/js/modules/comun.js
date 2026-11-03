@@ -25,20 +25,33 @@ export async function get(url) {
   return r.json();
 }
 
-// Aviso temporal abajo en pantalla
+// Aviso temporal abajo en pantalla.
+// Es un popover manual: va a la capa superior y se ve incluso con un <dialog> abierto.
 export function toast(mensaje, error = false) {
   let t = document.querySelector('#toast');
   if (!t) {
     t = document.createElement('div');
     t.id = 'toast';
     t.setAttribute('role', 'status');
+    t.setAttribute('popover', 'manual');
     document.body.appendChild(t);
   }
+  const popover = typeof t.showPopover === 'function';
+  const cerrar = () => {
+    if (popover) { if (t.matches(':popover-open')) t.hidePopover(); }
+    else t.hidden = true;
+  };
+
   t.textContent = mensaje;
   t.className = error ? 'toast error' : 'toast';
-  t.hidden = false;
   clearTimeout(t._h);
-  t._h = setTimeout(() => (t.hidden = true), 3000);
+  if (popover) {
+    if (t.matches(':popover-open')) t.hidePopover();   // lo reabre por encima de lo último abierto
+    t.showPopover();
+  } else {
+    t.hidden = false;
+  }
+  t._h = setTimeout(cerrar, 3000);
 }
 
 // Fecha "2026-11-05" -> "5 nov"

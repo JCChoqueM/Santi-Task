@@ -1,0 +1,112 @@
+@use 'base/variables' as v;
+@use 'base/mixins' as m;
+
+.contenedor-md {
+  max-width: 80rem;
+  margin: 0 auto;
+}
+
+.filtros-tutor {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2rem;
+  align-items: flex-end;
+  margin-bottom: 2rem;
+
+  .campo { display: flex; flex-direction: column; gap: 0.6rem; }
+  label { font-weight: 700; font-size: 1.4rem; }
+  select {
+    padding: 0.8rem 1rem;
+    border: 1px solid v.$grisClaro;
+    border-radius: 0.6rem;
+    background: v.$blanco;
+    font-size: 1.4rem;
+  }
+}
+
+.check { display: flex; gap: 0.6rem; align-items: center; font-size: 1.4rem; }
+
+.lista-tareas {
+  display: grid;
+  gap: 2rem;
+  .tarea-card { margin-bottom: 0; }
+}
+.vacio { text-align: center; color: v.$gris; }
+
+.tarea-card,
+.tarjeta {
+  background: v.$blanco;
+  border-radius: 1rem;
+  padding: 2rem;
+  box-shadow: 0 0.2rem 0.8rem rgba(0, 0, 0, 0.08);
+  margin-bottom: 2rem;
+
+  header {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    h4 { margin: 0; }
+    .meta { margin: 0.4rem 0 0; color: v.$gris; font-size: 1.3rem; }
+  }
+  .desc { color: v.$grisOscuro; }
+  footer { display: flex; flex-wrap: wrap; gap: 1.5rem; margin-top: 1.5rem; }
+  &.vencida { border-left: 0.4rem solid v.$rojo; }
+}
+
+.aviso { border-left: 0.4rem solid v.$naranja; }
+.dashboard .nota { color: v.$gris; font-size: 1.3rem; }
+.dashboard .etiqueta {
+  margin: 1.5rem 0 0.5rem;
+  color: v.$gris;
+  font-size: 1.2rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.subtitulo { margin: 3rem 0 1rem; }
+.chip {
+  background: v.$grisClaro;
+  border-radius: 99px;
+  padding: 0.1rem 0.8rem;
+  font-size: 1.1rem;
+}
+.tutores {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  li {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.8rem;
+    align-items: center;
+    padding: 0.4rem 0;
+    font-size: 1.5rem;
+  }
+}
+.acciones-tarjeta { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 1rem; }
+
+// Botones de acción (los .boton de UpTask se conservan para formularios)
+.btn-prim {
+  @include m.boton(v.$indigo, inline-block);
+  margin-top: 0;
+  padding: 0.7rem 1.6rem;
+  border-radius: 0.6rem;
+  font-size: 1.4rem;
+}
+.btn-sec {
+  @include m.boton(v.$gris, inline-block);
+  margin-top: 0;
+  padding: 0.7rem 1.6rem;
+  border-radius: 0.6rem;
+  font-size: 1.4rem;
+}
+.btn-link {
+  background: none;
+  border: none;
+  color: v.$azul;
+  cursor: pointer;
+  padding: 0;
+  font-size: 1.4rem;
+  &:hover { text-decoration: underline; }
+  &.peligro { color: v.$rojo; }
+}

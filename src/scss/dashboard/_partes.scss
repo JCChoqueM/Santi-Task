@@ -1,0 +1,44 @@
+@use 'base/variables' as v;
+
+.partes { list-style: none; padding: 0; margin: 0; }
+
+.parte {
+  padding: 1rem 0;
+  border-bottom: 1px solid v.$grisClaro;
+
+  &:last-child { border-bottom: none; }
+
+  .parte-fila {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    align-items: center;
+    > span:first-child { overflow-wrap: anywhere; font-size: 1.5rem; }
+  }
+  .comentario { margin: 0.6rem 0 0; color: v.$grisOscuro; font-style: italic; }
+  .parte-acc {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    align-items: center;
+    margin-top: 0.8rem;
+    &:empty { display: none; }
+    .com {
+      flex: 1 1 20rem;
+      min-width: 0;
+      padding: 0.7rem 1rem;
+      border: 1px solid v.$grisClaro;
+      border-radius: 0.6rem;
+      font-size: 1.4rem;
+    }
+  }
+}
+
+// Lista dinámica de partes (nueva tarea / editar)
+.np-row {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  margin-bottom: 0.8rem;
+  .np-in { flex: 1; min-width: 0; }
+}

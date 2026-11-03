@@ -2,14 +2,14 @@
 
 <div class="contenedor-sm">
     <?php if (!$tutelados): ?>
-        <p class="vacio">Primero crea un tutelado en la pestaña <a href="/tutelados">Tutelados</a>.</p>
+        <p class="vacio">Primero crea un tutelado en la sección <a href="/tutelados">Tutelados</a>.</p>
     <?php else: ?>
     <form id="form-tarea" class="formulario" novalidate>
         <div class="campo">
             <label for="tutelado_id">Para</label>
             <select id="tutelado_id" name="tutelado_id" required>
                 <?php foreach ($tutelados as $al): ?>
-                    <option value="<?= (int) $al->id ?>"><?= s($al->nombre) ?><?= $al->curso ? ' · ' . s($al->curso) : '' ?></option>
+                    <option value="<?= (int) $al->id ?>"><?= s($al->nombre) ?> (<?= s($al->alias) ?>)<?= $al->curso ? ' · ' . s($al->curso) : '' ?></option>
                 <?php endforeach; ?>
             </select>
         </div>

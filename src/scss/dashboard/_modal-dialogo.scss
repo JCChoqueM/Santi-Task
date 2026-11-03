@@ -1,0 +1,34 @@
+@use 'base/variables' as v;
+
+// Modales con <dialog> (editar, duplicar, historial)
+.modal-dialogo {
+  border: none;
+  border-radius: 1rem;
+  padding: 2.5rem;
+  width: min(60rem, 92vw);
+  max-height: 90vh;
+  overflow-y: auto;
+
+  &::backdrop { background: rgba(0, 0, 0, 0.5); }
+
+  .acciones-modal {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 2rem;
+  }
+  .historial {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    li {
+      padding: 0.8rem 0;
+      border-bottom: 1px solid v.$grisClaro;
+      font-size: 1.5rem;
+      small { display: block; color: v.$gris; }
+    }
+  }
+}
+
+// Dentro de un modal el formulario no lleva el margen superior de la página
+.dashboard .modal-dialogo .formulario { margin-top: 0; }

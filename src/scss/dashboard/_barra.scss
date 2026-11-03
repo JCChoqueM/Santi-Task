@@ -2,6 +2,21 @@
 @use 'base/mixins' as m;
 @use 'sass:color';
 
+// Botón con icono SVG (menú móvil y cerrar menú)
+.icono-btn {
+  background: none;
+  border: none;
+  padding: 0.4rem;
+  cursor: pointer;
+  color: v.$blanco;
+  line-height: 0;
+  svg {
+    width: 2.8rem;
+    height: 2.8rem;
+    display: block;
+  }
+}
+
 .barra-mobile {
   background-color: v.$indigo;
   padding: 2rem 4rem;
@@ -14,14 +29,6 @@
   h1 {
     color: v.$blanco;
     margin: 0;
-  }
-  .menu {
-    img {
-      width: 0.8rem;
-      &:hover {
-        cursor: pointer;
-      }
-    }
   }
 }
 
@@ -44,6 +51,16 @@
   span {
     font-weight: 700;
     color: v.$indigo;
+  }
+  .rol {
+    margin-left: 0.8rem;
+    padding: 0.2rem 0.8rem;
+    border-radius: 99px;
+    background: v.$grisClaro;
+    color: v.$indigo;
+    font-size: 1.1rem;
+    font-weight: 700;
+    text-transform: uppercase;
   }
 
   .cerrar-sesion {

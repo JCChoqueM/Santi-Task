@@ -11,7 +11,7 @@
   }
   .principal {
     flex: 1;
-    overflow: scroll;
+    overflow-y: auto;
   }
   .contenido {
     padding: 2rem;
@@ -21,10 +21,49 @@
     }
   }
 
+  // Tipografía del panel: más compacta que la del login
+  h3 {
+    font-size: 2.2rem;
+    margin: 0 0 1.5rem;
+  }
+  h4 {
+    font-family: v.$fuente_headings;
+    font-weight: 700;
+    font-size: 1.8rem;
+  }
+  p {
+    font-size: 1.5rem;
+    line-height: 1.5;
+  }
+  .alerta {
+    font-size: 1.4rem;
+    text-transform: none;
+    padding: 1rem 1.5rem;
+  }
+
   .formulario {
-    input:not([type='submit']) {
+    margin-top: 2rem;
+    // En el panel la etiqueta va encima del campo
+    .campo {
+      flex-direction: column;
+      align-items: stretch;
+      label {
+        flex: none;
+        margin-bottom: 0.6rem;
+        font-weight: 700;
+        font-size: 1.4rem;
+      }
+      > input,
+      > textarea,
+      > select {
+        flex: none;
+        width: 100%;
+      }
+    }
+    input:not([type='submit']),
+    textarea,
+    select {
       background-color: v.$blanco;
-  
     }
     input[type='submit'] {
       @include m.boton(v.$indigo, v.$blanco);

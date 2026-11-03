@@ -1,0 +1,69 @@
+@use 'base/variables' as v;
+@use 'sass:color';
+
+// Insignias de estado de una parte
+.est {
+  display: inline-block;
+  padding: 0.2rem 1rem;
+  border-radius: 99px;
+  font-size: 1.2rem;
+  font-weight: 700;
+  white-space: nowrap;
+
+  &.est-pendiente { background: v.$grisClaro; color: v.$grisOscuro; }
+  &.est-hecha     { background: color.adjust(v.$naranja, $lightness: 35%); color: color.adjust(v.$naranja, $lightness: -25%); }
+  &.est-aprobada  { background: color.adjust(v.$verde, $lightness: 60%); color: v.$verde; }
+}
+
+.badge-done { color: v.$verde; font-weight: 700; white-space: nowrap; }
+.prog       { color: v.$gris; font-size: 1.3rem; white-space: nowrap; }
+.venc       { color: v.$rojo; font-weight: 700; font-size: 1.2rem; }
+
+// Barra segmentada: una celda por parte
+.seg {
+  display: flex;
+  gap: 0.3rem;
+  margin: 1rem 0;
+
+  i {
+    flex: 1;
+    height: 0.6rem;
+    border-radius: 99px;
+    background: v.$grisClaro;
+    &.s-hecha    { background: v.$naranja; }
+    &.s-aprobada { background: v.$verde; }
+  }
+}
+
+// La parte que el tutor devolvió con correcciones
+.aviso-devuelta {
+  margin: 0.8rem 0;
+  padding: 1rem 1.5rem;
+  border-left: 0.4rem solid v.$rojo;
+  background: color.adjust(v.$rojo, $lightness: 60%);
+  p { margin: 0.4rem 0 0; }
+}
+
+// Aviso temporal. Es un popover manual (ver toast() en comun.js):
+// se restablecen los estilos por defecto de [popover] y se coloca abajo al centro.
+.toast {
+  position: fixed;
+  inset: auto;
+  left: 50%;
+  bottom: 2rem;
+  margin: 0;
+  transform: translateX(-50%);
+  max-width: min(50rem, 90vw);
+  padding: 1rem 2rem;
+  border: none;
+  border-radius: 0.6rem;
+  background: v.$negro;
+  color: v.$blanco;
+  font-size: 1.5rem;
+  font-weight: 700;
+  text-align: center;
+  box-shadow: 0 0.6rem 2.4rem rgba(0, 0, 0, 0.3);
+  z-index: 50;
+  pointer-events: none;
+  &.error { background: v.$rojo; }
+}

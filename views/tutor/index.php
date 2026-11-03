@@ -7,7 +7,7 @@
             <select id="f-tutelado">
                 <option value="">Todos</option>
                 <?php foreach ($tutelados as $al): ?>
-                    <option value="<?= (int) $al->id ?>"><?= s($al->nombre) ?><?= $al->curso ? ' · ' . s($al->curso) : '' ?></option>
+                    <option value="<?= (int) $al->id ?>"><?= s($al->nombre) ?> (<?= s($al->alias) ?>)<?= $al->curso ? ' · ' . s($al->curso) : '' ?></option>
                 <?php endforeach; ?>
             </select>
         </div>
@@ -47,7 +47,7 @@
         <p>Elige a quién se copia:</p>
         <?php foreach ($tutelados as $al): ?>
             <label class="check">
-                <input type="checkbox" name="destinos[]" value="<?= (int) $al->id ?>"> <?= s($al->nombre) ?>
+                <input type="checkbox" name="destinos[]" value="<?= (int) $al->id ?>"> <?= s($al->nombre) ?> (<?= s($al->alias) ?>)<?= $al->curso ? ' · ' . s($al->curso) : '' ?>
             </label>
         <?php endforeach; ?>
         <div class="acciones-modal">

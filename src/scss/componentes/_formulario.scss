@@ -12,12 +12,15 @@
     label {
       flex: 0 0 10rem;
     }
-    input {
+    input,
+    textarea,
+    select {
       flex: 1;
       padding: 1rem;
       border: none;
       border-radius: 1rem;
       background-color: color.adjust(v.$gris, $lightness: 40%);
+      font-size: 1.5rem;
     }
   }
 }
