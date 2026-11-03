@@ -1232,7 +1232,7 @@ Estas funciones se dieron por probadas en su paso, pero ninguna prueba P las reg
 | Funcionales    | Pruebas por área con `curl` y dos navegadores (uno por rol) y el recorrido completo de P-34                                    | Hecho, con las lagunas de 7.1                             |
 | Seguridad      | P-01 a P-20, P-22, P-27 a P-30, P-32, P-33 y P-35: `curl` con sesión y token CSRF reales, y revisión del código                | Hecho                                                     |
 | Usabilidad     | El recorrido de P-34 lo hizo el autor; falta que otra persona lo haga solo con `README.md`                                     | Pendiente (Versión 1.0)                                   |
-| Compatibilidad | Menú móvil a 375 px en modo claro y oscuro (P-21); consola de DevTools sin avisos de CSP en producción (P-31)                  | Parcial: no consta con qué navegadores                    |
+| Compatibilidad | Pruebas manuales en Brave (motor Chromium) y Mozilla Firefox (Gecko); menú móvil a 375 px en modo claro y oscuro (P-21); consola de DevTools sin avisos de CSP en producción (P-31) | Parcial: sin Safari (WebKit) y sin registro de qué prueba se hizo en cada navegador |
 | Automáticas    | No existen; todas las pruebas son manuales o con `curl`                                                                        | No hay                                                    |
 
 ## 7.3 Errores y limitaciones conocidos
