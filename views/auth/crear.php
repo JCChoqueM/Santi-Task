@@ -22,7 +22,7 @@
                     id="nombre"
                     placeholder="Tu Nombre"
                     name="nombre"
-                    value="<?php echo $usuario->nombre; ?>">
+                    value="<?= s($usuario->nombre) ?>">
             </div>
             <!-- !subBloque 1 fin - nombre[fin]-->
 
@@ -34,7 +34,7 @@
                     id="email"
                     placeholder="Tu Email"
                     name="email"
-                    value="<?php echo $usuario->email; ?>">
+                    value="<?= s($usuario->email) ?>">
             </div>
             <!-- !subBloque2 fin email - [fin]-->
 

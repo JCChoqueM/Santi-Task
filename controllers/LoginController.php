@@ -9,20 +9,30 @@ use MVC\Router;
 
 class LoginController
 {
+    /** Lee un campo de $_POST como texto; si llega un arreglo u otro tipo, devuelve ''. */
+    private static function texto(string $clave): string
+    {
+        $v = $_POST[$clave] ?? '';
+        return is_string($v) ? $v : '';
+    }
 
     public static function login(Router $router)
     {
         $alertas = [];
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             verificarCsrf();
-            $usuario = new Usuario($_POST);
+            // Solo correo/alias y password, y solo como texto
+            $usuario = new Usuario(['email' => self::texto('email'), 'password' => self::texto('password')]);
             $alertas = $usuario->validarLoginDual();
 
             if (empty($alertas)) {
-                $ident = trim($_POST['email']);
+                $ident = trim($usuario->email);
                 $intento = IntentoLogin::deClave($ident);
 
-                if ($intento->segundosRestantes() > 0) {
+                if (mb_strlen($ident) > 255) {
+                    // No cabe en intentos_login.clave (VARCHAR 255): no se registra el intento
+                    Usuario::setAlerta('error', 'Usuario o contraseña incorrectos');
+                } elseif ($intento->segundosRestantes() > 0) {
                     Usuario::setAlerta('error', 'Demasiados intentos. Espera ' . $intento->segundosRestantes() . ' segundos.');
                 } else {
                     // Con "@" es tutor (correo); si no, tutelado (alias)
@@ -34,7 +44,7 @@ class LoginController
                     $valido = $encontrado
                         && $encontrado->rol === $rolEsperado
                         && $encontrado->confirmado
-                        && password_verify($_POST['password'], $encontrado->password);
+                        && password_verify($usuario->password, $encontrado->password);
 
                     if ($valido) {
                         $intento->limpiar();
@@ -78,7 +88,11 @@ class LoginController
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             verificarCsrf();
-            $usuario->sincronizar($_POST);
+            // Solo estas cuatro entradas, y solo como texto (nada de sincronizar($_POST))
+            $usuario->nombre = trim(self::texto('nombre'));
+            $usuario->email = trim(self::texto('email'));
+            $usuario->password = self::texto('password');
+            $usuario->password2 = self::texto('password2');
             // El cliente no decide estos campos
             $usuario->id = null;
             $usuario->rol = 'tutor';
@@ -140,7 +154,7 @@ class LoginController
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             verificarCsrf();
-            $usuario = new Usuario($_POST);
+            $usuario = new Usuario(['email' => trim(self::texto('email'))]);
             $alertas = $usuario->validarEmail();
             if (empty($alertas)) {
                 //buscar el usuario
@@ -253,7 +267,7 @@ class LoginController
     public static function confirmar(Router $router)
     {
 
-        $token = isset($_GET['token']) ? s($_GET['token']) : '';
+        $token = (isset($_GET['token']) && is_string($_GET['token'])) ? s($_GET['token']) : '';
         // debuguear($token);
         if (!$token) {
             header('Location: /');

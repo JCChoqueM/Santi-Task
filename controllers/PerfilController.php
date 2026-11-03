@@ -7,6 +7,13 @@ use MVC\Router;
 
 class PerfilController
 {
+    /** Lee un campo de $_POST como texto; si llega un arreglo u otro tipo, devuelve ''. */
+    private static function texto(string $clave): string
+    {
+        $v = $_POST[$clave] ?? '';
+        return is_string($v) ? $v : '';
+    }
+
     public static function perfil(Router $router)
     {
         isAuth();
@@ -16,9 +23,9 @@ class PerfilController
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             verificarCsrf();
             // El tutelado solo puede cambiar su nombre; el alias no se edita
-            $usuario->nombre = trim($_POST['nombre'] ?? '');
+            $usuario->nombre = trim(self::texto('nombre'));
             if ($usuario->rol === 'tutor') {
-                $usuario->email = trim($_POST['email'] ?? '');
+                $usuario->email = trim(self::texto('email'));
             }
 
             $alertas = $usuario->rol === 'tutor'
@@ -26,6 +33,8 @@ class PerfilController
                 : (function () use ($usuario) {
                     if (!$usuario->nombre) {
                         Usuario::setAlerta('error', 'El Nombre es Obligatorio');
+                    } elseif (mb_strlen($usuario->nombre) > 100) {
+                        Usuario::setAlerta('error', 'El nombre es demasiado largo (máximo 100 caracteres)');
                     }
                     return Usuario::getAlertas();
                 })();
@@ -59,8 +68,8 @@ class PerfilController
             verificarCsrf();
             $usuario = Usuario::find((int) $_SESSION['id']);
             // Solo estas dos entradas; no se usa sincronizar($_POST) para no aceptar otros campos
-            $usuario->password_actual = $_POST['password_actual'] ?? '';
-            $usuario->password_nuevo = $_POST['password_nuevo'] ?? '';
+            $usuario->password_actual = self::texto('password_actual');
+            $usuario->password_nuevo = self::texto('password_nuevo');
             $alertas = $usuario->nuevo_password();
 
             if (empty($alertas)) {

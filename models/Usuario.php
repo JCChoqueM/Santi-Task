@@ -133,10 +133,14 @@ class Usuario extends ActiveRecord
     {
         if (!$this->nombre) {
             self::$alertas['error'][] = 'El Nombre es Obligatorio';
+        } elseif (mb_strlen($this->nombre) > 100) {
+            self::$alertas['error'][] = 'El nombre es demasiado largo (máximo 100 caracteres)';
         }
 
         if (!$this->email) {
             self::$alertas['error'][] = 'El Email es Obligatorio';
+        } elseif (!filter_var($this->email, FILTER_VALIDATE_EMAIL) || mb_strlen($this->email) > 255) {
+            self::$alertas['error'][] = 'Email no valido';
         }
 
         if (!$this->password) {
@@ -144,6 +148,9 @@ class Usuario extends ActiveRecord
         }
         if (strlen($this->password) < 6) {
             self::$alertas['error'][] = 'El Password debe contener al menos 6 caracteres';
+        }
+        if (strlen($this->password) > 72) {   // bcrypt solo usa los primeros 72 bytes
+            self::$alertas['error'][] = 'El Password no puede pasar de 72 caracteres';
         }
         if (!$this->password2) {
             self::$alertas['error'][] = 'El Password2 no puede ir vacio';
@@ -189,9 +196,13 @@ class Usuario extends ActiveRecord
     {
         if (!$this->nombre) {
             self::$alertas['error'][] = 'El Nombre es Obligatorio';
+        } elseif (mb_strlen($this->nombre) > 100) {
+            self::$alertas['error'][] = 'El nombre es demasiado largo (máximo 100 caracteres)';
         }
         if (!$this->email) {
             self::$alertas['error'][] = 'El Email es Obligatorio';
+        } elseif (!filter_var($this->email, FILTER_VALIDATE_EMAIL) || mb_strlen($this->email) > 255) {
+            self::$alertas['error'][] = 'Email no valido';
         }
         return self::$alertas;
     }
@@ -207,6 +218,9 @@ class Usuario extends ActiveRecord
         }
         if (strlen($this->password_nuevo) < 6) {
             self::$alertas['error'][] = 'El Password debe contener al menos 6 caracteres';
+        }
+        if (strlen($this->password_nuevo) > 72) {   // bcrypt solo usa los primeros 72 bytes
+            self::$alertas['error'][] = 'El Password no puede pasar de 72 caracteres';
         }
         return self::$alertas;
     }
@@ -230,7 +244,9 @@ class Usuario extends ActiveRecord
     /* section1 generar un token[inicio] */
     public function crearToken(): void
     {
-        $this->token = uniqid();  //tb se puede poner md5(uniqueid()); que genera 32 caracteres pero en bd esta configurado con 15 
+        // uniqid() se deriva de la hora y es adivinable; el token de confirmar/reestablecer debe ser aleatorio.
+        // usuarios.token es VARCHAR(255): caben los 32 caracteres.
+        $this->token = bin2hex(random_bytes(16));
     }
     /* !section1 fin - generar un token[fin] */
 }
