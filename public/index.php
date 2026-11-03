@@ -5,8 +5,10 @@ require_once __DIR__ . '/../includes/app.php';
 
 use Controllers\LoginController;
 use Controllers\TutorController;
+use Controllers\AlumnoController;
 use Controllers\PerfilController;
 use Controllers\TareaController;
+use Controllers\ParteController;
 use MVC\Router;
 
 $router = new Router();
@@ -37,6 +39,9 @@ $router->get('/dashboard', [TutorController::class, 'index']);
 $router->get('/crear-tarea', [TutorController::class, 'crear_tarea']);
 $router->get('/tutelados', [TutorController::class, 'tutelados']);
 
+// Zona del tutelado
+$router->get('/mis-tareas', [AlumnoController::class, 'index']);
+
 // Perfil (ambos roles)
 $router->get('/perfil', [PerfilController::class, 'perfil']);
 $router->post('/perfil', [PerfilController::class, 'perfil']);
@@ -49,6 +54,12 @@ $router->post('/api/tarea', [TareaController::class, 'crear']);
 $router->post('/api/tarea/actualizar', [TareaController::class, 'actualizar']);
 $router->post('/api/tarea/eliminar', [TareaController::class, 'eliminar']);
 $router->post('/api/tarea/duplicar', [TareaController::class, 'duplicar']);
+$router->get('/api/historial', [TareaController::class, 'historial']);
+
+// API de partes
+$router->post('/api/parte', [ParteController::class, 'crear']);
+$router->post('/api/parte/hecha', [ParteController::class, 'marcar_hecha']);
+$router->post('/api/parte/revisar', [ParteController::class, 'revisar']);
 
 // Comprueba y valida las rutas, que existan y les asigna las funciones del Controlador
 $router->comprobarRutas();
