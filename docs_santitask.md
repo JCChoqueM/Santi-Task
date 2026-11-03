@@ -1248,10 +1248,11 @@ Método: peticiones `curl` con sesión y token CSRF reales, y dos navegadores (u
 | P-20 | Textos peligrosos  | Modales Historial y Duplicar, y comentario devuelto                                                          | Texto literal; sin errores                       | Pasa      |
 | P-21 | Interfaz           | Menú móvil a 375 px en modo claro y oscuro                                                                   | Sin fallos visibles                              | Pasa      |
 | P-22 | Código             | `grep` de `new X($_POST)` y `sincronizar($_POST)` en controllers, models, includes, classes e index          | Ninguna llamada real                             | Pasa (solo 3 comentarios) |
-| P-23 | Cuenta             | Registro de un tutor nuevo con correo de confirmación                                                        | Correo recibido y cuenta confirmable             | Pendiente (Mailtrap sin configurar) |
-| P-24 | Cuenta             | Tokens nuevos de confirmar y recuperar                                                                       | 32 caracteres hexadecimales                      | Pendiente (depende de P-23) |
+| P-23 | Cuenta             | Registro de un tutor nuevo con correo (Ethereal): correo recibido, enlace con el token de la base, confirmación con el enlace, token de un solo uso, token inventado, ausente o como arreglo | Cuenta con `confirmado=1` y token NULL; reutilizar o inventar el token da «Token no valido»; sin token o con arreglo redirige a `/` | Pasa |
+| P-24 | Cuenta             | Tokens nuevos de confirmar y recuperar                                                                       | 32 caracteres hexadecimales                      | Pasa      |
+| P-25 | Cuenta             | Recuperar contraseña: correo «Reestablecer tu Password», correo como arreglo, password corto o como arreglo, password nuevo, token reutilizado, login con la contraseña vieja y la nueva | Sin errores de PHP; token intacto hasta un password válido; token NULL después; la vieja falla y la nueva entra a `/dashboard` | Pasa |
 
-Tras P-17 la tarea de prueba se eliminó con `DELETE`; los contadores volvieron a tareas 3, partes 6, usuarios 6 e historial 7.
+Tras P-17 la tarea de prueba se eliminó con `DELETE`; los contadores volvieron a tareas 3, partes 6, usuarios 6 e historial 7. P-23 a P-25 se hicieron con una cuenta desechable (`carla.p23@test.com`) y un buzón de pruebas Ethereal; la cuenta y sus intentos de login se borraron después y los contadores quedaron iguales.
 
 ## Decisiones de diseño aceptadas
 
@@ -1265,6 +1266,9 @@ Tras P-17 la tarea de prueba se eliminó con `DELETE`; los contadores volvieron 
 - Desactivar `display_errors` en producción (hoy las excepciones muestran rutas internas con HTTP 200).
 - `classes/Email.php`: enviar al correo del usuario (hoy es fijo) y escapar `$nombre` en el HTML del correo.
 - Caducidad de los tokens de confirmar y recuperar.
+- `LoginController::crear` redirige a `/mensaje` aunque el correo no se envíe (comprobado: con credenciales SMTP vacías el usuario se creó y nunca llegó el correo). Comprobar el resultado de `send()` y avisar.
+- El envío SMTP es síncrono: registrar y recuperar contraseña tardan de 3 a 5 segundos.
+- Tras editar `.env`, reiniciar `claudetask_php`: el contenedor llegó a ver una copia antigua del archivo (Mailtrap con usuario vacío) hasta reiniciarlo.
 - Usuario de base de datos propio en lugar de `root`; `.env` fuera del repositorio; `ENVIRONMENT=production` y `npm run prod`; respaldo con `mysqldump`.
 
 ---
