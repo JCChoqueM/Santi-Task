@@ -1,4 +1,4 @@
-<?php include_once __DIR__ . '/header-dashboard.php' ?>
+<?php include_once __DIR__ . '/../templates/header-panel.php' ?>
 <div class="contenedor-sm">
    <?php include_once __DIR__ . '/../templates/alertas.php'; ?>
    <a
@@ -44,4 +44,4 @@
    </form>
 
 </div>
-<?php include_once __DIR__ . '/footer-dashboard.php' ?>
+<?php include_once __DIR__ . '/../templates/footer-panel.php' ?>

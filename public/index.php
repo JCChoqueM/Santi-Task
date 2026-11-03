@@ -3,54 +3,52 @@
 require_once __DIR__ . '/../includes/app.php';
 
 
-use Controllers\DashboardController;
 use Controllers\LoginController;
-
+use Controllers\TutorController;
+use Controllers\PerfilController;
 use Controllers\TareaController;
 use MVC\Router;
 
 $router = new Router();
 
-//login
+// Acceso
 $router->get('/', [LoginController::class, 'login']);
 $router->post('/', [LoginController::class, 'login']);
 $router->get('/logout', [LoginController::class, 'logout']);
 
-//Crear Cuenta
+// Crear cuenta (tutores)
 $router->get('/crear', [LoginController::class, 'crear']);
 $router->post('/crear', [LoginController::class, 'crear']);
 
-//Formulario de olvide mi password
+// Olvidé mi password
 $router->get('/olvide', [LoginController::class, 'olvide']);
 $router->post('/olvide', [LoginController::class, 'olvide']);
 
-
-//Colocar el nuevo password
+// Nuevo password
 $router->get('/reestablecer', [LoginController::class, 'reestablecer']);
 $router->post('/reestablecer', [LoginController::class, 'reestablecer']);
 
-//Confirmar Cuenta
+// Confirmar cuenta
 $router->get('/mensaje', [LoginController::class, 'mensaje']);
 $router->get('/confirmar', [LoginController::class, 'confirmar']);
 
+// Zona del tutor
+$router->get('/dashboard', [TutorController::class, 'index']);
+$router->get('/crear-tarea', [TutorController::class, 'crear_tarea']);
+$router->get('/tutelados', [TutorController::class, 'tutelados']);
 
-//ZONA DE PROYECTOS
-$router->get('/dashboard', [DashboardController::class, 'index']);
-$router->get('/crear-proyecto', [DashboardController::class, 'crear_proyecto']);
-$router->post('/crear-proyecto', [DashboardController::class, 'crear_proyecto']);
-$router->get('/proyecto', [DashboardController::class, 'proyecto']);
-$router->get('/perfil', [DashboardController::class, 'perfil']);
-$router->post('/perfil', [DashboardController::class, 'perfil']);
-$router->get('/cambiar-password', [DashboardController::class, 'cambiar_password']);
-$router->post('/cambiar-password', [DashboardController::class, 'cambiar_password']);
+// Perfil (ambos roles)
+$router->get('/perfil', [PerfilController::class, 'perfil']);
+$router->post('/perfil', [PerfilController::class, 'perfil']);
+$router->get('/cambiar-password', [PerfilController::class, 'cambiar_password']);
+$router->post('/cambiar-password', [PerfilController::class, 'cambiar_password']);
 
-
-//API para las tareas
+// API de tareas
 $router->get('/api/tareas', [TareaController::class, 'index']);
 $router->post('/api/tarea', [TareaController::class, 'crear']);
 $router->post('/api/tarea/actualizar', [TareaController::class, 'actualizar']);
 $router->post('/api/tarea/eliminar', [TareaController::class, 'eliminar']);
-
+$router->post('/api/tarea/duplicar', [TareaController::class, 'duplicar']);
 
 // Comprueba y valida las rutas, que existan y les asigna las funciones del Controlador
 $router->comprobarRutas();

@@ -11,7 +11,7 @@ function debuguear($variable): string
 // Escapa / Sanitizar el HTML
 function s($html): string
 {
-    return htmlspecialchars($html);
+    return htmlspecialchars((string) $html);
 }
 
 // Función que revisa que el usuario este autenticado
