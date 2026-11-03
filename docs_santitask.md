@@ -1176,86 +1176,127 @@ uptask/
 
 ## 7.1 Plan de pruebas
 
-Las pruebas se diseñaron a partir del código. La columna «Resultado obtenido» queda vacía para llenarla al ejecutarlas. Las pruebas de seguridad describen el **comportamiento deseado**; si fallan, confirman el error indicado.
+Las pruebas de ClaudeTask son las **P-01 a P-35** de la sección 13, con su método, su fecha (2026-11-03) y su resultado. Los CP-01 a CP-24 que tenía esta sección eran de UpTask (proyectos, `tareas.js`, `/proyecto?id=`): no se ejecutaron y se retiraron. La relación de cada requisito con sus pruebas está en la sección 11.
 
-| ID    | Req.   | Caso                            | Pasos                                                                                                | Resultado esperado                                              | Resultado obtenido |
-| ----- | ------ | ------------------------------- | ---------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- | ------------------ |
-| CP-01 | RF-01  | Registro válido                 | Completar `/crear` con datos correctos                                                               | Redirige a `/mensaje` y se crea el usuario con `confirmado = 0` |                    |
-| CP-02 | RF-01  | Contraseñas distintas           | Escribir passwords diferentes                                                                        | Alerta «Los Passwords no son iguales»                           |                    |
-| CP-03 | RF-01  | Email repetido                  | Registrar un email existente                                                                         | Alerta «El usuario ya esta registrado»                          |                    |
-| CP-04 | RF-02  | Confirmar con token válido      | Abrir el enlace del correo                                                                           | Cuenta confirmada y token vacío                                 |                    |
-| CP-05 | RF-02  | Confirmar con token falso       | Abrir `/confirmar?token=xxxx`                                                                        | Alerta «Token no valido»                                        |                    |
-| CP-06 | RF-03  | Login con cuenta sin confirmar  | Iniciar sesión                                                                                       | Alerta de usuario no confirmado                                 |                    |
-| CP-07 | RF-03  | Login correcto                  | Iniciar sesión con cuenta confirmada                                                                 | Redirige a `/dashboard`                                         |                    |
-| CP-08 | RF-03  | Password incorrecto             | Escribir una clave errónea                                                                           | Alerta «Password incorrecto»                                    |                    |
-| CP-09 | RF-05  | Recuperar contraseña            | Solicitar en `/olvide`, abrir enlace y guardar nueva clave                                           | Se puede iniciar sesión con la nueva clave                      |                    |
-| CP-10 | RF-07  | Crear proyecto sin nombre       | Enviar el formulario vacío                                                                           | Alerta «El Nombre del Proyecto es Obligatorio»                  |                    |
-| CP-11 | RF-07  | Crear proyecto válido           | Escribir un nombre                                                                                   | Redirige a `/proyecto?id=...`                                   |                    |
-| CP-12 | RF-08  | Abrir proyecto ajeno            | Con el usuario B abrir la URL del proyecto de A                                                      | Redirige a `/dashboard` y no muestra datos de A                 |                    |
-| CP-13 | RF-09  | Perfil con email de otra cuenta | Cambiar el email a uno existente                                                                     | Alerta «Email no válido…»                                       |                    |
-| CP-14 | RF-10  | Cambiar contraseña              | Contraseña actual correcta y nueva de 6 o más                                                        | «Password Actualizado Correctamente»                            |                    |
-| CP-15 | RF-12  | Crear tarea                     | Clic en Nueva Tarea y escribir un nombre                                                             | La tarea aparece como Pendiente                                 |                    |
-| CP-16 | RF-14  | Cambiar estado                  | Doble clic en el botón de estado                                                                     | Cambia a Completa y se guarda al recargar                       |                    |
-| CP-17 | RF-15  | Eliminar tarea                  | Doble clic en Eliminar y confirmar                                                                   | La tarea desaparece y no está al recargar                       |                    |
-| CP-18 | RF-16  | Filtro tras cambiar estado      | Filtrar Pendientes, completar una y observar                                                         | La lista debe actualizarse (ver ERR-14)                         |                    |
-| CP-19 | RNF-02 | Dashboard sin sesión            | Abrir `/dashboard` sin iniciar sesión                                                                | Redirige a `/` sin mostrar contenido                            |                    |
-| CP-20 | RNF-02 | Editar tarea ajena              | Con el usuario B enviar `POST /api/tarea/actualizar` con su `proyectoId` y el `id` de una tarea de A | La petición debe rechazarse (ver ERR-03)                        |                    |
-| CP-21 | RNF-03 | Inyección SQL                   | Abrir `/proyecto?id='`                                                                               | No debe producir error de SQL (ver ERR-01)                      |                    |
-| CP-22 | RNF-03 | Nombre con HTML                 | Crear un proyecto llamado `<b>x</b>`                                                                 | Se muestra como texto, sin negrita (ver ERR-05)                 |                    |
-| CP-23 | RNF-02 | Cambiar `id` en el perfil       | Enviar `POST /perfil` con `id` de otra cuenta                                                        | No debe modificar otra cuenta (ver ERR-02)                      |                    |
-| CP-24 | RF-02  | Registro con `confirmado=1`     | Enviar `POST /crear` con el campo extra `confirmado=1`                                               | La cuenta debe quedar sin confirmar (ver ERR-02)                |                    |
+**Resultado:** las 35 pasan. P-14, P-15 y P-16 fallaron, se corrigieron y se repitieron; P-35 mostró el fallo con el guion antes del cambio. P-33 pasó tras reiniciar el contenedor. En P-26 y P-34 falló el procedimiento de prueba, no el código. P-31 consta «según lo indicado por el usuario», sin resultado por acción.
+
+**Cobertura por área**
+
+| Área                      | Pruebas                       | Qué comprueban                                                                                                     |
+| ------------------------- | ----------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| Vínculo                   | P-01 a P-06                   | Un tutor sin vínculo no aprueba, devuelve, añade partes, duplica ni ve el historial o las tareas de un tutelado ajeno |
+| CSRF                      | P-07                          | 10 endpoints POST con token ausente, vacío y falso (30 peticiones): 403 y datos intactos                           |
+| Roles                     | P-08 a P-11                   | Un tutelado no revisa, no crea, no vincula ni abre páginas de tutor; `/api/tareas` no incluye tareas de otros      |
+| Sesión                    | P-12, P-13                    | Rutas privadas sin sesión redirigen a `/`; tras el logout la cookie anterior no entra                              |
+| Entradas                  | P-14, P-15                    | Títulos largos, arreglos en lugar de texto y fechas inválidas dan error controlado                                 |
+| Salida y textos peligrosos | P-16 a P-20                  | HTML, `<script>`, comillas e inyección SQL se guardan y se muestran como texto literal                             |
+| Interfaz                  | P-21                          | Menú móvil a 375 px en modo claro y oscuro                                                                         |
+| Código                    | P-22                          | Ninguna llamada real a `new X($_POST)` ni a `sincronizar($_POST)`                                                  |
+| Cuenta y tokens           | P-23 a P-26, P-35             | Registro, confirmación, recuperación, caducidad y uso único de los tokens                                          |
+| Base de datos e instalación | P-27, P-28, P-34            | Usuario de base con solo `SELECT`, `INSERT`, `UPDATE` y `DELETE`; instalación desde cero y ciclo completo          |
+| Cabeceras y producción    | P-29 a P-31, P-33             | CSP por entorno con nonce, cookie de sesión, sin `.map`, `/build/` sin listado, manifest de Vite no público        |
+| Respaldo                  | P-32                          | Respaldo y restauración conservan los datos y el hash de las contraseñas                                           |
+
+**Equivalencias con los CP retirados**
+
+| CP de UpTask              | Prueba actual                                                   |
+| ------------------------- | --------------------------------------------------------------- |
+| CP-01, CP-04, CP-05       | P-23 (registro, confirmación, token inventado)                  |
+| CP-07, CP-08              | P-27 (login correcto y con clave errónea)                       |
+| CP-09                     | P-25 y P-26 (recuperar contraseña)                              |
+| CP-12, CP-20              | P-01 a P-06 (permiso por vínculo, en lugar de por proyecto)     |
+| CP-19                     | P-12 (rutas privadas sin sesión)                                |
+| CP-21, CP-22              | P-17 (texto peligroso y SQL en títulos y partes)                |
+| CP-23, CP-24              | P-22 (revisión del código; no se repitió como petición)         |
+| Resto                     | Sin equivalente: eran de proyectos, perfil o filtros de UpTask  |
+
+**Requisitos sin prueba numerada**
+
+Estas funciones se dieron por probadas en su paso, pero ninguna prueba P las registra. Son las candidatas a P-36 en adelante.
+
+| Requisito | Qué falta registrar                                                                                               |
+| --------- | ----------------------------------------------------------------------------------------------------------------- |
+| RF-03     | Bloqueo tras 5 intentos fallidos y desbloqueo a los 30 s; login de una cuenta sin confirmar                       |
+| RF-06     | Crear un tutelado solo consta dentro del recorrido de P-34 y como rechazo en P-08                                  |
+| RF-07     | Restablecer la contraseña de un tutelado                                                                          |
+| RF-08     | Desvincular, y que solo el responsable quite a otros tutores                                                      |
+| RF-11     | Duplicar una tarea con éxito (P-04 cubre el rechazo y P-20 el modal)                                              |
+| RF-13     | Filtros por tutelado y «solo por revisar»; marca de tarea vencida                                                 |
+| RF-17     | Editar el perfil y cambiar la contraseña                                                                          |
+| RNF-13    | No hay prueba: se comprueba leyendo el código                                                                     |
 
 ## 7.2 Tipos de prueba
 
-| Tipo           | Método                                                  | Estado      |
-| -------------- | ------------------------------------------------------- | ----------- |
-| Funcionales    | CP-01 a CP-18 a mano                                    | [Completar] |
-| Seguridad      | CP-19 a CP-24 con el navegador y herramientas como curl | [Completar] |
-| Usabilidad     | Probar con 2 o 3 usuarios                               | [Completar] |
-| Compatibilidad | Chrome, Firefox, móvil                                  | [Completar] |
-| Automáticas    | No se encontraron en los archivos recibidos             | Pendiente   |
+| Tipo           | Método                                                                                                                         | Estado                                                    |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------- |
+| Funcionales    | Pruebas por área con `curl` y dos navegadores (uno por rol) y el recorrido completo de P-34                                    | Hecho, con las lagunas de 7.1                             |
+| Seguridad      | P-01 a P-20, P-22, P-27 a P-30, P-32, P-33 y P-35: `curl` con sesión y token CSRF reales, y revisión del código                | Hecho                                                     |
+| Usabilidad     | El recorrido de P-34 lo hizo el autor; falta que otra persona lo haga solo con `README.md`                                     | Pendiente (Versión 1.0)                                   |
+| Compatibilidad | Menú móvil a 375 px en modo claro y oscuro (P-21); consola de DevTools sin avisos de CSP en producción (P-31)                  | Parcial: no consta con qué navegadores                    |
+| Automáticas    | No existen; todas las pruebas son manuales o con `curl`                                                                        | No hay                                                    |
 
 ## 7.3 Errores y limitaciones conocidos
 
-Hallazgos obtenidos al leer el código. Se recomienda confirmarlos con las pruebas de la sección 7.1.
+Los ERR-01 a ERR-20 se redactaron al leer el código de UpTask, la base de ClaudeTask. Su estado se revisó el 2026-11-03 contra el código actual y las pruebas P-01 a P-35. La columna «Cierre» da el commit que lo corrigió y la prueba que lo respalda; donde no hay prueba, dice cómo se verificó.
 
-| ID     | Descripción                                                                                                                                                                                                                                                                                                      | Gravedad | Dónde                                                              |
-| ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ------------------------------------------------------------------ |
-| ERR-01 | **Inyección SQL:** `find`, `get`, `where` y `belongsTo` insertan el valor en la consulta sin escaparlo. Se llaman con datos del usuario, por ejemplo `Proyecto::where('url', $_GET['id'])` y `Proyecto::where('url', $_POST['proyectoId'])`                                                                      | Alta     | `ActiveRecord.php`, `DashboardController`, `TareaController`       |
-| ERR-02 | **Asignación masiva:** `sincronizar($_POST)` copia cualquier campo enviado a propiedades como `id`, `password`, `token` o `confirmado`. En `perfil`, enviar otro `id` haría que `guardar()` actualice otra cuenta; en `crear`, enviar `confirmado=1` omitiría la confirmación por correo                         | Alta     | `Usuario`, `DashboardController::perfil`, `LoginController::crear` |
-| ERR-03 | **Acceso a tareas ajenas:** `actualizar` y `eliminar` comprueban que el proyecto (por url) sea del usuario, pero no que la tarea con el `id` enviado pertenezca a ese proyecto. En `actualizar` incluso se reasigna la tarea al proyecto del atacante                                                            | Alta     | `TareaController.php`                                              |
-| ERR-04 | **Falta `exit` tras `header('Location: ...')`:** el código sigue ejecutándose en `isAuth()`, `DashboardController::proyecto`, `TareaController::index` y otros. Puede mostrar contenido a quien debía ser redirigido (por ejemplo, el JSON de tareas de un proyecto ajeno si se conoce su url) o generar errores | Alta     | `funciones.php`, controladores                                     |
-| ERR-05 | **XSS:** se imprimen sin escapar el nombre del proyecto (`$proyecto->proyecto`, `$titulo`), `$usuario->nombre` y `email` en los `value`, `$_SESSION['nombre']` y los mensajes de alerta. En `tareas.js`, el modal de edición inserta `tarea.nombre` con `innerHTML`. La función `s()` existe pero casi no se usa | Alta     | `views/`, `tareas.js`                                              |
-| ERR-06 | **Sin protección CSRF** en formularios ni en las rutas POST de la API                                                                                                                                                                                                                                            | Media    | Global                                                             |
-| ERR-07 | Tokens con `uniqid()` (predecible) y sin caducidad, usados para confirmar cuenta y recuperar contraseña                                                                                                                                                                                                          | Alta     | `Usuario::crearToken`                                              |
-| ERR-08 | **Correo con destinatario fijo:** `addAddress('cuentas@uptask.com')`; el usuario real no recibe el mensaje (sirve solo con un buzón de pruebas)                                                                                                                                                                  | Alta     | `Email.php`                                                        |
-| ERR-09 | Sesión: no se llama a `session_regenerate_id()` al iniciar sesión; `logout` vacía `$_SESSION` pero no usa `session_destroy()`; no hay ajustes de cookie                                                                                                                                                          | Media    | `LoginController`                                                  |
-| ERR-10 | Con token inválido y un POST manual en `reestablecer` se produce un error fatal (`$usuario` vacío)                                                                                                                                                                                                               | Baja     | `LoginController::reestablecer`                                    |
-| ERR-11 | El servidor no valida el nombre de la tarea (acepta vacío o muy largo); solo se valida en el cliente                                                                                                                                                                                                             | Media    | `TareaController::crear`                                           |
-| ERR-12 | El `INSERT` de `ActiveRecord::crear` deja espacios dentro de las comillas (`VALUES (' ... ')`), que podrían guardarse al inicio del primer valor y al final del último. Verificar en la base de datos                                                                                                            | Baja     | `ActiveRecord.php`                                                 |
-| ERR-13 | Los mensajes distintos de login y olvide permiten saber si un email está registrado                                                                                                                                                                                                                              | Baja     | `LoginController`                                                  |
-| ERR-14 | Los filtros del cliente no se recalculan tras agregar, cambiar estado o eliminar: la lista filtrada puede quedar desactualizada                                                                                                                                                                                  | Media    | `tareas.js`                                                        |
-| ERR-15 | La respuesta de error de `actualizar` no trae la clave `respuesta`, y el cliente lee `resultado.respuesta.tipo`, lo que lanza una excepción. Además, SweetAlert muestra el mismo texto como título y cuerpo                                                                                                      | Baja     | `TareaController`, `tareas.js`                                     |
-| ERR-16 | `docker-compose.yml`: contraseña root `1234` en claro; se monta todo el proyecto (incluido `.env`) dentro del contenedor MySQL; `uptask.sql` queda en la subcarpeta `host/`, por lo que MySQL normalmente no lo importa solo (verificar)                                                                         | Media    | `docker-compose.yml`                                               |
-| ERR-17 | No hay `.env.example` ni README; las variables solo se deducen del código                                                                                                                                                                                                                                        | Baja     | Raíz                                                               |
-| ERR-18 | Marca inconsistente (UpTask, Uptask, SantiTask); el texto accidental `Sopilote22` de `nombre-sitio.php` ya se quitó (`941e8d1`); `<html lang="en">` con contenido en español (ya es `es` en `layout.php`); `author` de `package.json` ya es el autor del proyecto                                                                                      | Baja     | `views/`, `package.json`                                           |
-| ERR-19 | La CSP de Apache está pensada para desarrollo (`unsafe-inline`, `unsafe-eval`, `localhost:5173`)                                                                                                                                                                                                                 | Media    | `docker/apache.conf`                                               |
-| ERR-20 | Las rutas inexistentes muestran texto plano, y se redirige a `/404`, que no existe                                                                                                                                                                                                                               | Baja     | `Router.php`, `TareaController`                                    |
+**Resumen:** 15 resueltos, 3 parciales (ERR-09, ERR-13 y ERR-18) y 2 obsoletos por la reescritura del cliente (ERR-14 y ERR-15).
+
+| ID     | Hallazgo en UpTask                                                                          | Gravedad | Estado   | Cierre                                                                                                                                                                                                                                                                  |
+| ------ | ------------------------------------------------------------------------------------------- | -------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ERR-01 | Inyección SQL: `find`, `get`, `where` y `belongsTo` insertaban datos del usuario sin escapar | Alta     | Resuelto | `c1b2931`. `find` convierte a entero; `where` y `belongsTo` escapan el valor y aceptan solo columnas con letras, números y guion bajo. P-17 (`' OR 1=1 --` en partes: la consulta no se altera). Residuo: `get($limite)` no escapa, pero ningún código lo llama |
+| ERR-02 | Asignación masiva: `sincronizar($_POST)` permitía fijar `id`, `confirmado` y otros campos     | Alta     | Resuelto | `d9850e0`, `1da09e5` (crear) y `98a7151` (reestablecer); el commit de cada baja se atribuye por su mensaje. Comprobación: P-22 (ninguna llamada real a `new X($_POST)` ni a `sincronizar($_POST)`)                                                                      |
+| ERR-03 | Acceso a tareas ajenas: no se comprobaba que la tarea perteneciera al usuario               | Alta     | Resuelto | `d9850e0` (Paso 4): el permiso se decide por el vínculo tutor-tutelado (`Vinculo::existe`). P-01 a P-06 y P-09                                                                                                                                                          |
+| ERR-04 | Sin `exit` tras `header('Location: ...')`                                                    | Alta     | Resuelto | `c1b2931`. Revisión del código (2026-11-03): las 8 redirecciones de controllers, includes, classes y `public/index.php` van seguidas de `exit`. P-12                                                                                                                      |
+| ERR-05 | XSS: salida sin escapar en vistas y en `innerHTML`                                           | Alta     | Resuelto | `d9850e0` (`esc()` en el cliente nuevo, `textContent` donde basta) y `1da09e5` (`crear.php`). P-16 a P-20; P-30 (CSP estricta en producción)                                                                                                                             |
+| ERR-06 | Sin protección CSRF                                                                          | Media    | Resuelto | `c1b2931`. P-07: 30 de 30 peticiones rechazadas con 403                                                                                                                                                                                                                 |
+| ERR-07 | Tokens con `uniqid()` y sin caducidad                                                        | Alta     | Resuelto | `1da09e5` (32 caracteres hexadecimales aleatorios) y `c1a2919` (la recuperación caduca en 1 hora; la confirmación no). P-24, P-26, P-35                                                                                                                                  |
+| ERR-08 | Correo con destinatario fijo `cuentas@uptask.com`                                            | Alta     | Resuelto | `c978a1f`: se envía al correo del usuario y el fallo de envío se controla. P-23, P-25                                                                                                                                                                                   |
+| ERR-09 | Sesión sin regenerar el id, sin destruirla y sin ajustes de cookie                           | Media    | Parcial  | `c1b2931` (`session_regenerate_id(true)` al iniciar sesión) y `7bfa426` (cookie `HttpOnly` y `SameSite=Lax`). `logout` solo vacía `$_SESSION`: aceptado (LIM-02). P-13, P-29                                                                                            |
+| ERR-10 | Error fatal en `reestablecer` con token inválido y POST manual                               | Baja     | Resuelto | `98a7151`: sin usuario válido no se procesa el POST. P-25, P-26                                                                                                                                                                                                         |
+| ERR-11 | El servidor no validaba el nombre de la tarea                                                | Media    | Resuelto | `c3401ed` (entradas solo texto, límites de largo, fecha válida). P-14                                                                                                                                                                                                    |
+| ERR-12 | `INSERT` con espacios dentro de las comillas                                                 | Baja     | Resuelto | `c1b2931` (`literal()` y NULL real). Verificado leyendo el código, no en la base                                                                                                                                                                                         |
+| ERR-13 | Mensajes distintos que revelan si un correo está registrado                                  | Baja     | Parcial  | `044f268`: el login da un solo mensaje («Usuario o contraseña incorrectos»). `olvide`, `crear` y `vincular` siguen revelándolo: aceptado (LIM-01)                                                                                                                        |
+| ERR-14 | Filtros del cliente desactualizados tras cambiar datos                                       | Media    | Obsoleto | El cliente se reescribió en el Paso 4: `tareas.js` ya no existe y los filtros del panel (`tutor.js`) se piden al servidor con `/api/tareas`                                                                                                                              |
+| ERR-15 | `actualizar` respondía un error sin la clave `respuesta`                                     | Baja     | Obsoleto | Mismo caso: cliente y API se reescribieron en el Paso 4; los endpoints responden con `tipo` y `mensaje`                                                                                                                                                                  |
+| ERR-16 | `docker-compose.yml`: root `1234`, montaje de todo el proyecto, SQL en una subcarpeta        | Media    | Resuelto | `2f334a3`: usuario `claudetask_app`, claves en `.env` y solo dos archivos de arranque montados. P-27, P-28, P-34                                                                                                                                                         |
+| ERR-17 | Sin `.env.example` ni README                                                                 | Baja     | Resuelto | `.env.example` desde `19d6614`; `README.md` en `5b581aa`. P-34 (instalación solo con el README)                                                                                                                                                                          |
+| ERR-18 | Marca inconsistente (UpTask, Uptask, SantiTask)                                              | Baja     | Parcial  | `941e8d1` quitó el texto accidental; `<html lang="es">` y el autor de `package.json` ya están corregidos. El código dice ClaudeTask; quedan menciones a UpTask en `README.md` (como origen) y en esta documentación, que se ajusta en el Paso 10c                          |
+| ERR-19 | CSP de desarrollo (`unsafe-inline`, `unsafe-eval`, `localhost:5173`)                         | Media    | Resuelto | `7bfa426`: CSP por entorno con nonce; la de producción es estricta. P-29, P-30, P-31                                                                                                                                                                                     |
+| ERR-20 | Rutas inexistentes en texto plano y redirección a una `/404` que no existía                  | Baja     | Resuelto | `c1b2931`: el `Router` responde HTTP 404 con la vista `404.php`. Verificado leyendo el código, sin petición de prueba                                                                                                                                                    |
+
+**Limitaciones aceptadas y abiertas**
+
+| ID     | Limitación                                                                                                                                    | Estado   |
+| ------ | --------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| LIM-01 | Vincular (por correo), `olvide` y `crear` revelan si un correo está registrado                                                                | Aceptada |
+| LIM-02 | `logout` solo vacía `$_SESSION`; no destruye la sesión                                                                                        | Aceptada |
+| LIM-03 | Restablecer la contraseña de un tutelado no limpia su bloqueo en `intentos_login`                                                             | Aceptada |
+| LIM-04 | La tabla `intentos_login` crece con claves arbitrarias                                                                                        | Aceptada |
+| LIM-05 | No hay «reenviar confirmación»: una cuenta sin confirmar queda bloqueada                                                                      | Aceptada |
+| LIM-06 | La contraseña de un tutelado solo exige un mínimo de 6 caracteres                                                                             | Aceptada |
+| LIM-07 | El envío SMTP es síncrono: registrar y recuperar contraseña tardan de 3 a 5 segundos                                                          | Abierta  |
+| LIM-08 | Antes de publicar: `ENVIRONMENT=production`, `APP_URL` con https y, si hay un proxy, revisar la CSP (`form-action` y `connect-src` están en `'self'`) | Abierta  |
+| LIM-09 | Tras editar `.env` o `docker/apache.conf` hay que reiniciar `claudetask_php`; con `apache2ctl graceful` no basta                              | Conocida |
 
 ## 7.4 Seguridad
 
-| Aspecto       | Estado actual                                                          | Qué haría falta                                      |
-| ------------- | ---------------------------------------------------------------------- | ---------------------------------------------------- |
-| Contraseñas   | Hash bcrypt (correcto)                                                 | Mantener; subir el mínimo de 6 caracteres            |
-| Autenticación | Solo cuentas confirmadas; sin límite de intentos                       | Limitar intentos y regenerar la sesión               |
-| Autorización  | Se comprueba el propietario del proyecto, pero no de la tarea (ERR-03) | Verificar propiedad en cada recurso                  |
-| Inyección SQL | Escape solo al escribir (ERR-01)                                       | Consultas preparadas o escape en todas               |
-| XSS           | Casi sin escape de salida (ERR-05)                                     | Usar `s()` en todas las vistas y `textContent` en JS |
-| CSRF          | Sin protección (ERR-06)                                                | Token CSRF por sesión                                |
-| Tokens        | `uniqid()` sin caducidad (ERR-07)                                      | `random_bytes` con fecha de caducidad                |
-| Sesión        | Sin regeneración ni destrucción (ERR-09)                               | `session_regenerate_id` y `session_destroy`          |
-| Secretos      | En `.env`, pero `docker-compose.yml` tiene la clave root (ERR-16)      | Usar variables también en Compose                    |
-| Transporte    | HTTP                                                                   | HTTPS en producción                                  |
+Estado al 2026-11-03. Las pruebas son las de la sección 13.
+
+| Aspecto           | Estado actual                                                                                                                                                       | Pruebas                 | Pendiente                                              |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------- | ------------------------------------------------------ |
+| Contraseñas       | Hash bcrypt (`password_hash`); de 6 a 72 caracteres al registrarse; el tutelado solo exige 6 (LIM-06)                                                               | P-25, P-26, P-32        | Subir el mínimo, si se desea                           |
+| Autenticación     | Solo cuentas confirmadas; bloqueo de 30 s tras 5 intentos; mensaje único de error; `session_regenerate_id(true)` al entrar                                          | P-15, P-27              | Registrar la prueba del bloqueo (7.1)                  |
+| Autorización      | Por rol y por vínculo (`Vinculo::existe`); la API responde JSON 403 sin sesión o sin permiso                                                                        | P-01 a P-11             | Ninguno                                                |
+| Inyección SQL     | Valores escapados, columnas en lista blanca, `find` con entero; el usuario de base no puede crear ni borrar tablas                                                   | P-17, P-27, P-28        | Consultas preparadas, como mejora futura               |
+| XSS               | Salida escapada (`s()` y `esc()`), `textContent` donde basta y CSP estricta con nonce en producción                                                                  | P-16 a P-20, P-30       | Ninguno                                                |
+| CSRF              | Token por sesión en cada POST (campo `csrf` o cabecera `X-CSRF-Token`)                                                                                              | P-07                    | Ninguno                                                |
+| Tokens            | 32 caracteres hexadecimales aleatorios; el de recuperación caduca en 1 hora; el de confirmación no caduca y cada ruta rechaza el del otro                            | P-24, P-26, P-35        | «Reenviar confirmación» (LIM-05)                       |
+| Sesión            | Cookie `HttpOnly` y `SameSite=Lax` (`Secure` si `APP_URL` es https); `logout` solo vacía `$_SESSION` (LIM-02)                                                       | P-13, P-29              | Ninguno                                                |
+| Secretos          | `.env` fuera del repositorio; claves propias de cada instalación; MySQL solo en `127.0.0.1`                                                                         | P-27, P-28, P-34        | Ninguno                                                |
+| Cabeceras         | CSP por entorno, `nosniff` y `Referrer-Policy`; sin sourcemaps; `/build/` sin listado; manifest de Vite no público                                                  | P-29, P-30, P-33        | Revisar la CSP si hay un proxy (LIM-08)                |
+| Errores           | En producción los errores van al registro y no a la pantalla; el registro de PHP quedó vacío en las 10 páginas probadas                                             | P-30                    | Ninguno                                                |
+| Respaldo          | `docker/respaldo.sh` y `docker/restaurar.sh`                                                                                                                        | P-32                    | Ninguno                                                |
+| Transporte        | HTTP en desarrollo; en producción se supone HTTPS en un proxy delante del puerto 8082                                                                               | Sin prueba              | HTTPS y proxy en producción (LIM-08)                   |
 
 ---
 
@@ -1454,51 +1495,76 @@ $mail->addAddress($this->email, $this->nombre);
 
 # 11. Matriz de trazabilidad
 
-| Requisito                  | Caso de uso | Diseño          | Código                                                    | Prueba                     |
-| -------------------------- | ----------- | --------------- | --------------------------------------------------------- | -------------------------- |
-| RF-01 Registrar cuenta     | CU-01       | Fig. 2, 3, 5, 6 | `LoginController::crear`, `Usuario::validarNuevaCuenta`   | CP-01, CP-02, CP-03, CP-24 |
-| RF-02 Confirmar cuenta     | CU-02       | Fig. 3, 6       | `LoginController::confirmar`, `Email::enviarConfirmacion` | CP-04, CP-05               |
-| RF-03 Iniciar sesión       | CU-03       | Fig. 2          | `LoginController::login`                                  | CP-06, CP-07, CP-08        |
-| RF-04 Cerrar sesión        | CU-04       | Fig. 2          | `LoginController::logout`                                 | [Completar]                |
-| RF-05 Recuperar contraseña | CU-05       | Fig. 3          | `LoginController::olvide`, `reestablecer`                 | CP-09                      |
-| RF-06 Listar proyectos     | CU-06       | Fig. 2, 5       | `DashboardController::index`                              | CP-19                      |
-| RF-07 Crear proyecto       | CU-07       | Fig. 5          | `DashboardController::crear_proyecto`                     | CP-10, CP-11               |
-| RF-08 Abrir proyecto       | CU-08       | Fig. 5          | `DashboardController::proyecto`                           | CP-12                      |
-| RF-09 Editar perfil        | CU-09       | Fig. 5          | `DashboardController::perfil`                             | CP-13, CP-23               |
-| RF-10 Cambiar contraseña   | CU-10       | Fig. 5          | `DashboardController::cambiar_password`                   | CP-14                      |
-| RF-11 Listar tareas        | CU-11       | Fig. 7, API     | `TareaController::index`                                  | CP-15                      |
-| RF-12 Crear tarea          | CU-11       | Fig. 4, API     | `TareaController::crear`, `tareas.js::agregarTarea`       | CP-15                      |
-| RF-13 Editar nombre        | CU-11       | Fig. 7, API     | `TareaController::actualizar`                             | CP-20                      |
-| RF-14 Cambiar estado       | CU-11       | Fig. 4, 7       | `TareaController::actualizar`, `cambiarEstadoTarea`       | CP-16                      |
-| RF-15 Eliminar tarea       | CU-11       | Fig. 4, API     | `TareaController::eliminar`                               | CP-17                      |
-| RF-16 Filtrar tareas       | CU-12       | Fig. 9          | `tareas.js::filtrarTareas`                                | CP-18                      |
-| RF-17 Menú móvil           | -           | Fig. 9          | `src/js/app.js`                                           | [Completar]                |
+## 11.1 Requisitos funcionales
+
+La columna «Prueba» remite a la sección 13. «Sin P» significa que ninguna prueba numerada registra ese requisito (ver 7.1).
+
+| Requisito                            | Caso de uso | Diseño                | Código                                                                         | Prueba                                   |
+| ------------------------------------ | ----------- | --------------------- | ------------------------------------------------------------------------------ | ---------------------------------------- |
+| RF-01 Registrar cuenta               | CU-01       | Fig. 1, 2, 3, 6       | `LoginController::crear`, `Usuario::validarNuevaCuenta`                        | P-15, P-16, P-22, P-23, P-34             |
+| RF-02 Confirmar cuenta               | CU-02       | Fig. 3, 6             | `LoginController::confirmar`, `Email::enviarConfirmacion`                      | P-23, P-24, P-26, P-35                   |
+| RF-03 Iniciar sesión                 | CU-03       | Fig. 7                | `LoginController::login`, `IntentoLogin`                                       | P-15, P-27; bloqueo: sin P               |
+| RF-04 Cerrar sesión                  | CU-04       | Fig. 2                | `LoginController::logout`                                                      | P-13                                     |
+| RF-05 Recuperar contraseña           | CU-05       | Fig. 3                | `LoginController::olvide` y `reestablecer`, `Usuario::crearTokenRecuperacion`  | P-24, P-25, P-26                         |
+| RF-06 Crear tutelado                 | CU-06       | Fig. 2, 5             | `TutorController::crear_tutelado`, `Usuario::generarAlias`                     | P-08 (rechazo), P-34                     |
+| RF-07 Restablecer clave del tutelado | CU-07       | Fig. 1                | `TutorController::reset_password`                                              | Sin P                                    |
+| RF-08 Vincular y desvincular         | CU-08       | Fig. 1, 5             | `TutorController::vincular` y `desvincular`, `Vinculo`                         | P-08 (rechazo), P-01 a P-06 (efecto del vínculo); desvincular: sin P |
+| RF-09 Asignar tarea con partes       | CU-09       | Fig. 2, 4, 5          | `TareaController::crear`, `views/tutor/nueva-tarea.php`, `nueva-tarea.js`      | P-14, P-17, P-34                         |
+| RF-10 Editar tarea y partes          | CU-10       | Fig. 4                | `TareaController::actualizar`, `ParteController::crear`                        | P-03, P-14, P-19                         |
+| RF-11 Duplicar tarea                 | CU-10       | Fig. 5                | `TareaController::duplicar`                                                    | P-04, P-20 (modal); éxito: sin P         |
+| RF-12 Eliminar tarea                 | CU-10       | Fig. 5                | `TareaController::eliminar`                                                    | P-17 (baja con sus partes y su historial) |
+| RF-13 Listar y filtrar tareas        | CU-13       | Fig. 11               | `TareaController::index`, `Tarea::vencida`, `tutor.js`                         | P-06, P-10, P-18; filtros y vencidas: sin P |
+| RF-14 Marcar parte como hecha        | CU-12       | Fig. 4, 8             | `ParteController::marcar_hecha`, `alumno.js`                                   | P-09, P-34                               |
+| RF-15 Revisar parte                  | CU-11       | Fig. 4, 9             | `ParteController::revisar`, `Parte::transicionar`                              | P-01, P-02, P-08, P-34                   |
+| RF-16 Historial de la tarea          | CU-14       | Fig. 5, 8, 9          | `TareaController::historial`, `Historial::registrar`, `comun.js`               | P-05, P-20                               |
+| RF-17 Perfil y contraseña            | CU-15       | Fig. 1                | `PerfilController::perfil` y `cambiar_password`                                | Sin P                                    |
+| RF-18 Menú lateral móvil             | -           | -                     | `src/js/app.js`                                                                | P-21                                     |
+
+## 11.2 Requisitos no funcionales
+
+| Requisito                        | Diseño          | Código                                                                  | Prueba                          |
+| -------------------------------- | --------------- | ----------------------------------------------------------------------- | ------------------------------- |
+| RNF-01 Contraseñas con hash      | Fig. 5          | `Usuario::hashPassword`                                                 | P-25, P-26, P-32                |
+| RNF-02 Acceso por rol y vínculo  | Fig. 11         | `isAuth`, `isTutor`, `isTutelado`, `Vinculo::existe`                    | P-01 a P-06, P-08 a P-13        |
+| RNF-03 Entradas y consultas      | Fig. 11         | `verificarCsrf`, `escape_string`, `columnaSegura`                       | P-07, P-14 a P-20, P-22         |
+| RNF-04 Navegador y sesión        | Fig. 11, 13     | `enviarCabecerasSeguridad`, `cspNonce`, `includes/app.php`              | P-13, P-29, P-30, P-31          |
+| RNF-05 Base con el mínimo permiso | Fig. 12, 13    | Usuario `claudetask_app`, `docker/`                                     | P-27, P-28, P-34                |
+| RNF-06 Borrado en cascada        | Fig. 5          | Claves foráneas de `claudetask.sql`                                     | P-17                            |
+| RNF-07 Entorno reproducible      | Fig. 12         | `docker-compose.yml`                                                    | P-28, P-34                      |
+| RNF-08 Secretos fuera del código | Fig. 12         | `.env`, `.env.example`, `vlucas/phpdotenv`                              | P-34                            |
+| RNF-09 Respaldo y restauración   | Fig. 12         | `docker/respaldo.sh`, `docker/restaurar.sh`                             | P-32                            |
+| RNF-10 Móvil, tableta y escritorio | -             | SCSS con puntos de quiebre, `src/js/app.js`                             | P-21                            |
+| RNF-11 Modo claro y oscuro       | -               | `prefers-color-scheme` y `color-scheme` en `src/scss`                   | P-21, P-31                      |
+| RNF-12 Retroalimentación         | -               | Alertas de las vistas, `toast` en `comun.js`                            | P-31                            |
+| RNF-13 Código por responsabilidades | Fig. 10, 11  | MVC propio, autoload PSR-4 en `composer.json`                           | Sin P (se lee en el código)     |
+| RNF-14 Paneles sin recarga       | Fig. 8, 9       | `/api/tareas`, `tutor.js`, `alumno.js`                                  | P-10, P-18                      |
 
 ---
 
 # 12. Lista de figuras
 
-| Figura | Título                                    | Sección |
-| ------ | ----------------------------------------- | ------- |
-| 1      | Diagrama de casos de uso                  | 4.1     |
-| 2      | Flujo general de uso del sistema          | 4.2     |
-| 3      | Estados de una cuenta de usuario          | 4.3     |
-| 4      | Estados de una tarea                      | 4.3     |
-| 5      | Entidad-relación                          | 4.4     |
-| 6      | Secuencia: registro y confirmación        | 4.5     |
-| 7      | Secuencia: cambiar el estado de una tarea | 4.5     |
-| 8      | Diagrama de clases                        | 4.6     |
-| 9      | Arquitectura por capas                    | 4.7     |
-| 10     | Despliegue con Docker                     | 4.8     |
-| 11     | Puertos y comunicaciones                  | 4.9     |
-| 12     | Pantallas (capturas)                      | 4.10    |
-| 13     | Gantt propuesto                           | 5.2     |
+| Figura | Título                                                  | Sección |
+| ------ | ------------------------------------------------------- | ------- |
+| 1      | Diagrama de casos de uso                                | 4.1     |
+| 2      | Flujo general de uso del sistema                        | 4.2     |
+| 3      | Estados de una cuenta de tutor                          | 4.3     |
+| 4      | Estados de una parte de tarea                           | 4.3     |
+| 5      | Diagrama entidad-relación                               | 4.4     |
+| 6      | Secuencia: registro de cuenta y confirmación            | 4.5     |
+| 7      | Secuencia: inicio de sesión con bloqueo por intentos    | 4.5     |
+| 8      | Secuencia: el tutelado marca una parte como hecha       | 4.5     |
+| 9      | Secuencia: el tutor revisa una parte                    | 4.5     |
+| 10     | Diagrama de clases                                      | 4.6     |
+| 11     | Arquitectura por capas                                  | 4.7     |
+| 12     | Diagrama de despliegue con Docker                       | 4.8     |
+| 13     | Puertos y comunicaciones                                | 4.9     |
+| 14     | Pantallas (capturas)                                    | 4.10    |
 
 ---
 
 # 13. Pruebas de ClaudeTask (Paso 8)
 
-El plan hacía referencia a una lista «P-01 a P-16» que no existía en ningún documento. Esta es la lista propia, armada a partir de la matriz de roles y de las pruebas realizadas. Los CP-01 a CP-24 de la sección 7.1 pertenecen a UpTask (proyectos) y no se usan aquí.
+El plan hacía referencia a una lista «P-01 a P-16» que no existía en ningún documento. Esta es la lista propia, armada a partir de la matriz de roles y de las pruebas realizadas. Los CP-01 a CP-24 que tenía la sección 7.1 pertenecían a UpTask (proyectos) y se retiraron; la sección 11 relaciona cada requisito con estas pruebas.
 
 Método: peticiones `curl` con sesión y token CSRF reales, y dos navegadores (uno por rol). Las pruebas de rechazo no destruyen datos y usan ids que existen, de modo que el 403 es por permiso y no por id inexistente. Fecha de ejecución: 2026-11-03. Usuarios: tutor Ana (id 1), tutor Beto (id 4, sin vínculo con los tutelados de Ana), tutelados Lucia47 (id 2) y Pedro52 (id 3).
 
@@ -1584,8 +1650,8 @@ Abiertos:
 
 - [ ] Completar autor, institución, metodología y roles
 - [ ] Insertar capturas de pantalla
-- [ ] Ejecutar CP-01 a CP-24 y anotar resultados
-- [ ] Confirmar o descartar cada error ERR-01 a ERR-20
+- [x] Los CP-01 a CP-24 (UpTask) se retiraron; los resultados están en P-01 a P-35 (secciones 7.1, 11 y 13)
+- [x] Cada error ERR-01 a ERR-20 confirmado, resuelto o descartado (sección 7.3, 2026-11-03)
 - [ ] Aplicar el plan de la sección 10 antes de publicar
 - [x] Revisar el texto `Sopilote22` de `views/templates/nombre-sitio.php` (quitado en `941e8d1`)
 - [ ] Confirmar que lo documentado coincide con el sistema
