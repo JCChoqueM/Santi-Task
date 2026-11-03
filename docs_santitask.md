@@ -949,83 +949,47 @@ Hallazgos obtenidos al leer el código. Se recomienda confirmarlos con las prueb
 
 ## 8.1 Requisitos del entorno
 
-| Elemento                 | Requisito                                      |
-| ------------------------ | ---------------------------------------------- |
-| Para ejecutar con Docker | Docker y Docker Compose                        |
-| Puertos libres           | 8082, 5173 y 3308                              |
-| Navegador                | Chrome, Firefox, Edge o Safari actuales        |
-| Internet                 | Necesario para fuentes, SweetAlert2 y el SMTP  |
-| Servidor de correo       | Cuenta SMTP (por ejemplo, un buzón de pruebas) |
+| Elemento                 | Requisito                                                                 |
+| ------------------------ | ------------------------------------------------------------------------- |
+| Para ejecutar con Docker | Docker con Docker Compose v2 (`docker compose`)                           |
+| Puertos libres           | 8082 (aplicación), 5173 (Vite, solo en desarrollo) y 3308 (MySQL, solo desde el propio equipo) |
+| Navegador                | Chrome, Firefox, Edge o Safari actuales                                   |
+| Internet                 | Descarga de imágenes y dependencias la primera vez; fuentes de Google en el navegador |
+| Servidor de correo       | Cuenta SMTP **obligatoria**: sin correo de confirmación no se crea la cuenta de un tutor |
 
 ## 8.2 Guía de instalación y configuración
 
-**1. Crear el archivo `.env`** en la raíz (valores deducidos de `docker-compose.yml` y del código; cámbialos por los tuyos):
+La guía paso a paso está en [`README.md`](README.md), sección 1 (así no se mantiene dos veces). Resumen:
 
-```
-DB_HOST=mysql
-DB_USER=root
-DB_PASS=1234
-DB_NAME=uptask
-MAIL_HOST=<servidor SMTP>
-MAIL_PORT=<puerto SMTP>
-MAIL_USERNAME=<usuario SMTP>
-MAIL_PASSWORD=<clave SMTP>
-APP_URL=http://localhost:8082
-ENVIRONMENT=development
-```
+1. `cp .env.example .env`; generar `DB_PASS` y `MYSQL_ROOT_PASSWORD` aleatorias; completar `MAIL_*` y `APP_URL`.
+2. `docker compose up -d --build`. La primera vez MySQL importa `claudetask.sql` (carpeta `docker-entrypoint-initdb.d`) y crea el usuario de la aplicación con `docker/initdb/02-usuario.sh` (solo `SELECT`, `INSERT`, `UPDATE`, `DELETE` sobre `claudetask`). Esos scripts solo corren con el volumen vacío.
+3. `docker exec -it claudetask_php npm run dev` (Vite, en desarrollo).
+4. Abrir `http://localhost:8082`.
 
-**2. Levantar los contenedores** (instala las dependencias de Composer y npm la primera vez):
-
-```bash
-docker compose up -d --build
-```
-
-**3. Importar la base de datos** (el volcado ya incluye `CREATE DATABASE` y `USE`):
-
-```bash
-docker exec -i uptask_mysql mysql -uroot -p1234 < uptask.sql
-```
-
-**4. Iniciar Vite** (en desarrollo, para cargar CSS y JS):
-
-```bash
-docker exec -it uptask_php npm start
-```
-
-**5. Abrir** `http://localhost:8082`.
-
-**Para producción:** ejecutar `npm run prod` (cambia `ENVIRONMENT` a `production` y compila a `public/build/`), usar HTTPS y cambiar todas las claves.
+Para una base ya creada con `root`: `bash docker/crear-usuario-bd.sh`. Para producción: README, sección 7.
 
 ## 8.3 Manual de usuario
 
-Existe un solo tipo de usuario.
+Hay dos roles. El manual completo está en [`README.md`](README.md): sección 2 (primer uso), 3 (tutor), 4 (tutelado) y 5 (contraseña olvidada y bloqueo). En una línea cada uno:
 
-2. **Crear cuenta:** en «Obtener una», escribe nombre, email, contraseña (mínimo 6) y repítela. Recibirás un correo.
-4. **Confirmar:** abre el enlace del correo. Verás «Cuenta confirmada correctamente».
-6. **Iniciar sesión:** escribe tu email y contraseña.
-8. **Crear un proyecto:** menú «Crear Proyecto», escribe el nombre y pulsa «Crear Proyecto».
-10. **Abrir un proyecto:** en «Proyectos», pulsa su nombre.
-12. **Añadir una tarea:** pulsa «+ Nueva Tarea», escribe el nombre y confirma.
-14. **Editar el nombre:** haz **doble clic** sobre el texto de la tarea.
-16. **Marcar completa o pendiente:** haz **doble clic** sobre el botón de estado.
-18. **Eliminar:** haz **doble clic** en «Eliminar» y confirma.
-20. **Filtrar:** usa Todas, Completadas o Pendientes (una opción se desactiva si no hay tareas de ese tipo).
-22. **Perfil y contraseña:** menú «Perfil» para cambiar nombre y email; «Cambiar Password» para la contraseña.
-24. **Olvidé mi contraseña:** en la pantalla de acceso, escribe tu email y sigue el enlace que recibirás.
-26. **Salir:** botón «Cerrar Sesión».
+- **Tutor:** se registra con correo y confirma la cuenta; crea tutelados (la aplicación genera su alias), asigna tareas divididas en partes, y revisa lo que el alumno marca como hecho (aprobar, devolver con comentario o reabrir); puede editar, duplicar, ver el historial y eliminar tareas.
+- **Tutelado:** entra con su alias y la contraseña que le dio su tutor; marca sus partes con «Ya lo hice» y ve las correcciones de su tutor. Si olvida la contraseña, su tutor la restablece.
 
 ## 8.4 Manual técnico y de mantenimiento
 
-| Tarea                   | Cómo                                                                                       |
-| ----------------------- | ------------------------------------------------------------------------------------------ |
-| Agregar una ruta        | Registrar `$router->get/post(...)` en `public/index.php` y crear el método del controlador |
-| Agregar una vista       | Crear el archivo en `views/` y llamar `$router->render('carpeta/vista', [...])`            |
-| Agregar un modelo       | Crear la clase en `models/` que extienda `ActiveRecord` con `$tabla` y `$columnasDB`       |
-| Respaldo de la base     | `docker exec uptask_mysql mysqldump -uroot -p uptask > respaldo.sql`                       |
-| Ver registros de Apache | `docker logs uptask_php`                                                                   |
-| Reconstruir recursos    | `npm run build` (o `npm run prod`)                                                         |
-| Cambiar de modo         | Cambiar `ENVIRONMENT` en `.env` entre `development` y `production`                         |
-| Optimizar imágenes      | `npm run imagen` (usa Gulp; la configuración no fue recibida)                              |
+| Tarea                        | Cómo                                                                                                   |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------ |
+| Agregar una ruta             | Registrar `$router->get/post(...)` en `public/index.php` y crear el método del controlador              |
+| Agregar una vista            | Crear el archivo en `views/` y llamar `$router->render('carpeta/vista', [...])`                         |
+| Agregar un modelo            | Crear la clase en `models/` que extienda `ActiveRecord` con `$tabla` y `$columnasDB`                    |
+| Respaldo de la base          | `bash docker/respaldo.sh` (guarda `respaldos/claudetask-<fecha>.sql`, permisos 600)                     |
+| Restaurar un respaldo        | `bash docker/restaurar.sh respaldos/claudetask-<fecha>.sql` (pide `si`; reemplaza los datos)             |
+| Ver registros                | `docker logs claudetask_php` (PHP y Apache) y `docker logs claudetask_mysql`                             |
+| Reconstruir recursos         | `docker exec claudetask_php npm run prod` (compila a `public/build/` y pone `ENVIRONMENT=production`)    |
+| Cambiar de modo              | `ENVIRONMENT` en `.env` entre `development` y `production`; después, `docker restart claudetask_php`     |
+| Tras editar `.env` o `docker/apache.conf` | Reiniciar `claudetask_php` (el contenedor puede ver una copia antigua)                         |
+| Cambiar las claves de la base | Con una base ya creada, el `.env` no cambia el usuario de MySQL: usar `docker/crear-usuario-bd.sh` o `ALTER USER` |
+| Optimizar imágenes           | `npm run imagen` (usa Gulp; la configuración no fue recibida)                                           |
 
 ---
 
@@ -1290,8 +1254,8 @@ Hechos:
 
 Abiertos:
 
-- [ ] Manuales cortos de tutor y de tutelado; instalar desde cero siguiendo solo el manual; que otra persona cree un tutelado, asigne una tarea y complete el ciclo (Versión 1.0).
-- [ ] Actualizar las secciones 8.2 y 8.4: siguen con `root`, `1234`, `uptask_mysql` y `mysqldump -uroot -p`.
+- [ ] Instalar desde cero siguiendo solo `README.md`, y que otra persona cree un tutelado, asigne una tarea y complete el ciclo (Versión 1.0). Los manuales ya están escritos.
+- [x] Secciones 8.1 a 8.4 actualizadas; la instalación y los manuales de tutor y tutelado están en `README.md`.
 - [ ] El envío SMTP es síncrono: registrar y recuperar contraseña tardan de 3 a 5 segundos (limitación conocida).
 - [ ] Tras editar el `.env` o `docker/apache.conf` hay que reiniciar `claudetask_php`: el contenedor ve una copia antigua (comprobado de nuevo en 9e con `apache.conf`, que se monta como archivo único). Con `apache2ctl graceful` no basta.
 - [ ] `/confirmar` acepta también un token de recuperación: lo gasta y deja `token_expira` sin limpiar. No abre ningún acceso.
