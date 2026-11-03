@@ -48,7 +48,7 @@
 - [10. Registro de correcciones aplicadas](#10-registro-de-correcciones-aplicadas)
 - [11. Matriz de trazabilidad](#11-matriz-de-trazabilidad)
 - [12. Lista de figuras](#12-lista-de-figuras)
-- [13. Pruebas de ClaudeTask (Paso 8)](#13-pruebas-de-claudetask-paso-8)
+- [13. Pruebas de ClaudeTask](#13-pruebas-de-claudetask)
 
 ---
 
@@ -1058,7 +1058,7 @@ No se aplicó una metodología formal. El proceso real fue un desarrollo increme
 
 ## 5.2 Plan y cronograma
 
-Git registra los 28 commits del proyecto hasta `56c8534` con la misma fecha, 2026-11-03, así que no se puede reconstruir un cronograma con duraciones y no se inventa uno. La tabla muestra el orden real de los pasos con sus commits.
+Git registra los 30 commits del proyecto hasta `272405a` con la misma fecha, 2026-11-03, así que no se puede reconstruir un cronograma con duraciones y no se inventa uno. La tabla muestra el orden real de los pasos con sus commits.
 
 | Paso | Contenido                                                                          | Commits                                                                               |
 | ---- | ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
@@ -1072,7 +1072,7 @@ Git registra los 28 commits del proyecto hasta `56c8534` con la misma fecha, 202
 | -    | Endurecimiento de `TareaController` y de la cuenta                                 | `c3401ed`, `1da09e5`                                                                  |
 | 8    | Lista de pruebas P-01 a P-25                                                       | `a3f03d4`, `97a16f7`                                                                  |
 | 9    | Errores y correo, tokens, usuario de base, CSP, respaldo, README, P-26 a P-35      | `c978a1f`, `c1a2919`, `2f334a3`, `7bfa426`, `f7414b2`, `6aa6283`, `5b581aa`, `941e8d1`, `563e2ff`, `6a96305` |
-| 10   | Documentación alineada con el sistema real (10a, 10b, 10c)                         | `6f9a8b9`, `1fe904c`, `73e90ac`, `5b54f42`, `56c8534`                                |
+| 10   | Documentación alineada con el sistema real (10a, 10b, 10c, 10d)                    | `6f9a8b9`, `1fe904c`, `73e90ac`, `5b54f42`, `56c8534`, `eb67270`, `272405a`          |
 
 **Pendiente para la Versión 1.0:** que otra persona haga el ciclo solo con el `README.md` (7.2), insertar las capturas (4.10) y publicar el sistema (5.4, R6 y R7).
 
@@ -1090,7 +1090,7 @@ Probabilidad e impacto son una estimación del autor al 2026-11-03, no una medic
 
 | ID  | Riesgo                                                                                                    | Probabilidad | Impacto | Mitigación                                                                                                          |
 | --- | --------------------------------------------------------------------------------------------------------- | ------------ | ------- | ------------------------------------------------------------------------------------------------------------------- |
-| R1  | Uso malicioso por fallos de seguridad que no se hayan encontrado (los conocidos están resueltos, sección 10) | Baja         | Alto    | Las 35 pruebas pasan; quedan LIM-01 y LIM-02 (7.3); registrar las pruebas de 7.1 que faltan                         |
+| R1  | Uso malicioso por fallos de seguridad que no se hayan encontrado (los conocidos están resueltos, sección 10) | Baja         | Alto    | Las 44 pruebas pasan; quedan LIM-01, LIM-02 y LIM-11 a LIM-13 (7.3)                         |
 | R2  | Los correos de confirmación y recuperación tardan o no salen (SMTP síncrono, LIM-07)                      | Media        | Alto    | Un SMTP real antes de publicar; probar el envío en el servidor; en el plan gratuito de DOM Cloud ver R7            |
 | R3  | Pérdida de datos si se borra el volumen de MySQL o la cuenta del servidor                                 | Media        | Alto    | `docker/respaldo.sh` y `docker/restaurar.sh` (P-32) en Docker; en el servidor de publicación definir otro método   |
 | R4  | Versiones de dependencias que cambien o no existan                                                        | Media        | Medio   | `composer.lock` y `package-lock.json` fijan los paquetes; el `Dockerfile` fija `php:8.5.12-apache` y la base es `mysql:8.0` |
@@ -1221,9 +1221,9 @@ claudetask/
 
 ## 7.1 Plan de pruebas
 
-Las pruebas de ClaudeTask son las **P-01 a P-35** de la sección 13, con su método, su fecha (2026-11-03) y su resultado. Los CP-01 a CP-24 que tenía esta sección eran de UpTask (proyectos, `tareas.js`, `/proyecto?id=`): no se ejecutaron y se retiraron. La relación de cada requisito con sus pruebas está en la sección 11.
+Las pruebas de ClaudeTask son las **P-01 a P-44** de la sección 13, con su método, su fecha (2026-11-03) y su resultado. Los CP-01 a CP-24 que tenía esta sección eran de UpTask (proyectos, `tareas.js`, `/proyecto?id=`): no se ejecutaron y se retiraron. La relación de cada requisito con sus pruebas está en la sección 11.
 
-**Resultado:** las 35 pasan. P-14, P-15 y P-16 fallaron, se corrigieron y se repitieron; P-35 mostró el fallo con el guion antes del cambio. P-33 pasó tras reiniciar el contenedor. En P-26 y P-34 falló el procedimiento de prueba, no el código. P-31 consta «según lo indicado por el usuario», sin resultado por acción.
+**Resultado:** las 44 pasan. P-14, P-15 y P-16 fallaron, se corrigieron y se repitieron; P-35 mostró el fallo con el guion antes del cambio. P-33 pasó tras reiniciar el contenedor. En P-26 y P-34 falló el procedimiento de prueba, no el código. P-31 consta «según lo indicado por el usuario», sin resultado por acción. P-36 a P-44 pasaron a la primera, sin fallos y sin cambios de código.
 
 **Cobertura por área**
 
@@ -1241,6 +1241,11 @@ Las pruebas de ClaudeTask son las **P-01 a P-35** de la sección 13, con su mét
 | Base de datos e instalación | P-27, P-28, P-34            | Usuario de base con solo `SELECT`, `INSERT`, `UPDATE` y `DELETE`; instalación desde cero y ciclo completo          |
 | Cabeceras y producción    | P-29 a P-31, P-33             | CSP por entorno con nonce, cookie de sesión, sin `.map`, `/build/` sin listado, manifest de Vite no público        |
 | Respaldo                  | P-32                          | Respaldo y restauración conservan los datos y el hash de las contraseñas                                           |
+| Inicio de sesión y bloqueo | P-36, P-37                   | Bloqueo de 5 intentos y desbloqueo a los 30 s; una cuenta sin confirmar no entra y el mensaje no revela el motivo  |
+| Tutelados y vínculos      | P-38 a P-40                   | Restablecer la clave, vincular y desvincular (responsable, salida propia, único tutor) y crear tutelados con alias y rechazos |
+| Tareas: duplicar y listar | P-41, P-42                    | Duplicar con éxito (todo o nada), filtros por tutelado y «por revisar», marca de vencida                           |
+| Perfil y contraseña       | P-43                          | Rechazos, límites, campos extra ignorados, salida escapada y cambio de contraseña verificando la actual            |
+| Ciclo de revisión         | P-44                          | Hecha, aprobar, devolver con comentario, reabrir, tarea completa e historial con autor y fecha                     |
 
 **Equivalencias con los CP retirados**
 
@@ -1257,32 +1262,25 @@ Las pruebas de ClaudeTask son las **P-01 a P-35** de la sección 13, con su mét
 
 **Requisitos sin prueba numerada**
 
-Estas funciones se dieron por probadas en su paso, pero ninguna prueba P las registra. Son las candidatas a P-36 en adelante.
+Tras registrar P-36 a P-44, solo queda este requisito sin prueba numerada. Tampoco se probó la marca «vencida» en una tarea con 0 partes.
 
 | Requisito | Qué falta registrar                                                                                               |
 | --------- | ----------------------------------------------------------------------------------------------------------------- |
-| RF-03     | Bloqueo tras 5 intentos fallidos y desbloqueo a los 30 s; login de una cuenta sin confirmar                       |
-| RF-06     | Crear un tutelado solo consta dentro del recorrido de P-34 y como rechazo en P-08                                  |
-| RF-07     | Restablecer la contraseña de un tutelado                                                                          |
-| RF-08     | Desvincular, y que solo el responsable quite a otros tutores                                                      |
-| RF-11     | Duplicar una tarea con éxito (P-04 cubre el rechazo y P-20 el modal)                                              |
-| RF-13     | Filtros por tutelado y «solo por revisar»; marca de tarea vencida                                                 |
-| RF-17     | Editar el perfil y cambiar la contraseña                                                                          |
 | RNF-13    | No hay prueba: se comprueba leyendo el código                                                                     |
 
 ## 7.2 Tipos de prueba
 
 | Tipo           | Método                                                                                                                         | Estado                                                    |
 | -------------- | ------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------- |
-| Funcionales    | Pruebas por área con `curl` y dos navegadores (uno por rol) y el recorrido completo de P-34                                    | Hecho, con las lagunas de 7.1                             |
-| Seguridad      | P-01 a P-20, P-22, P-27 a P-30, P-32, P-33 y P-35: `curl` con sesión y token CSRF reales, y revisión del código                | Hecho                                                     |
+| Funcionales    | Pruebas por área con `curl` y dos navegadores (uno por rol) y el recorrido completo de P-34                                    | Hecho; la única laguna de 7.1 es RNF-13, que se lee en el código |
+| Seguridad      | P-01 a P-20, P-22, P-27 a P-30, P-32, P-33 y P-35 a P-44: `curl` con sesión y token CSRF reales, y revisión del código                | Hecho                                                     |
 | Usabilidad     | El recorrido de P-34 lo hizo el autor; falta que otra persona lo haga solo con `README.md`                                     | Pendiente (Versión 1.0)                                   |
 | Compatibilidad | Pruebas manuales en Brave (motor Chromium) y Mozilla Firefox (Gecko); menú móvil a 375 px en modo claro y oscuro (P-21); consola de DevTools sin avisos de CSP en producción (P-31) | Parcial: sin Safari (WebKit) y sin registro de qué prueba se hizo en cada navegador |
 | Automáticas    | No existen; todas las pruebas son manuales o con `curl`                                                                        | No hay                                                    |
 
 ## 7.3 Errores y limitaciones conocidos
 
-Los ERR-01 a ERR-20 se redactaron al leer el código de UpTask, la base de ClaudeTask. Su estado se revisó el 2026-11-03 contra el código actual y las pruebas P-01 a P-35. La columna «Cierre» da el commit que lo corrigió y la prueba que lo respalda; donde no hay prueba, dice cómo se verificó.
+Los ERR-01 a ERR-20 se redactaron al leer el código de UpTask, la base de ClaudeTask. Su estado se revisó el 2026-11-03 contra el código actual y las pruebas P-01 a P-44. La columna «Cierre» da el commit que lo corrigió y la prueba que lo respalda; donde no hay prueba, dice cómo se verificó.
 
 **Resumen:** 15 resueltos, 3 parciales (ERR-09, ERR-13 y ERR-18) y 2 obsoletos por la reescritura del cliente (ERR-14 y ERR-15).
 
@@ -1323,6 +1321,10 @@ Los ERR-01 a ERR-20 se redactaron al leer el código de UpTask, la base de Claud
 | LIM-08 | Antes de publicar: `ENVIRONMENT=production`, `APP_URL` con https y, si hay un proxy, revisar la CSP (`form-action` y `connect-src` están en `'self'`) | Abierta  |
 | LIM-09 | Tras editar `.env` o `docker/apache.conf` hay que reiniciar `claudetask_php`; con `apache2ctl graceful` no basta                              | Conocida |
 | LIM-10 | El destino previsto, DOM Cloud, no usa Docker ni Apache y trae MariaDB: las reglas de `docker/apache.conf` y los scripts de `docker/` no se aplican allí (5.4, R6) | Abierta  |
+| LIM-11 | Cambiar la contraseña no limita los intentos con una contraseña actual incorrecta: el bloqueo de 5 intentos es solo del login (P-43: 6 intentos seguidos, sin bloqueo) | Aceptada |
+| LIM-12 | Cambiar la contraseña no cierra otras sesiones: la sesión abierta sigue válida (P-43); no se comprobó si se regenera el id de sesión                | Aceptada |
+| LIM-13 | El tutor cambia su correo en el perfil sin contraseña ni reconfirmación, y `confirmado` sigue en 1 (P-43)                                     | Aceptada |
+| LIM-14 | El comentario de una devolución se borra cuando el tutelado vuelve a marcar la parte, y el historial no guarda comentarios: no queda rastro del motivo (P-44) | Aceptada |
 
 ## 7.4 Seguridad
 
@@ -1330,14 +1332,15 @@ Estado al 2026-11-03. Las pruebas son las de la sección 13.
 
 | Aspecto           | Estado actual                                                                                                                                                       | Pruebas                 | Pendiente                                              |
 | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------- | ------------------------------------------------------ |
-| Contraseñas       | Hash bcrypt (`password_hash`); de 6 a 72 caracteres al registrarse; el tutelado solo exige 6 (LIM-06)                                                               | P-25, P-26, P-32        | Subir el mínimo, si se desea                           |
-| Autenticación     | Solo cuentas confirmadas; bloqueo de 30 s tras 5 intentos; mensaje único de error; `session_regenerate_id(true)` al entrar                                          | P-15, P-27              | Registrar la prueba del bloqueo (7.1)                  |
-| Autorización      | Por rol y por vínculo (`Vinculo::existe`); la API responde JSON 403 sin sesión o sin permiso                                                                        | P-01 a P-11             | Ninguno                                                |
+| Contraseñas       | Hash bcrypt (`password_hash`); de 6 a 72 caracteres al registrarse y al cambiarla (P-43); el tutelado, al crearlo o al restablecerle la clave, solo exige 6 (LIM-06) | P-25, P-26, P-32, P-38, P-40, P-43 | Subir el mínimo, si se desea |
+| Autenticación     | Solo cuentas confirmadas; bloqueo de 30 s tras 5 intentos; mensaje único de error; `session_regenerate_id(true)` al entrar; cambiar la contraseña no limita los intentos (LIM-11) | P-15, P-27, P-36, P-37, P-43 | Límite de intentos al cambiar la contraseña (LIM-11), si se desea |
+| Perfil            | El tutelado solo cambia su nombre; el tutor cambia nombre y correo sin contraseña ni reconfirmación (LIM-13); los campos extra se ignoran | P-43 | Reconfirmar el correo, si se desea |
+| Autorización      | Por rol y por vínculo (`Vinculo::existe`); la API responde JSON 403 sin sesión o sin permiso | P-01 a P-11, P-38, P-39, P-41, P-44 | Ninguno |
 | Inyección SQL     | Valores escapados, columnas en lista blanca, `find` con entero; el usuario de base no puede crear ni borrar tablas                                                   | P-17, P-27, P-28        | Consultas preparadas, como mejora futura               |
 | XSS               | Salida escapada (`s()` y `esc()`), `textContent` donde basta y CSP estricta con nonce en producción                                                                  | P-16 a P-20, P-30       | Ninguno                                                |
 | CSRF              | Token por sesión en cada POST (campo `csrf` o cabecera `X-CSRF-Token`)                                                                                              | P-07                    | Ninguno                                                |
 | Tokens            | 32 caracteres hexadecimales aleatorios; el de recuperación caduca en 1 hora; el de confirmación no caduca y cada ruta rechaza el del otro                            | P-24, P-26, P-35        | «Reenviar confirmación» (LIM-05)                       |
-| Sesión            | Cookie `HttpOnly` y `SameSite=Lax` (`Secure` si `APP_URL` es https); `logout` solo vacía `$_SESSION` (LIM-02)                                                       | P-13, P-29              | Ninguno                                                |
+| Sesión            | Cookie `HttpOnly` y `SameSite=Lax` (`Secure` si `APP_URL` es https); `logout` solo vacía `$_SESSION` (LIM-02); cambiar la contraseña no cierra otras sesiones (LIM-12) | P-13, P-29, P-43 | Cerrar sesiones al cambiar la contraseña, si se desea |
 | Secretos          | `.env` fuera del repositorio; claves propias de cada instalación; MySQL solo en `127.0.0.1`                                                                         | P-27, P-28, P-34        | Ninguno                                                |
 | Cabeceras         | CSP por entorno, `nosniff` y `Referrer-Policy`; sin sourcemaps; `/build/` sin listado; manifest de Vite no público                                                  | P-29, P-30, P-33        | Revisar la CSP si hay un proxy (LIM-08)                |
 | Errores           | En producción los errores van al registro y no a la pantalla; el registro de PHP quedó vacío en las 10 páginas probadas                                             | P-30                    | Ninguno                                                |
@@ -1398,22 +1401,22 @@ Hay dos roles. El manual completo está en [`README.md`](README.md): sección 2 
 
 ## 9.1 Resultados frente a los objetivos
 
-Evaluación al 2026-11-03 de los objetivos de la sección 2.1, contra las pruebas P-01 a P-35 (sección 13). «Verificado en el código» significa que se leyó el código y no hay una prueba numerada que lo registre.
+Evaluación al 2026-11-03 de los objetivos de la sección 2.1, contra las pruebas P-01 a P-44 (sección 13). «Verificado en el código» significa que se leyó el código y no hay una prueba numerada que lo registre.
 
 | Objetivo                                        | Estado                    | Evidencia                                                                                                                                                                                                                               |
 | ----------------------------------------------- | ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| OE1 Registro de tutores con confirmación        | Cumplido                  | Registro, correo, confirmación y token de un solo uso: P-23, P-24, P-26, P-35 y el recorrido de P-34. Que solo las cuentas con `confirmado = 1` entren se verificó en el código (`LoginController::login`); no hay prueba numerada (RF-03). El tutelado nace con `confirmado = 1` y alias generado (`TutorController::crear_tutelado`, `Usuario::generarAlias`): verificado en el código y recorrido en P-34 |
+| OE1 Registro de tutores con confirmación        | Cumplido                  | Registro, correo, confirmación y token de un solo uso: P-23, P-24, P-26, P-35 y el recorrido de P-34. Que solo las cuentas con `confirmado = 1` entren: P-37 (RF-03). El tutelado nace con `confirmado = 1` y alias generado (`TutorController::crear_tutelado`, `Usuario::generarAlias`): P-40 y el recorrido de P-34 |
 | OE2 Acceso por rol y por vínculo                | Cumplido                  | P-01 a P-06 (un tutor sin vínculo no ve ni modifica), P-08 a P-11 (un tutelado no usa funciones de tutor y solo ve lo suyo), P-12 y P-13 (sesión) y P-07 (CSRF)                                                                          |
-| OE3 Asignación y revisión de tareas por partes  | Cumplido en lo probado    | P-34 recorre asignar con partes, marcar, aprobar y devolver; P-01, P-02, P-08 y P-09 comprueban los rechazos. Reabrir con éxito y el cierre de la tarea con todas las partes aprobadas no tienen prueba numerada                         |
-| OE4 Trazabilidad en el historial                | Cumplido en lo probado    | La tabla `historial` guarda tarea, parte, acción, autor (`por`) y fecha (`creado_en`), verificado en `claudetask.sql` y `models/Historial.php`. P-17 registra que el historial crece (7 a 9) y P-05 y P-20 cubren el permiso y el modal  |
-| OE5 Recuperación de acceso                      | Parcial                   | El tutor restablece su contraseña con un enlace de 1 hora: P-25, P-26. Que un tutor restablezca la de un tutelado (RF-07) no tiene prueba numerada                                                                                      |
+| OE3 Asignación y revisión de tareas por partes  | Cumplido | P-44 recorre el ciclo completo: hecha, aprobar, devolver con comentario, reabrir y la tarea con todas las partes aprobadas (`completa`), con los rechazos de transición, de rol y de vínculo. P-34 lo hizo desde la interfaz; P-01, P-02, P-08 y P-09 comprueban los rechazos |
+| OE4 Trazabilidad en el historial                | Cumplido | La tabla `historial` guarda tarea, parte, acción, autor (`por`) y fecha (`creado_en`), verificado en `claudetask.sql` y `models/Historial.php`. P-44: un ciclo de 11 acciones deja 11 filas, que `/api/historial` devuelve de la más reciente a la más antigua con parte, acción, autor y fecha; lo ven el tutelado dueño y el tutor vinculado, y los demás reciben 403. P-17 registra que el historial crece (7 a 9) y P-05 y P-20 cubren el permiso y el modal. El historial no guarda el comentario de una devolución (LIM-14) |
+| OE5 Recuperación de acceso                      | Cumplido | El tutor restablece su contraseña con un enlace de 1 hora: P-25, P-26. Un tutor restablece la de un tutelado vinculado y no la de uno ajeno (P-38, RF-07). Cada usuario cambia la suya verificando la actual (P-43) |
 | OE6 Entorno reproducible y con respaldo         | Cumplido                  | Instalación desde cero con solo el README: P-34 (y P-28 para el arranque de la base). Respaldo y restauración: P-32. Falta que otra persona repita el ciclo sola con el README (Versión 1.0)                                              |
 
-**Resumen:** 4 cumplidos, 2 cumplidos en lo probado y 1 parcial según la evidencia; ninguno incumplido. Las lagunas son de prueba, no de funcionamiento conocido, y están listadas en 7.1 como candidatas a P-36 en adelante.
+**Resumen:** los 6 objetivos están cumplidos según la evidencia; ninguno incumplido. Fuera de la evidencia numerada quedan que otra persona repita el ciclo solo con el README (OE6, Versión 1.0) y RNF-13, que se lee en el código (7.1).
 
 ## 9.2 Limitaciones
 
-- Las limitaciones de seguridad y operación están en 7.3 (LIM-01 a LIM-09).
+- Las limitaciones de seguridad y operación están en 7.3 (LIM-01 a LIM-14).
 - Lo que el alcance excluye (sección 2.2): correo y recuperación propia para los tutelados, reenviar la confirmación, notificaciones por correo de tareas o revisiones, rol de administrador, prioridades y etiquetas, pruebas automáticas y HTTPS configurado por la aplicación.
 - Pruebas: todas son manuales o con `curl`; no se probó en Safari (WebKit); falta la prueba de usabilidad con otra persona (7.2).
 
@@ -1427,7 +1430,7 @@ Son propuestas que salen de lo que el alcance excluye (2.2) y de las limitacione
 - Prioridades y etiquetas en las tareas.
 - Consultas preparadas en lugar de escape de valores (7.4).
 - Pruebas automáticas (PHPUnit) y migraciones de base de datos.
-- Registrar las pruebas P-36 en adelante de 7.1 (bloqueo de intentos, restablecer clave de tutelado, desvincular, duplicar con éxito, filtros y vencidas, perfil).
+- Límite de intentos y cierre de sesiones al cambiar la contraseña, reconfirmar el correo del tutor al cambiarlo y guardar el comentario de la devolución en el historial (LIM-11 a LIM-14).
 
 ## 9.4 Conclusiones y lecciones aprendidas
 
@@ -1450,7 +1453,7 @@ Son propuestas que salen de lo que el alcance excluye (2.2) y de las limitacione
 | ----- | --------------------------------------------------------------------------------------------------- |
 | A     | Capturas de pantalla [Completar]                                                                    |
 | B     | Código crítico: `ActiveRecord::where`, `TareaController::actualizar`, `PerfilController::perfil`    |
-| C     | Resultados de las pruebas: sección 13 (P-01 a P-35)                                                 |
+| C     | Resultados de las pruebas: sección 13 (P-01 a P-44)                                                 |
 
 ---
 
@@ -1469,7 +1472,7 @@ Esta sección reemplaza el «Plan de corrección y endurecimiento» que se redac
 | 7. Correo al destinatario real                  | ERR-08        | `c978a1f`                                     | P-23, P-25          | Resuelto |
 | 8. CSRF y sesión                                | ERR-06, ERR-09 | `c1b2931`, `7bfa426`                         | P-07, P-13, P-29    | ERR-06 resuelto; ERR-09 parcial (LIM-02) |
 | 9. Docker y producción                          | ERR-16, ERR-19 | `2f334a3`, `7bfa426`                         | P-27 a P-31, P-34   | Resuelto |
-| 10. Ejecutar las pruebas tras corregir          | -             | -                                             | P-01 a P-35         | Hecho: las 35 pasan (7.1) |
+| 10. Ejecutar las pruebas tras corregir          | -             | -                                             | P-01 a P-44         | Hecho: las 44 pasan (7.1) |
 
 **Lo que no es un paso del plan y también se cerró:** ERR-10 (`98a7151`), ERR-11 (`c3401ed`), ERR-12 (`c1b2931`), ERR-17 (`5b581aa`) y ERR-20 (`c1b2931`). ERR-14 y ERR-15 quedaron obsoletos al reescribir el cliente en el Paso 4; se atribuyen a `d9850e0` por su mensaje, sin haber comprobado el hash exacto.
 
@@ -1479,6 +1482,7 @@ Esta sección reemplaza el «Plan de corrección y endurecimiento» que se redac
 | ------------------------------------------------------------------------------------------------------ | ----------------------------------- |
 | `logout` solo vacía `$_SESSION`                                                                        | ERR-09 parcial, LIM-02 (aceptada)   |
 | Vincular, `olvide` y `crear` revelan si un correo existe                                               | ERR-13 parcial, LIM-01 (aceptada)   |
+| Cambiar la contraseña sin límite de intentos y sin cerrar otras sesiones; correo del tutor sin reconfirmar; comentario de devolución sin rastro | LIM-11 a LIM-14 (aceptadas) |
 | Menciones a UpTask como origen en el README y en esta documentación                                    | ERR-18 parcial (se ajusta en 10c)   |
 | `ActiveRecord::get($limite)` no escapa; ningún código lo llama                                         | Residuo de ERR-01                   |
 | Consultas preparadas en lugar de escape de valores                                                     | Mejora futura (7.4)                 |
@@ -1491,27 +1495,27 @@ Esta sección reemplaza el «Plan de corrección y endurecimiento» que se redac
 
 ## 11.1 Requisitos funcionales
 
-La columna «Prueba» remite a la sección 13. «Sin P» significa que ninguna prueba numerada registra ese requisito (ver 7.1).
+La columna «Prueba» remite a la sección 13. Tras el Paso 11a todos los requisitos funcionales tienen al menos una prueba numerada; «Sin P» (11.2) significa que ninguna la registra (ver 7.1).
 
 | Requisito                            | Caso de uso | Diseño                | Código                                                                         | Prueba                                   |
 | ------------------------------------ | ----------- | --------------------- | ------------------------------------------------------------------------------ | ---------------------------------------- |
 | RF-01 Registrar cuenta               | CU-01       | Fig. 1, 2, 3, 6       | `LoginController::crear`, `Usuario::validarNuevaCuenta`                        | P-15, P-16, P-22, P-23, P-34             |
 | RF-02 Confirmar cuenta               | CU-02       | Fig. 3, 6             | `LoginController::confirmar`, `Email::enviarConfirmacion`                      | P-23, P-24, P-26, P-35                   |
-| RF-03 Iniciar sesión                 | CU-03       | Fig. 7                | `LoginController::login`, `IntentoLogin`                                       | P-15, P-27; bloqueo: sin P               |
+| RF-03 Iniciar sesión                 | CU-03       | Fig. 7                | `LoginController::login`, `IntentoLogin`                                       | P-15, P-27, P-36, P-37                   |
 | RF-04 Cerrar sesión                  | CU-04       | Fig. 2                | `LoginController::logout`                                                      | P-13                                     |
 | RF-05 Recuperar contraseña           | CU-05       | Fig. 3                | `LoginController::olvide` y `reestablecer`, `Usuario::crearTokenRecuperacion`  | P-24, P-25, P-26                         |
-| RF-06 Crear tutelado                 | CU-06       | Fig. 2, 5             | `TutorController::crear_tutelado`, `Usuario::generarAlias`                     | P-08 (rechazo), P-34                     |
-| RF-07 Restablecer clave del tutelado | CU-07       | Fig. 1                | `TutorController::reset_password`                                              | Sin P                                    |
-| RF-08 Vincular y desvincular         | CU-08       | Fig. 1, 5             | `TutorController::vincular` y `desvincular`, `Vinculo`                         | P-08 (rechazo), P-01 a P-06 (efecto del vínculo); desvincular: sin P |
+| RF-06 Crear tutelado                 | CU-06       | Fig. 2, 5             | `TutorController::crear_tutelado`, `Usuario::generarAlias`                     | P-08 (rechazo), P-34, P-40               |
+| RF-07 Restablecer clave del tutelado | CU-07       | Fig. 1                | `TutorController::reset_password`                                              | P-38                                     |
+| RF-08 Vincular y desvincular         | CU-08       | Fig. 1, 5             | `TutorController::vincular` y `desvincular`, `Vinculo`                         | P-08 (rechazo), P-01 a P-06 (efecto del vínculo), P-39 |
 | RF-09 Asignar tarea con partes       | CU-09       | Fig. 2, 4, 5          | `TareaController::crear`, `views/tutor/nueva-tarea.php`, `nueva-tarea.js`      | P-14, P-17, P-34                         |
 | RF-10 Editar tarea y partes          | CU-10       | Fig. 4                | `TareaController::actualizar`, `ParteController::crear`                        | P-03, P-14, P-19                         |
-| RF-11 Duplicar tarea                 | CU-10       | Fig. 5                | `TareaController::duplicar`                                                    | P-04, P-20 (modal); éxito: sin P         |
-| RF-12 Eliminar tarea                 | CU-10       | Fig. 5                | `TareaController::eliminar`                                                    | P-17 (baja con sus partes y su historial) |
-| RF-13 Listar y filtrar tareas        | CU-13       | Fig. 11               | `TareaController::index`, `Tarea::vencida`, `tutor.js`                         | P-06, P-10, P-18; filtros y vencidas: sin P |
-| RF-14 Marcar parte como hecha        | CU-12       | Fig. 4, 8             | `ParteController::marcar_hecha`, `alumno.js`                                   | P-09, P-34                               |
-| RF-15 Revisar parte                  | CU-11       | Fig. 4, 9             | `ParteController::revisar`, `Parte::transicionar`                              | P-01, P-02, P-08, P-34                   |
-| RF-16 Historial de la tarea          | CU-14       | Fig. 5, 8, 9          | `TareaController::historial`, `Historial::registrar`, `comun.js`               | P-05, P-20                               |
-| RF-17 Perfil y contraseña            | CU-15       | Fig. 1                | `PerfilController::perfil` y `cambiar_password`                                | Sin P                                    |
+| RF-11 Duplicar tarea                 | CU-10       | Fig. 5                | `TareaController::duplicar`                                                    | P-04, P-20 (modal), P-41                 |
+| RF-12 Eliminar tarea                 | CU-10       | Fig. 5                | `TareaController::eliminar`                                                    | P-17, P-44 (baja con sus partes y su historial) |
+| RF-13 Listar y filtrar tareas        | CU-13       | Fig. 11               | `TareaController::index`, `Tarea::vencida`, `tutor.js`                         | P-06, P-10, P-18, P-42                   |
+| RF-14 Marcar parte como hecha        | CU-12       | Fig. 4, 8             | `ParteController::marcar_hecha`, `alumno.js`                                   | P-09, P-34, P-44                         |
+| RF-15 Revisar parte                  | CU-11       | Fig. 4, 9             | `ParteController::revisar`, `Parte::transicionar`                              | P-01, P-02, P-08, P-34, P-44             |
+| RF-16 Historial de la tarea          | CU-14       | Fig. 5, 8, 9          | `TareaController::historial`, `Historial::registrar`, `comun.js`               | P-05, P-20, P-44                         |
+| RF-17 Perfil y contraseña            | CU-15       | Fig. 1                | `PerfilController::perfil` y `cambiar_password`                                | P-43                                     |
 | RF-18 Menú lateral móvil             | -           | -                     | `src/js/app.js`                                                                | P-21                                     |
 
 ## 11.2 Requisitos no funcionales
@@ -1523,7 +1527,7 @@ La columna «Prueba» remite a la sección 13. «Sin P» significa que ninguna p
 | RNF-03 Entradas y consultas      | Fig. 11         | `verificarCsrf`, `escape_string`, `columnaSegura`                       | P-07, P-14 a P-20, P-22         |
 | RNF-04 Navegador y sesión        | Fig. 11, 13     | `enviarCabecerasSeguridad`, `cspNonce`, `includes/app.php`              | P-13, P-29, P-30, P-31          |
 | RNF-05 Base con el mínimo permiso | Fig. 12, 13    | Usuario `claudetask_app`, `docker/`                                     | P-27, P-28, P-34                |
-| RNF-06 Borrado en cascada        | Fig. 5          | Claves foráneas de `claudetask.sql`                                     | P-17                            |
+| RNF-06 Borrado en cascada        | Fig. 5          | Claves foráneas de `claudetask.sql`                                     | P-17, P-44                      |
 | RNF-07 Entorno reproducible      | Fig. 12         | `docker-compose.yml`                                                    | P-28, P-34                      |
 | RNF-08 Secretos fuera del código | Fig. 12         | `.env`, `.env.example`, `vlucas/phpdotenv`                              | P-34                            |
 | RNF-09 Respaldo y restauración   | Fig. 12         | `docker/respaldo.sh`, `docker/restaurar.sh`                             | P-32                            |
@@ -1556,9 +1560,9 @@ La columna «Prueba» remite a la sección 13. «Sin P» significa que ninguna p
 
 ---
 
-# 13. Pruebas de ClaudeTask (Paso 8)
+# 13. Pruebas de ClaudeTask
 
-El plan hacía referencia a una lista «P-01 a P-16» que no existía en ningún documento. Esta es la lista propia, armada a partir de la matriz de roles y de las pruebas realizadas. Los CP-01 a CP-24 que tenía la sección 7.1 pertenecían a UpTask (proyectos) y se retiraron; la sección 11 relaciona cada requisito con estas pruebas.
+El plan hacía referencia a una lista «P-01 a P-16» que no existía en ningún documento. Esta es la lista propia, armada a partir de la matriz de roles y de las pruebas realizadas. Los CP-01 a CP-24 que tenía la sección 7.1 pertenecían a UpTask (proyectos) y se retiraron; la sección 11 relaciona cada requisito con estas pruebas. La lista va de P-01 a P-44: P-01 a P-25 son del Paso 8, P-26 a P-35 del Paso 9 y P-36 a P-44 del Paso 11a.
 
 Método: peticiones `curl` con sesión y token CSRF reales, y dos navegadores (uno por rol). Las pruebas de rechazo no destruyen datos y usan ids que existen, de modo que el 403 es por permiso y no por id inexistente. Fecha de ejecución: 2026-11-03. Usuarios: tutor Ana (id 1), tutor Beto (id 4, sin vínculo con los tutelados de Ana), tutelados Lucia47 (id 2) y Pedro52 (id 3).
 
@@ -1609,12 +1613,36 @@ Misma fecha (2026-11-03) y mismo método que el Paso 8. Los commits son los del 
 | P-34 | Instalación desde cero (9f) | Copia limpia del commit `941e8d1` con `git archive HEAD` en otra carpeta (sin `.env`, `vendor` ni `node_modules`), con su propio volumen de MySQL; solo los pasos 1 a 4 de `README.md`; después el «Primer uso» y los manuales: registrar tutor, confirmar por correo, iniciar sesión, crear tutelado, asignar tarea con partes, entrar como alumno, marcar, aprobar y devolver | `docker compose up -d --build` termina sin errores (listo a los 40 s); `/` da 200 y `/build/.vite/manifest.json` da 404; el usuario `claudetask_app` solo tiene `SELECT, INSERT, UPDATE, DELETE` sobre `claudetask`; 0 usuarios al inicio; el flujo completo funciona como lo describe el README | Pasa. El primer intento falló por el procedimiento de la prueba, no por el código: los contenedores de la instalación habitual, aunque detenidos, conservan los nombres fijos `claudetask_php` y `claudetask_mysql`; hubo que renombrarlos antes y devolverles el nombre después. El recorrido en el navegador lo hizo el usuario y no se anotó resultado por paso; el README no necesitó cambios |
 | P-35 | Tokens en `/confirmar` (9f) | Con un usuario confirmado de la base: poner un token de recuperación (con `token_expira` a 1 hora) y visitar `/confirmar?token=...`; después un token de confirmación (`token_expira` NULL, `confirmado=0`) y visitar lo mismo; restaurar el usuario | El token de recuperación da «Token no valido» y no se gasta; el de confirmación confirma la cuenta, deja `token` NULL y `confirmado=1` | Pasa. Antes del cambio, el mismo guion mostró el fallo: el token de recuperación confirmaba y se gastaba. Usuario restaurado (`NULL NULL 1`) |
 
+## Pruebas del Paso 11a
+
+Misma fecha (2026-11-03) y mismo método que los pasos anteriores: `curl` con sesión y token CSRF reales, en un único bloque por prueba. Pasaron sin fallos y sin cambios de código. Cada bloque restauró lo que tocó (usuarios reales por SQL, con el hash exacto; lo creado se borró) y dejó los contadores base: usuarios 6, tareas 3, partes 6, historial 7, vínculos 4, `intentos_login` 0. Los ids nuevos de prueba empiezan en 14 o más porque el `AUTO_INCREMENT` ya había avanzado; no afectan a los contadores.
+
+| Id   | Área                                | Prueba                                                                                                                                                                                                                                                                                                                                              | Esperado                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | Resultado |
+| ---- | ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------- |
+| P-36 | Bloqueo de intentos (RF-03)         | Con Lucia52: 5 intentos con clave incorrecta; el 6.º con la clave correcta; a los 31 s, la clave correcta                                                                                                                                                                                                                                           | Los 5 primeros dan 200 «Usuario o contraseña incorrectos»; tras el 5.º, `intentos=0` y `bloqueado_hasta` a +30 s; el 6.º da 200 «Demasiados intentos. Espera 30 segundos.»; a los 31 s, 302 a `/mis-tareas` y la fila de `intentos_login` se elimina (la clave se guarda en minúsculas)                                                                                                                                                                                     | Pasa      |
+| P-37 | Cuenta sin confirmar (RF-03)        | Beto (id 4) con `confirmado=0` puesto por SQL: login con la clave correcta; después, restaurar `confirmado=1` y repetir                                                                                                                                                                                                                              | Con `confirmado=0`: 200 con el mensaje genérico e `intentos=1`, sin revelar el motivo; con `confirmado=1`: 302 a `/dashboard`                                                                                                                                                                                                                                                                                                                                             | Pasa      |
+| P-38 | Restablecer clave de tutelado (RF-07) | Ana sobre Lucia52 (vinculada); Beto (sin vínculo); la propia tutelada; clave de 2 caracteres y clave como arreglo; login con la clave vieja y con la nueva                                                                                                                                                                                         | Clave corta o arreglo: 400 «La contraseña necesita al menos 6 caracteres.»; Beto: 403 «No tienes permiso sobre este tutelado.» y el hash no cambia; Ana: 200 «Contraseña actualizada», la clave vieja no entra (200 sin redirección) y la nueva da 302 a `/mis-tareas`; la tutelada: 403 «Acceso denegado.»                                                                                                                                                                | Pasa. Hash original restaurado exacto por SQL |
+| P-39 | Vincular y desvincular (RF-08)      | Sobre Lucia52 con Ana y Beto: Beto sin vínculo en las dos acciones; quitar a un tutor no vinculado; correo inexistente; vincular y repetir; un tutor que no es el responsable quita a otro; cada tutor se quita a sí mismo; sale el responsable; sale el único tutor                                                                                 | Beto sin vínculo: 403 en las dos acciones; quitar a un no vinculado: 400; correo inexistente: 404; vincular: 200 y repetir: 400; quitar a otro sin ser el responsable: 403 «Solo el tutor responsable puede quitar a otros tutores.»; salir uno mismo: 200; si sale el responsable, `creado_por` pasa al siguiente (de 1 a 4); el único tutor no sale: 400 «Es el único tutor. Vincula a otro antes de salir.»                                                              | Pasa. Vínculos y `creado_por` restaurados |
+| P-40 | Crear tutelado (RF-06)              | Ana: nombre en blanco, de 101 y como arreglo; curso de 61; clave de 5; nombre sin letras; tres altas válidas («Test23», «María Ñandú» y un nombre de 100 caracteres); login con el alias y con la clave de otro                                                                                                                                      | Seis rechazos 400 sin filas nuevas; tres altas 200 con alias «Test23», «Maria80» (tilde y eñe convertidas) y un alias de 32 caracteres; filas con rol tutelado, sin correo, `confirmado=1`, `creado_por=1`, hash `$2y$` y vínculo (1, id); el login con el alias da 302 a `/mis-tareas` y con la clave de otro, 200                                                                                                                                                       | Pasa. Usuarios creados borrados al final |
+| P-41 | Duplicar tarea (RF-11)              | Ana: sin destinos y destinos basura (`abc`, `-1`, `0`); un destino no vinculado mezclado con uno válido; la tutelada; destinos 3 y 6; destinos repetidos 3 y 3; comparar las copias con el original                                                                                                                                                | Sin destinos o basura: 400 «Elige al menos un tutelado.»; destino ajeno mezclado: 403 y no se crea nada (todo o nada); la tutelada: 403; destinos 3 y 6: `copiadas` 2; repetidos: `copiadas` 1; las copias conservan título, descripción y fecha, con las partes en pendiente, sin historial y con `url` distinta cada una                                                                                                                                                | Pasa. Copias borradas al final |
+| P-42 | Filtros y vencidas (RF-13)          | Ana, Pedro y Beto: una tarea con fecha límite 2020 y otra con 2099; `tutelado=2`, `tutelado=3` y `tutelado=5` (no vinculado a Ana); `porRevisar=1` con una parte en `hecha`; `porRevisar=1&tutelado=2`; Beto lista las tareas                                                                                                                       | `vencida` true en la de 2020 y false en la de 2099; cada filtro devuelve solo lo del tutelado; `tutelado=5` devuelve lista vacía; `porRevisar=1` deja solo la tarea con una parte en `hecha`; `porRevisar=1&tutelado=2` da vacío; Beto no ve las tareas de Ana                                                                                                                                                                                                             | Pasa      |
+| P-43 | Perfil y contraseña (RF-17)         | Beto (tutor) y Lucia52 (tutelada): sin sesión; sin token CSRF y con uno falso; perfil con nombre vacío, de espacios, de 101 y como arreglo, y con correo vacío, `abc`, de 258 caracteres, como arreglo y de otra cuenta (también en mayúsculas); en la tutelada, nombre inválido y `email`, `alias` y `rol` enviados; cambiar contraseña con campos vacíos, actual incorrecta, nueva de 5, de 73 y como arreglo; 6 intentos con la actual incorrecta y luego la correcta; nueva igual a la actual; nueva de 72; perfil con HTML y comilla, correo propio, nombre de 100 y campos extra (`rol`, `confirmado`, `password`, `id`, `creado_por`, `alias`, `token`) | Sin sesión: 302 a `/`; sin CSRF o con uno falso: 403 y la BD no cambia. Todos los rechazos: 200 con alerta de error y sin cambios (hash igual). Tutelada: solo cambia el nombre (correo `NULL`, alias y rol intactos). Los 6 intentos incorrectos dan «Password Incorrecto» sin bloqueo (`intentos_login` en 0) y la correcta se acepta; la clave vieja da 200 sin redirección y la nueva 302 a `/dashboard` (`/mis-tareas` en la tutelada); la sesión abierta sigue en 200; 72 caracteres se aceptan y 73 se rechazan; una nueva igual a la actual se acepta con hash distinto. El nombre con `<b>` y comilla se guarda literal y se muestra escapado en el campo y en «Hola:»; el nombre de 100 y el correo propio se aceptan; los campos extra no cambian nada (filas iguales) | Pasa. Usuarios 4 y 6 restaurados por SQL (nombre, correo y hash exactos); `intentos_login` vaciada |
+| P-44 | Ciclo de revisión (RF-14, RF-15, RF-16) | Ana crea la tarea «P44» con las partes A, B y C para Lucia47. Con todo pendiente: aprobar, devolver y reabrir, y acciones inválidas (`borrar`, vacía, arreglo). Permisos: Beto, la tutelada que revisa, Pedro y la tutora que marcan hecha, marcar hecha sin CSRF, ids inexistentes y Beto que elimina la tarea. Ciclo: Lucia47 marca A, B y C y repite A; Ana aprueba A con comentario, devuelve B con comentario de 600 caracteres; Lucia47 marca B; Ana aprueba B y C; reabre A y repite; Lucia47 marca A; Ana aprueba A y repite. Después, el historial y la limpieza | Transiciones inválidas: 400 con su mensaje («Solo se aprueba lo que el alumno marcó como hecho.», «Solo se devuelve lo que está por revisar.», «Solo se reabre una parte aprobada.») y 3 veces «Acción no válida.»; permisos: 403 las 8 veces y nada cambia; repetir «hecha»: 400 «Esta parte ya no está pendiente.». Devolver deja B en pendiente con `devuelta=1` y comentario de 500 (recortado); al marcarla de nuevo, el comentario queda vacío y `revisada_por` se conserva; al aprobar A, B y C, `progreso` es 3 de 3 con `completa` true, `vencida` false y la tarea sale de «por revisar»; reabrir A baja a 2 de 3, deja `devuelta=1` y comentario vacío; tras aprobarla de nuevo, 3 de 3. El historial tiene 11 filas, `hecha:2 hecha:2 hecha:2 aprobar:1 devolver:1 hecha:2 aprobar:1 aprobar:1 reabrir:1 hecha:2 aprobar:1` (acción y autor); `/api/historial` las devuelve de la más reciente a la más antigua, con parte, acción, nombre del autor y fecha, a Ana y a Lucia47; Pedro y Beto: 403 | Pasa. Tarea eliminada: partes e historial en 0 por la cascada; sin datos nuevos |
+
+**Observaciones de P-43 y P-44 (no son fallos)**
+
+- Cambiar la contraseña no limita los intentos, no cierra otras sesiones y acepta una contraseña nueva igual a la actual; el tutor cambia su correo sin contraseña ni reconfirmación. Se registran como LIM-11 a LIM-13 (7.3). De la regeneración del id de sesión solo consta que la sesión abierta sigue válida.
+- El comentario de una devolución se borra cuando el tutelado vuelve a marcar la parte, y el historial no guarda comentarios (LIM-14). Un comentario de más de 500 caracteres se recorta sin avisar, y aprobar también guarda el comentario enviado.
+- El cliente `mysql` del contenedor muestra «�» con las tildes (por ejemplo, «Lucía»). La hipótesis es que imprime en `latin1`; no se verificó. Lo respalda que P-17 guardó y mostró emojis, y que la restauración con `UNHEX` dejó el nombre exacto.
+- La marca «vencida» en una tarea con 0 partes no se probó.
+
 ## Decisiones de diseño aceptadas
 
 - Vincular por correo revela si el correo existe.
 - Logout solo vacía `$_SESSION`.
 - Restablecer la contraseña de un tutelado no limpia su bloqueo en `intentos_login`.
 - La tabla `intentos_login` crece con claves arbitrarias.
+- Cambiar la contraseña no limita los intentos ni cierra otras sesiones; el correo del tutor se cambia sin reconfirmar (LIM-11 a LIM-13).
 
 ## Estado de los pendientes del Paso 9
 
@@ -1644,7 +1672,8 @@ Abiertos:
 
 - [x] Completar autor, institución, metodología y roles (la metodología y los roles son descripciones del proceso real, confirmar con el autor)
 - [ ] Insertar capturas de pantalla
-- [x] Los CP-01 a CP-24 (UpTask) se retiraron; los resultados están en P-01 a P-35 (secciones 7.1, 11 y 13)
+- [x] Los CP-01 a CP-24 (UpTask) se retiraron; los resultados están en P-01 a P-44 (secciones 7.1, 11 y 13)
+- [x] Registradas las pruebas P-36 a P-44 (2026-11-03): ningún requisito funcional queda sin prueba numerada (7.1 y 11.1)
 - [x] Cada error ERR-01 a ERR-20 confirmado, resuelto o descartado (sección 7.3, 2026-11-03)
 - [x] El plan de corrección de UpTask está aplicado y registrado en la sección 10; quedan las limitaciones de 7.3
 - [x] Revisar el texto `Sopilote22` de `views/templates/nombre-sitio.php` (quitado en `941e8d1`)
