@@ -924,7 +924,7 @@ Hallazgos obtenidos al leer el código. Se recomienda confirmarlos con las prueb
 | ERR-15 | La respuesta de error de `actualizar` no trae la clave `respuesta`, y el cliente lee `resultado.respuesta.tipo`, lo que lanza una excepción. Además, SweetAlert muestra el mismo texto como título y cuerpo                                                                                                      | Baja     | `TareaController`, `tareas.js`                                     |
 | ERR-16 | `docker-compose.yml`: contraseña root `1234` en claro; se monta todo el proyecto (incluido `.env`) dentro del contenedor MySQL; `uptask.sql` queda en la subcarpeta `host/`, por lo que MySQL normalmente no lo importa solo (verificar)                                                                         | Media    | `docker-compose.yml`                                               |
 | ERR-17 | No hay `.env.example` ni README; las variables solo se deducen del código                                                                                                                                                                                                                                        | Baja     | Raíz                                                               |
-| ERR-18 | Marca inconsistente (UpTask, Uptask, SantiTask); el texto `Sopilote22` en `nombre-sitio.php` parece accidental y conviene revisarlo; `<html lang="en">` con contenido en español; `author` en `package.json` es «Tu nombre»                                                                                      | Baja     | `views/`, `package.json`                                           |
+| ERR-18 | Marca inconsistente (UpTask, Uptask, SantiTask); el texto accidental `Sopilote22` de `nombre-sitio.php` ya se quitó (`941e8d1`); `<html lang="en">` con contenido en español; `author` en `package.json` es «Tu nombre»                                                                                      | Baja     | `views/`, `package.json`                                           |
 | ERR-19 | La CSP de Apache está pensada para desarrollo (`unsafe-inline`, `unsafe-eval`, `localhost:5173`)                                                                                                                                                                                                                 | Media    | `docker/apache.conf`                                               |
 | ERR-20 | Las rutas inexistentes muestran texto plano, y se redirige a `/404`, que no existe                                                                                                                                                                                                                               | Baja     | `Router.php`, `TareaController`                                    |
 
@@ -1220,7 +1220,7 @@ Tras P-17 la tarea de prueba se eliminó con `DELETE`; los contadores volvieron 
 
 ## Pruebas del Paso 9
 
-Misma fecha (2026-11-03) y mismo método que el Paso 8. Los commits son los del repositorio: 9a `c978a1f`, 9b `c1a2919`, 9c `2f334a3`, 9d `7bfa426`, 9e `f7414b2`. El Paso 9a (entorno de errores, correo al usuario, fallo de envío controlado) se probó antes y consta en el commit.
+Misma fecha (2026-11-03) y mismo método que el Paso 8. Los commits son los del repositorio: 9a `c978a1f`, 9b `c1a2919`, 9c `2f334a3`, 9d `7bfa426`, 9e `f7414b2`; después, `6aa6283` (resultados), `5b581aa` (README) y `941e8d1` (P-34). El Paso 9a (entorno de errores, correo al usuario, fallo de envío controlado) se probó antes y consta en el commit.
 
 | Id   | Área                 | Prueba                                                                                                                                                      | Esperado                                                                                                                                  | Resultado |
 | ---- | -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | --------- |
@@ -1232,6 +1232,7 @@ Misma fecha (2026-11-03) y mismo método que el Paso 8. Los commits son los del 
 | P-31 | Producción, navegador (9d) | Con `ENVIRONMENT=production`, tutor y tutelado con la consola de DevTools abierta. Se pidió revisar: estilos y fuentes, crear, Editar, Historial, Duplicar y Eliminar tarea, marcar hecha y revisar una parte, modo oscuro y aviso de éxito | Sin mensajes `Refused to ...` ni de Content Security Policy en la consola; la interfaz igual que en desarrollo | Pasa, según lo indicado por el usuario. No se anotó el resultado por acción |
 | P-32 | Respaldo (9e)        | `docker/respaldo.sh`; cancelar con `no`; restaurar con `si` en un MySQL desechable y comparar con la base real                                              | Archivo con permisos 600, 6 `CREATE TABLE`, `token_expira` presente y `respaldos/` fuera de `git status`; cancelar da `exit=1` sin tocar nada; restaurado = real en contadores y en el hash de contraseñas (`tareas=3 partes=6 usuarios=6 historial=7 vinculos=4`) | Pasa |
 | P-33 | Archivos públicos (9e) | `/build/.vite/manifest.json`, un CSS de `/build/assets/` y `/`                                                                                            | 404, 200 y 200                                                                                                                            | Falló la primera vez (200): el contenedor veía una copia antigua de `docker/apache.conf` montada como archivo único. Tras reiniciar `claudetask_php` pasa |
+| P-34 | Instalación desde cero (9f) | Copia limpia del commit `941e8d1` con `git archive HEAD` en otra carpeta (sin `.env`, `vendor` ni `node_modules`), con su propio volumen de MySQL; solo los pasos 1 a 4 de `README.md`; después el «Primer uso» y los manuales: registrar tutor, confirmar por correo, iniciar sesión, crear tutelado, asignar tarea con partes, entrar como alumno, marcar, aprobar y devolver | `docker compose up -d --build` termina sin errores (listo a los 40 s); `/` da 200 y `/build/.vite/manifest.json` da 404; el usuario `claudetask_app` solo tiene `SELECT, INSERT, UPDATE, DELETE` sobre `claudetask`; 0 usuarios al inicio; el flujo completo funciona como lo describe el README | Pasa. El primer intento falló por el procedimiento de la prueba, no por el código: los contenedores de la instalación habitual, aunque detenidos, conservan los nombres fijos `claudetask_php` y `claudetask_mysql`; hubo que renombrarlos antes y devolverles el nombre después. El recorrido en el navegador lo hizo el usuario y no se anotó resultado por paso; el README no necesitó cambios |
 
 ## Decisiones de diseño aceptadas
 
@@ -1254,7 +1255,8 @@ Hechos:
 
 Abiertos:
 
-- [ ] Instalar desde cero siguiendo solo `README.md`, y que otra persona cree un tutelado, asigne una tarea y complete el ciclo (Versión 1.0). Los manuales ya están escritos.
+- [x] Instalar desde cero siguiendo solo `README.md` y recorrer el ciclo completo (P-34, 2026-11-03, commit `941e8d1`).
+- [ ] Que otra persona, distinta de quien desarrolló, cree un tutelado, asigne una tarea y complete el ciclo siguiendo solo los manuales (Versión 1.0).
 - [x] Secciones 8.1 a 8.4 actualizadas; la instalación y los manuales de tutor y tutelado están en `README.md`.
 - [ ] El envío SMTP es síncrono: registrar y recuperar contraseña tardan de 3 a 5 segundos (limitación conocida).
 - [ ] Tras editar el `.env` o `docker/apache.conf` hay que reiniciar `claudetask_php`: el contenedor ve una copia antigua (comprobado de nuevo en 9e con `apache.conf`, que se monta como archivo único). Con `apache2ctl graceful` no basta.
@@ -1270,5 +1272,5 @@ Abiertos:
 - [ ] Ejecutar CP-01 a CP-24 y anotar resultados
 - [ ] Confirmar o descartar cada error ERR-01 a ERR-20
 - [ ] Aplicar el plan de la sección 10 antes de publicar
-- [ ] Revisar el texto `Sopilote22` de `views/templates/nombre-sitio.php`
+- [x] Revisar el texto `Sopilote22` de `views/templates/nombre-sitio.php` (quitado en `941e8d1`)
 - [ ] Confirmar que lo documentado coincide con el sistema
