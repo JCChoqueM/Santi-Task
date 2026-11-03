@@ -123,17 +123,27 @@ class LoginController
 
                     //Crear un nuevo usuario
                     $resultado = $usuario->guardar();
+                    $creado = is_array($resultado) && !empty($resultado['resultado']);
 
-                    //enviar email
-                    $email = new Email($usuario->email, $usuario->nombre, $usuario->token);
-                    // debuguear($email);
-                    $email->enviarConfirmacion();
-                    if ($resultado) {
-                        header('Location: /mensaje'); exit;
+                    if ($creado) {
+                        //enviar email
+                        $email = new Email($usuario->email, $usuario->nombre, $usuario->token);
+                        if ($email->enviarConfirmacion()) {
+                            header('Location: /mensaje'); exit;
+                        }
+                        // Sin correo nadie puede confirmar la cuenta: se borra para poder reintentar
+                        $usuario->id = $resultado['id'];
+                        $usuario->eliminar();
+                        $usuario->id = null;
+                        Usuario::setAlerta('error', 'No pudimos enviar el correo de confirmación. Inténtalo de nuevo en unos minutos.');
+                    } else {
+                        Usuario::setAlerta('error', 'No se pudo crear la cuenta. Inténtalo de nuevo.');
                     }
+                    $alertas = Usuario::getAlertas();
                 }
             }
         }
+
         $router->render(
             'auth/crear',
             [
@@ -170,12 +180,11 @@ class LoginController
 
                     //enviar el email
                     $email = new Email($usuario->email, $usuario->nombre, $usuario->token);
-                    $email->enviarInstrucciones();
-
-
-                    //imprimir alerta
-                    Usuario::setAlerta('exito', 'Hemos enviado las instrucciones a tu email');
-                    // debuguear($usuario);
+                    if ($email->enviarInstrucciones()) {
+                        Usuario::setAlerta('exito', 'Hemos enviado las instrucciones a tu email');
+                    } else {
+                        Usuario::setAlerta('error', 'No pudimos enviar el correo. Inténtalo de nuevo en unos minutos.');
+                    }
                 } else {
                     Usuario::setAlerta('error', 'El usuario no existe o no esta confirmado');
                 }
