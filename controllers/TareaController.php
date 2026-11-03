@@ -9,6 +9,74 @@ use Model\Historial;
 
 class TareaController
 {
+    // Límites acordes con las columnas: titulo VARCHAR(255), descripcion TEXT
+    private const MAX_TITULO = 255;
+    private const MAX_DESCRIPCION = 5000;
+    private const MAX_PARTES = 50;
+
+    /** Lee un campo de $_POST o $_GET como texto; si llega un arreglo u otro tipo, devuelve ''. */
+    private static function texto(string $clave, array $fuente): string
+    {
+        $v = $fuente[$clave] ?? '';
+        return is_string($v) ? $v : '';
+    }
+
+    /** Sin sesión, la API responde JSON 403 (no redirige). */
+    private static function sesion(): void
+    {
+        if (!isset($_SESSION['login'])) {
+            responderJson(['tipo' => 'error', 'mensaje' => 'Acceso denegado.'], 403);
+        }
+    }
+
+    /** Devuelve el mensaje del primer error de los campos, o null si todo es válido. */
+    private static function errorDeCampos(string $titulo, string $descripcion, string $fecha, array $partes): ?string
+    {
+        if ($titulo === '') {
+            return 'La tarea necesita un título';
+        }
+        if (mb_strlen($titulo) > self::MAX_TITULO) {
+            return 'El título no puede pasar de ' . self::MAX_TITULO . ' caracteres.';
+        }
+        if (mb_strlen($descripcion) > self::MAX_DESCRIPCION) {
+            return 'La descripción no puede pasar de ' . self::MAX_DESCRIPCION . ' caracteres.';
+        }
+        if ($fecha !== '') {
+            $d = \DateTime::createFromFormat('!Y-m-d', $fecha);
+            if (!$d || $d->format('Y-m-d') !== $fecha) {
+                return 'La fecha límite no es válida.';
+            }
+        }
+        if (!$partes) {
+            return 'Añade al menos una parte';
+        }
+        if (count($partes) > self::MAX_PARTES) {
+            return 'Una tarea admite como máximo ' . self::MAX_PARTES . ' partes.';
+        }
+        foreach ($partes as $p) {
+            if (mb_strlen($p) > self::MAX_TITULO) {
+                return 'Cada parte puede tener hasta ' . self::MAX_TITULO . ' caracteres.';
+            }
+        }
+        return null;
+    }
+
+    /** De una lista enviada por el cliente, conserva solo los textos no vacíos (ya recortados). */
+    private static function partesDeLista(mixed $lista): array
+    {
+        $salida = [];
+        foreach ((is_array($lista) ? $lista : []) as $p) {
+            if (!is_string($p)) {
+                continue;
+            }
+            $p = trim($p);
+            if ($p !== '') {
+                $salida[] = $p;
+            }
+        }
+        return $salida;
+    }
+
     /** Carga una tarea por url y exige que el tutor esté vinculado a su tutelado. */
     private static function tareaDelTutor(string $url): Tarea
     {
@@ -44,13 +112,14 @@ class TareaController
     // GET /api/tareas  (tutor y tutelado)
     public static function index()
     {
-        isAuth();
+        self::sesion();
         $yo = (int) $_SESSION['id'];
+        $filtro = (int) self::texto('tutelado', $_GET);
 
         if ($_SESSION['rol'] === 'tutor') {
             $tareas = [];
             foreach (Vinculo::tuteladosDe($yo) as $alumno) {
-                if (!empty($_GET['tutelado']) && (int) $_GET['tutelado'] !== (int) $alumno->id) {
+                if ($filtro && $filtro !== (int) $alumno->id) {
                     continue;
                 }
                 $tareas = array_merge($tareas, Tarea::belongsTo('tutelado_id', $alumno->id));
@@ -74,29 +143,33 @@ class TareaController
     // POST /api/tarea
     public static function crear()
     {
-        isAuth();
         isTutor(true);
         verificarCsrf(true);
 
-        $tuteladoId = (int) ($_POST['tutelado_id'] ?? 0);
+        $tuteladoId = (int) self::texto('tutelado_id', $_POST);
         if (!Vinculo::existe((int) $_SESSION['id'], $tuteladoId)) {
             responderJson(['tipo' => 'error', 'mensaje' => 'No tienes permiso sobre este tutelado.'], 403);
         }
 
-        $tarea = new Tarea($_POST);
-        $tarea->id = null;   // el cliente no decide el id: siempre es un INSERT (C-04)
-        $tarea->tutelado_id = $tuteladoId;
-        $tarea->creada_por = $_SESSION['id'];
-        $tarea->url = Tarea::generarUrl();
+        $titulo = trim(self::texto('titulo', $_POST));
+        $descripcion = trim(self::texto('descripcion', $_POST));
+        $fecha = trim(self::texto('fecha_limite', $_POST));
+        $partes = self::partesDeLista($_POST['partes'] ?? []);
 
-        $partes = array_values(array_filter(array_map('trim', (array) ($_POST['partes'] ?? []))));
-        $alertas = $tarea->validar();
-        if (!$partes) {
-            $alertas['error'][] = 'Añade al menos una parte';
+        $error = self::errorDeCampos($titulo, $descripcion, $fecha, $partes);
+        if ($error !== null) {
+            responderJson(['tipo' => 'error', 'mensaje' => $error], 400);
         }
-        if (!empty($alertas['error'])) {
-            responderJson(['tipo' => 'error', 'mensaje' => $alertas['error'][0]], 400);
-        }
+
+        // Solo estos campos salen del cliente; el id, el autor y la url los fija el servidor (C-04)
+        $tarea = new Tarea([
+            'url' => Tarea::generarUrl(),
+            'tutelado_id' => $tuteladoId,
+            'creada_por' => $_SESSION['id'],
+            'titulo' => $titulo,
+            'descripcion' => $descripcion,
+            'fecha_limite' => $fecha,
+        ]);
 
         $r = $tarea->guardar();
         foreach ($partes as $i => $titulo) {
@@ -109,30 +182,40 @@ class TareaController
     // partes = JSON: [{"id": 12, "titulo": "..."}, {"id": null, "titulo": "nueva"}]
     public static function actualizar()
     {
-        isAuth();
         isTutor(true);
         verificarCsrf(true);
 
-        $tarea = self::tareaDelTutor($_POST['url'] ?? '');
+        $tarea = self::tareaDelTutor(self::texto('url', $_POST));
 
         // Solo estos campos se aceptan del cliente (C-04)
-        $tarea->titulo = trim($_POST['titulo'] ?? '');
-        $tarea->descripcion = trim($_POST['descripcion'] ?? '');
-        $tarea->fecha_limite = ($_POST['fecha_limite'] ?? '') ?: null;
+        $titulo = trim(self::texto('titulo', $_POST));
+        $descripcion = trim(self::texto('descripcion', $_POST));
+        $fecha = trim(self::texto('fecha_limite', $_POST));
 
-        $alertas = $tarea->validar();
-        $enviadas = json_decode($_POST['partes'] ?? '[]', true);
-        $enviadas = array_values(array_filter(
-            is_array($enviadas) ? $enviadas : [],
-            fn($x) => trim((string) ($x['titulo'] ?? '')) !== ''
-        ));
-        if (!$enviadas) {
-            $alertas['error'][] = 'La tarea necesita al menos una parte';
-        }
-        if (!empty($alertas['error'])) {
-            responderJson(['tipo' => 'error', 'mensaje' => $alertas['error'][0]], 400);
+        // partes llega como JSON; se descartan los elementos que no sean {id, titulo} con titulo de texto
+        $crudo = self::texto('partes', $_POST);
+        $decodificado = json_decode($crudo === '' ? '[]' : $crudo, true);
+        $enviadas = [];
+        foreach ((is_array($decodificado) ? $decodificado : []) as $x) {
+            if (!is_array($x) || !is_string($x['titulo'] ?? null)) {
+                continue;
+            }
+            $t = trim($x['titulo']);
+            if ($t === '') {
+                continue;
+            }
+            $id = $x['id'] ?? null;
+            $enviadas[] = ['id' => is_numeric($id) ? (int) $id : 0, 'titulo' => $t];
         }
 
+        $error = self::errorDeCampos($titulo, $descripcion, $fecha, array_column($enviadas, 'titulo'));
+        if ($error !== null) {
+            responderJson(['tipo' => 'error', 'mensaje' => $error], 400);
+        }
+
+        $tarea->titulo = $titulo;
+        $tarea->descripcion = $descripcion;
+        $tarea->fecha_limite = $fecha !== '' ? $fecha : null;
         $tarea->guardar();
 
         // Partes actuales de esta tarea, por id
@@ -169,11 +252,10 @@ class TareaController
     // POST /api/tarea/eliminar
     public static function eliminar()
     {
-        isAuth();
         isTutor(true);
         verificarCsrf(true);
 
-        $tarea = self::tareaDelTutor($_POST['url'] ?? '');
+        $tarea = self::tareaDelTutor(self::texto('url', $_POST));
         $tarea->eliminar();   // partes e historial caen por ON DELETE CASCADE
         responderJson(['tipo' => 'exito', 'mensaje' => 'Tarea eliminada']);
     }
@@ -181,12 +263,19 @@ class TareaController
     // POST /api/tarea/duplicar   destinos[] = ids de tutelados
     public static function duplicar()
     {
-        isAuth();
         isTutor(true);
         verificarCsrf(true);
 
-        $original = self::tareaDelTutor($_POST['url'] ?? '');
-        $destinos = array_unique(array_map('intval', (array) ($_POST['destinos'] ?? [])));
+        $original = self::tareaDelTutor(self::texto('url', $_POST));
+        // Solo ids enteros positivos, sin repetidos; cualquier otro valor se ignora
+        $crudo = $_POST['destinos'] ?? [];
+        $unicos = [];
+        foreach ((is_array($crudo) ? $crudo : []) as $d) {
+            if (is_string($d) && ctype_digit($d) && (int) $d > 0) {
+                $unicos[(int) $d] = true;
+            }
+        }
+        $destinos = array_keys($unicos);
         if (!$destinos) {
             responderJson(['tipo' => 'error', 'mensaje' => 'Elige al menos un tutelado.'], 400);
         }
@@ -217,8 +306,8 @@ class TareaController
     // GET /api/historial?url=...  (tutelado dueño o tutor vinculado)
     public static function historial()
     {
-        isAuth();
-        $tarea = Tarea::where('url', $_GET['url'] ?? '');
+        self::sesion();
+        $tarea = Tarea::where('url', self::texto('url', $_GET));
         $permitido = $tarea && (
             ($_SESSION['rol'] === 'tutelado' && (int) $tarea->tutelado_id === (int) $_SESSION['id'])
             || ($_SESSION['rol'] === 'tutor' && Vinculo::existe((int) $_SESSION['id'], (int) $tarea->tutelado_id))
