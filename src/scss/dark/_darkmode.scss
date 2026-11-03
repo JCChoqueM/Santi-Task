@@ -1,0 +1,118 @@
+@use 'base/variables' as v;
+@use 'base/mixins' as m;
+@use 'sass:color';
+@media (prefers-color-scheme: dark) {
+  $grisOscuro: #2c2c3b;
+  body {
+    background-color: $grisOscuro;
+  }
+  .tagline,
+  .formulario label,
+  .login .acciones a,
+  .crear .acciones a,
+  .olvide .acciones a {
+    color: v.$blanco;
+  }
+  .descripcion-pagina,
+  .formulario .campo input,
+  .nombre-pagina {
+    color: v.$grisClaro;
+  }
+  .formulario .campo input {
+    background-color: color.scale(v.$grisOscuro, $lightness: -20%);
+  }
+
+  .alerta.error {
+    background-color: v.$blanco;
+    &::placeholder {
+      background-color: color.scale(v.$grisClaro, $lightness: 30%);
+    }
+  }
+  .sidebar {
+    @include m.tablet {
+      background-color: color.scale(v.$grisOscuro, $lightness: 5%);
+    }
+    .sidebar-nav a {
+      &.activo,
+      &:hover {
+        background-color: v.$naranja;
+      }
+    }
+  }
+
+  .barra-mobile,
+  .barra {
+    background-color: color.adjust(v.$grisOscuro, $lightness: -7%);
+  }
+
+  .barra {
+    p {
+      color: v.$naranja;
+      span {
+        color: v.$grisClaro;
+      }
+    }
+    .cerrar-sesion {
+      @include m.boton(v.$naranja, v.$blanco);
+      font-size: 1.2rem;
+      padding: 1rem;
+      border-radius: 0.5rem;
+      margin: 0;
+    }
+  }
+  .filtros {
+    background-color: color.scale(v.$grisOscuro, $lightness: 10%);
+    h2,
+    label {
+      color: v.$blanco;
+    }
+    input[type='radio'] {
+      accent-color: v.$naranja;
+    }
+  }
+  .dashboard {
+    background-color: v.$grisOscuro;
+    .enlace {
+      color: v.$blanco;
+      &:hover {
+        color: v.$naranja;
+      }
+    }
+    .formulario input:not([type='submit']) {
+      background-color: color.scale(v.$grisOscuro, $lightness: 20%);
+
+      color: v.$blanco;
+      &::placeholder {
+        color: color.scale(v.$grisOscuro, $lightness: 30%);
+      }
+    }
+  }
+
+  .listado-proyectos .proyecto {
+    background-color: color.adjust(v.$grisOscuro, $lightness: 20%);
+    &:hover {
+      background-color: color.adjust(v.$grisOscuro, $lightness: 5%);
+    }
+  }
+  .listado-tareas .tarea {
+    background-color: color.scale(v.$grisOscuro, $lightness: 10%);
+    border: none;
+    p {
+      color: v.$grisClaro;
+    }
+  }
+  .modal .formulario {
+    background-color: color.scale(v.$grisOscuro, $lightness: 5%);
+    input[type='text'] {
+      background-color: color.scale(v.$grisOscuro, $lightness: 20%);
+      border: none;
+      color: v.$blanco;
+      &::placeholder {
+        color: v.$grisOscuro;
+      }
+    }
+    legend {
+      color: v.$grisClaro;
+    }
+  }
+}

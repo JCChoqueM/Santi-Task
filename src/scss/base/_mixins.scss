@@ -1,0 +1,72 @@
+@use 'variables' as v;
+@use 'sass:color';
+
+@mixin telefono {
+  @media (min-width: v.$telefono) {
+    @content;
+  }
+}
+@mixin tablet {
+  @media (min-width: v.$tablet) {
+    @content;
+  }
+}
+@mixin desktop {
+  @media (min-width: v.$desktop) {
+    @content;
+  }
+}
+@mixin desktopXL {
+  @media (min-width: v.$desktopXL) {
+    @content;
+  }
+}
+@mixin grid($columnas, $espaciado) {
+  display: grid;
+  grid-template-columns: repeat($columnas, 1fr);
+  gap: $espaciado;
+}
+@mixin resetear-lista() {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+@mixin boton($bgColor, $display) {
+  background-color: $bgColor;
+  color: v.$blanco;
+  font-weight: bold;
+  text-decoration: none;
+  padding: 1rem 3rem;
+  text-align: center;
+  margin-top: calc(v.$separacion / 2);
+  display: $display;
+  border: none;
+
+  &:hover {
+    background-color: color.adjust($bgColor, $lightness: 5%);
+    cursor: pointer;
+  }
+}
+/* @mixin heading($color: red, $border-radius: false) {
+  //$color es un parámetro y red es el valor por defecto
+  text-transform: uppercase;
+  font-size: 2.4rem;
+  color: $color;
+  letter-spacing: 1px;
+  background-color: black;
+  @if $border-radius {
+    border-radius: 1rem;
+  }
+} */
+
+@mixin textoDegradado($color) {
+   background: linear-gradient(to right, $color 0%, color.adjust($color, $lightness: 30%) 100%);
+        color: transparent;
+        background-clip: text;
+        text-align: center;
+        font-size: 7rem;
+        @include tablet {
+            font-size: 10rem;
+        }
+}
