@@ -1,16 +1,16 @@
-# UPTASK (SANTITASK): DOCUMENTACIÓN DEL PROYECTO
+# CLAUDETASK: DOCUMENTACIÓN DEL PROYECTO
 
-> Documento elaborado a partir del código recibido en `uptask.zip`. Lo descrito coincide con lo que el código hace.  
-> Los campos marcados como **[Completar]** son datos que solo conoce el autor (nombres, institución, fechas reales, capturas).  
+> Documento técnico de ClaudeTask. Lo descrito coincide con lo que el código del repositorio hace.  
+> Los campos marcados como **[Completar]** son datos que solo conoce el autor (institución, fechas reales, capturas).  
 > Los diagramas están en Mermaid: se ven en GitHub, VS Code (extensión Markdown Preview Mermaid Support), Obsidian y Typora.
 
-### Alcance de la revisión
+### Alcance del documento
 
-| Revisado                                                                                         | No recibido (no se documenta su contenido)                                    |
-| ------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------- |
-| `Router.php`, `public/index.php`, `includes/`, `controllers/`, `models/`, `classes/`             | `.env` (se deducen las variables por el código)                               |
-| `views/`, `src/js/`, `src/scss/`                                                                 | `public/` salvo `index.php` (imágenes, `build/`)                              |
-| `uptask.sql`, `docker-compose.yml`, `docker/`, `composer.json`, `package.json`, `vite.config.js` | `gulpfile.js/`, `vite-plugins/scss-auto-index.js`, `vendor/`, `node_modules/` |
+| Documentado                                                                                                                              | No incluido (no se documenta su contenido)                                      |
+| ---------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| `Router.php`, `public/index.php`, `includes/`, `controllers/`, `models/`, `classes/`                                                     | `.env` (la plantilla es `.env.example`)                                         |
+| `views/`, `src/js/`, `src/scss/`, `vite-plugins/`                                                                                        | `vendor/` y `node_modules/` (dependencias instaladas)                           |
+| `claudetask.sql`, `docker-compose.yml`, `docker/`, `composer.json`, `package.json`, `vite.config.js`, `README.md`                        | `public/build/` (generado por Vite) y `respaldos/` (copias de la base)          |
 
 ---
 
@@ -18,7 +18,7 @@
 
 | Campo                     | Contenido                                            |
 | ------------------------- | ---------------------------------------------------- |
-| **Título**                | UpTask (SantiTask): gestor web de proyectos y tareas |
+| **Título**                | ClaudeTask: gestor web de tareas para tutores y tutelados |
 | **Autor / Equipo**        | Julio Cesar Choque Mamani                            |
 | **Institución**           | [Completar]                                          |
 | **Fecha**                 | 02/11/2026                                           |
@@ -35,18 +35,19 @@
 
 # ÍNDICE
 
-2. [Información general](https://claude.ai/chat/3f03764c-d8c1-4af9-890f-3d6a194edbd0#1-informaci%C3%B3n-general)
-4. [Planteamiento](https://claude.ai/chat/3f03764c-d8c1-4af9-890f-3d6a194edbd0#2-planteamiento)
-6. [Requisitos](https://claude.ai/chat/3f03764c-d8c1-4af9-890f-3d6a194edbd0#3-requisitos)
-8. [Análisis y diseño](https://claude.ai/chat/3f03764c-d8c1-4af9-890f-3d6a194edbd0#4-an%C3%A1lisis-y-dise%C3%B1o)
-10. [Gestión del proyecto](https://claude.ai/chat/3f03764c-d8c1-4af9-890f-3d6a194edbd0#5-gesti%C3%B3n-del-proyecto)
-12. [Implementación](https://claude.ai/chat/3f03764c-d8c1-4af9-890f-3d6a194edbd0#6-implementaci%C3%B3n)
-14. [Calidad](https://claude.ai/chat/3f03764c-d8c1-4af9-890f-3d6a194edbd0#7-calidad)
-16. [Entrega y uso](https://claude.ai/chat/3f03764c-d8c1-4af9-890f-3d6a194edbd0#8-entrega-y-uso)
-18. [Cierre](https://claude.ai/chat/3f03764c-d8c1-4af9-890f-3d6a194edbd0#9-cierre)
-20. [Plan de corrección y endurecimiento](https://claude.ai/chat/3f03764c-d8c1-4af9-890f-3d6a194edbd0#10-plan-de-correcci%C3%B3n-y-endurecimiento)
-22. [Matriz de trazabilidad](https://claude.ai/chat/3f03764c-d8c1-4af9-890f-3d6a194edbd0#11-matriz-de-trazabilidad)
-24. [Lista de figuras](https://claude.ai/chat/3f03764c-d8c1-4af9-890f-3d6a194edbd0#12-lista-de-figuras)
+- [1. Información general](#1-información-general)
+- [2. Planteamiento](#2-planteamiento)
+- [3. Requisitos](#3-requisitos)
+- [4. Análisis y diseño](#4-análisis-y-diseño)
+- [5. Gestión del proyecto](#5-gestión-del-proyecto)
+- [6. Implementación](#6-implementación)
+- [7. Calidad](#7-calidad)
+- [8. Entrega y uso](#8-entrega-y-uso)
+- [9. Cierre](#9-cierre)
+- [10. Plan de corrección y endurecimiento](#10-plan-de-corrección-y-endurecimiento)
+- [11. Matriz de trazabilidad](#11-matriz-de-trazabilidad)
+- [12. Lista de figuras](#12-lista-de-figuras)
+- [13. Pruebas de ClaudeTask (Paso 8)](#13-pruebas-de-claudetask-paso-8)
 
 ---
 
@@ -54,27 +55,39 @@
 
 ## 1.1 Resumen
 
-UpTask (rotulada «SantiTask» en la pantalla de acceso) es una aplicación web que permite a cada usuario crear una cuenta, confirmarla por correo y administrar sus propios proyectos con una lista de tareas. Dentro de un proyecto, el usuario añade tareas, edita su nombre, las marca como pendientes o completas, las elimina y las filtra por estado, todo sin recargar la página gracias a una API en JSON. Está hecha con PHP (patrón MVC con Active Record propio), MySQL, JavaScript puro y SCSS compilado con Vite, y se ejecuta con Docker. Cada proyecto tiene una URL única y solo su propietario puede verlo.
+ClaudeTask es una aplicación web para que un **tutor** asigne tareas a sus **tutelados** (alumnos), las divida en partes y las revise. El tutor se registra con su correo y confirma la cuenta con un enlace; después crea a sus tutelados: el sistema genera el alias de acceso de cada uno (por ejemplo `Lucia47`) y el tutor fija su contraseña inicial. El tutor asigna una tarea con título, descripción, fecha límite y una o más partes. El tutelado marca cada parte como hecha; el tutor la aprueba, la devuelve con un comentario o la reabre, y la tarea queda completa cuando todas sus partes están aprobadas. Cada acción queda en un historial. Varios tutores pueden vincularse al mismo tutelado, y los permisos se deciden en el servidor por rol y por vínculo.
+
+Está hecha con PHP 8 (patrón MVC con Active Record propio), MySQL 8, JavaScript sin frameworks y SCSS compilado con Vite. Los paneles cargan las tareas como JSON y se actualizan sin recargar la página. Se ejecuta con Docker Compose e incluye respaldo y restauración de la base. Nació como adaptación de UpTask, un gestor de proyectos y tareas, del que conserva la estructura MVC y la capa de acceso a datos.
 
 ## 1.2 Introducción
 
-- **Contexto:** organizar trabajos en proyectos con listas de tareas es una necesidad común en estudiantes y equipos pequeños.
-- **Problema:** sin una herramienta propia, las tareas se dispersan en notas y chats, y no hay un estado claro de lo pendiente y lo completado.
-- **Beneficiarios:** personas que quieren llevar sus proyectos de forma privada y simple.
+- **Contexto:** un tutor que acompaña a varios alumnos les asigna trabajos que casi nunca son un solo paso.
+- **Problema:** sin una herramienta común, las tareas y sus correcciones se dispersan en notas y chats, y no queda claro qué parte entregó cada alumno ni qué falta por revisar.
+- **Beneficiarios:** los tutores, que asignan y revisan, y los tutelados, que ven qué deben hacer y qué les devolvieron.
 
 ## 1.3 Glosario
 
-| Término             | Definición                                                                                                                                |
-| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| MVC                 | Patrón que separa Modelos (datos), Vistas (HTML) y Controladores (lógica).                                                                |
-| Active Record       | Patrón donde cada modelo representa una tabla y sabe guardarse (`guardar()`, `eliminar()`). Aquí lo implementa `models/ActiveRecord.php`. |
-| Router              | Clase `MVC\Router` que asocia cada URL con un método de un controlador.                                                                   |
-| Controlador frontal | `public/index.php`: único punto de entrada; Apache redirige todas las peticiones a él.                                                    |
-| Token               | Texto temporal guardado en `usuarios.token` para confirmar la cuenta o restablecer la contraseña.                                         |
-| URL del proyecto    | Identificador público del proyecto (`proyectos.url`), generado con `md5(uniqid())`.                                                       |
-| Estado de tarea     | `0` = Pendiente, `1` = Completa.                                                                                                          |
-| Vite                | Herramienta que compila SCSS y JavaScript y sirve los recursos en desarrollo.                                                             |
-| API                 | Rutas `/api/...` que devuelven JSON y son usadas por `tareas.js`.                                                                         |
+| Término             | Definición                                                                                                                                                                                         |
+| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| MVC                 | Patrón que separa Modelos (datos), Vistas (HTML) y Controladores (lógica).                                                                                                                         |
+| Active Record       | Patrón donde cada modelo representa una tabla y sabe guardarse (`guardar()`, `eliminar()`). Aquí lo implementa `models/ActiveRecord.php`.                                                          |
+| Router              | Clase `MVC\Router` que asocia cada URL con un método de un controlador.                                                                                                                            |
+| Controlador frontal | `public/index.php`: único punto de entrada; Apache redirige todas las peticiones a él.                                                                                                             |
+| Tutor               | Cuenta con rol `tutor`: se registra con su correo, confirma la cuenta, crea tutelados, asigna tareas y revisa partes.                                                                              |
+| Tutelado            | Cuenta con rol `tutelado`: la crea un tutor, entra con su alias (no tiene correo) y ve solo sus tareas.                                                                                            |
+| Alias               | Identificador de acceso del tutelado (`usuarios.alias`): su primer nombre y un número, generado por el sistema.                                                                                    |
+| Vínculo             | Relación entre un tutor y un tutelado (tabla `vinculos`). Da permiso sobre las tareas de ese tutelado. El tutor que creó al tutelado (`usuarios.creado_por`) es su responsable.                    |
+| Tarea               | Trabajo asignado a un tutelado, con título, descripción y fecha límite opcional (tabla `tareas`).                                                                                                  |
+| Parte               | Cada paso de una tarea (tabla `partes`). El tutelado marca cada parte como hecha y el tutor la revisa.                                                                                             |
+| Estado de parte     | `pendiente`, `hecha` y `aprobada`. En pantalla, `hecha` se muestra como «Por revisar» al tutor y «Esperando al tutor» al tutelado.                                                                 |
+| Historial           | Registro de quién marcó, aprobó, devolvió o reabrió una parte, y cuándo (tabla `historial`).                                                                                                       |
+| Token               | Texto guardado en `usuarios.token`. El de confirmación no caduca; el de recuperación de contraseña caduca en 1 hora (`usuarios.token_expira`).                                                     |
+| URL de la tarea     | Identificador de una tarea en la API (`tareas.url`), generado con `md5(uniqid())`, en lugar del id numérico.                                                                                       |
+| Bloqueo de acceso   | Tras 5 intentos fallidos con el mismo correo o alias, el acceso se bloquea 30 segundos (tabla `intentos_login`).                                                                                   |
+| CSRF                | Ataque que usa la sesión abierta de una persona para enviar peticiones sin que lo sepa. Se evita con un token por sesión que valida cada petición POST.                                            |
+| CSP                 | Cabecera que limita qué scripts y estilos puede cargar el navegador. En producción, los scripts en línea llevan un valor aleatorio por petición (nonce).                                           |
+| Vite                | Herramienta que compila SCSS y JavaScript y sirve los recursos en desarrollo.                                                                                                                      |
+| API                 | Rutas `/api/...` que devuelven JSON; las usan `tutor.js`, `alumno.js` y `tutelados.js`.                                                                                                            |
 
 ---
 
@@ -82,41 +95,44 @@ UpTask (rotulada «SantiTask» en la pantalla de acceso) es una aplicación web 
 
 ## 2.1 Objetivos
 
-**Objetivo general:** ofrecer una aplicación web donde cada usuario gestione de forma privada sus proyectos y las tareas de cada uno.
+**Objetivo general:** ofrecer una aplicación web donde un tutor asigne tareas divididas en partes a sus tutelados y las revise, y donde cada tutelado vea y trabaje solo lo suyo.
 
-| N.º | Objetivo específico                              | Indicador de logro                                                 |
-| --- | ------------------------------------------------ | ------------------------------------------------------------------ |
-| OE1 | Registro de usuarios con confirmación por correo | Solo las cuentas con `confirmado = 1` pueden iniciar sesión        |
-| OE2 | Proyectos privados por usuario                   | Un proyecto solo se abre si `propietarioId` coincide con la sesión |
-| OE3 | Gestión de tareas sin recargar la página         | Crear, editar, cambiar estado y eliminar usando `fetch` y JSON     |
-| OE4 | Recuperación de acceso                           | El usuario restablece su contraseña con un enlace con token        |
-| OE5 | Entorno reproducible                             | La aplicación se levanta con `docker compose up`                   |
+| N.º | Objetivo específico                                  | Indicador de logro                                                                                                                  |
+| --- | ---------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| OE1 | Registro de tutores con confirmación por correo      | Solo las cuentas con `confirmado = 1` pueden iniciar sesión; el tutelado nace confirmado, con alias generado por el sistema         |
+| OE2 | Acceso por rol y por vínculo                         | Un tutor solo ve y modifica las tareas de tutelados con los que tiene vínculo; un tutelado solo ve las suyas                        |
+| OE3 | Asignación y revisión de tareas por partes           | El tutelado marca partes como hechas; el tutor las aprueba, devuelve o reabre; la tarea está completa con todas las partes aprobadas |
+| OE4 | Trazabilidad de lo ocurrido en cada tarea            | Cada marca, aprobación, devolución o reapertura queda en el historial con su autor y su fecha                                       |
+| OE5 | Recuperación de acceso                               | El tutor restablece su contraseña con un enlace que caduca en 1 hora; un tutor restablece la de un tutelado                         |
+| OE6 | Entorno reproducible y con respaldo                  | La aplicación se instala desde cero con `docker compose up` siguiendo el README, y la base se respalda y se restaura con scripts    |
 
 ## 2.2 Alcance y límites
 
-| Incluye                                                              | No incluye                                             |
-| -------------------------------------------------------------------- | ------------------------------------------------------ |
-| Registro, confirmación, login, logout y recuperación de contraseña   | Editar o eliminar proyectos                            |
-| Perfil y cambio de contraseña                                        | Compartir proyectos o colaboradores                    |
-| Proyectos y tareas (crear, editar nombre, estado, eliminar, filtrar) | Fechas límite, prioridades o etiquetas en tareas       |
-| Diseño adaptable a móvil y modo oscuro                               | Notificaciones                                         |
-| Despliegue con Docker                                                | Roles de administrador                                 |
-|                                                                      | Pruebas automáticas (no hay en los archivos recibidos) |
-|                                                                      | HTTPS configurado                                      |
+| Incluye                                                                                              | No incluye                                                                             |
+| ---------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| Registro de tutores, confirmación, login con correo o alias, logout y recuperación de contraseña     | Correo para los tutelados ni recuperación de su contraseña por sí mismos               |
+| Alta de tutelados con alias generado, vínculos entre tutores y tutelados, y restablecer su contraseña | Reenviar el correo de confirmación                                                     |
+| Tareas con partes (hasta 50) y fecha límite; editar, duplicar y eliminar                             | Notificaciones por correo de tareas o revisiones (el correo solo confirma y recupera)  |
+| Revisión por partes (hecha, aprobar, devolver, reabrir) e historial                                  | Roles de administrador (solo hay tutor y tutelado)                                     |
+| Filtros por tutelado y «solo por revisar»; marca de tareas vencidas                                  | Prioridades o etiquetas en las tareas                                                  |
+| Perfil y cambio de contraseña                                                                        | Pruebas automáticas                                                                    |
+| Diseño adaptable a móvil y modo oscuro                                                               | HTTPS configurado por la aplicación (se supone un proxy delante)                       |
+| Despliegue con Docker, respaldo y restauración de la base                                            |                                                                                        |
 
 ## 2.3 Justificación
 
-Una herramienta propia, sencilla y con datos privados por usuario permite llevar el control de tareas sin depender de servicios externos, y sirve como base para crecer con más funciones.
+Una herramienta propia y sencilla permite que un tutor reparta el trabajo en partes verificables, y que cada alumno sepa qué debe hacer y qué le devolvieron, sin depender de servicios externos y con los datos separados por rol y por vínculo. Además sirve como base para crecer con más funciones.
 
 ## 2.4 Usuarios y actores
 
-| Actor                            | Descripción                               | Qué hace                                                                      |
-| -------------------------------- | ----------------------------------------- | ----------------------------------------------------------------------------- |
-| Visitante                        | Persona sin sesión                        | Crea cuenta, confirma su cuenta, inicia sesión, solicita recuperar contraseña |
-| Usuario autenticado              | Persona con sesión (`$_SESSION['login']`) | Gestiona proyectos, tareas, perfil y contraseña                               |
-| Servidor SMTP (actor secundario) | Servicio de correo externo                | Entrega los correos de confirmación y recuperación                            |
+| Actor                            | Descripción                                          | Qué hace                                                                                                                        |
+| -------------------------------- | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| Visitante                        | Persona sin sesión                                   | Inicia sesión (con correo o alias), crea una cuenta de tutor, confirma su cuenta y solicita recuperar la contraseña             |
+| Tutor                            | Persona con sesión y rol `tutor`                     | Crea tutelados, vincula tutores, asigna, edita, duplica y elimina tareas, revisa partes, consulta el historial y gestiona su perfil |
+| Tutelado                         | Persona con sesión y rol `tutelado`; la crea un tutor | Ve sus tareas, marca partes como hechas, consulta el historial y gestiona su nombre y su contraseña                            |
+| Servidor SMTP (actor secundario) | Servicio de correo externo                           | Entrega los correos de confirmación y de recuperación                                                                           |
 
-No existen roles distintos entre usuarios: todos tienen las mismas capacidades sobre sus propios datos.
+Hay dos roles, `tutor` y `tutelado` (`usuarios.rol`). El permiso sobre cada tarea depende del rol y del vínculo con el tutelado.
 
 ---
 
@@ -1097,78 +1113,102 @@ gantt
 
 ## 6.1 Tecnologías y herramientas
 
-| Componente                | Tecnología                                                      | Versión (según los archivos)                |
-| ------------------------- | --------------------------------------------------------------- | ------------------------------------------- |
-| Lenguaje servidor         | PHP                                                             | 8.5.12 (imagen `php:8.5.12-apache`)         |
-| Servidor web              | Apache con `mod_rewrite` y `mod_headers`                        | De la imagen                                |
-| Base de datos             | MySQL                                                           | 8.0 (`mysql:8.0`; el volcado indica 8.0.46) |
-| Acceso a datos            | `mysqli`                                                        | Extensión de PHP                            |
-| Correo                    | `phpmailer/phpmailer`                                           | ^7.1                                        |
-| Variables de entorno      | `vlucas/phpdotenv`                                              | ^5.6                                        |
-| Empaquetado               | Vite                                                            | ^5.0.0                                      |
-| Estilos                   | Sass (SCSS)                                                     | ^1.75.0                                     |
-| Utilidades de compilación | `fast-glob`, `glob`, `vite-plugin-full-reload`, `gulp`, `sharp` | ^3.3.3, ^13.0.0, ^1.1.0, ^5.0.0, ^0.34.5    |
-| Alertas en cliente        | SweetAlert2                                                     | 11 (CDN jsDelivr)                           |
-| Fuentes                   | Inter y Open Sans                                               | Google Fonts                                |
-| Contenedores              | Docker Compose                                                  | -                                           |
+| Componente                    | Tecnología                                                  | Versión (según los archivos)                                                            |
+| ----------------------------- | ----------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| Lenguaje servidor             | PHP                                                         | 8.5.12 (imagen `php:8.5.12-apache`)                                                     |
+| Servidor web                  | Apache con `mod_rewrite` y `mod_headers`                    | De la imagen                                                                            |
+| Base de datos                 | MySQL, InnoDB, `utf8mb4_unicode_ci`                         | 8.0 (`mysql:8.0`)                                                                       |
+| Acceso a datos                | `mysqli`                                                    | Extensión de PHP (el Dockerfile instala también `pdo` y `pdo_mysql`, que el código no usa) |
+| Dependencias de PHP           | Composer                                                    | Imagen `composer:latest`                                                                |
+| Correo                        | `phpmailer/phpmailer`                                       | ^7.1                                                                                    |
+| Variables de entorno          | `vlucas/phpdotenv`                                          | ^5.6                                                                                    |
+| Empaquetado                   | Vite, con `vite-plugin-full-reload` y un plugin propio (`vite-plugins/scss-auto-index.js`) | ^5.0.0; ^1.1.0                                                  |
+| Estilos                       | Sass (SCSS)                                                 | ^1.75.0                                                                                 |
+| Utilidad de compilación       | `fast-glob`                                                 | ^3.3.3                                                                                  |
+| Declaradas y sin uso          | `glob`, `gulp` y `sharp`                                    | ^13.0.0, ^5.0.0, ^0.34.5 (el script `npm run imagen` pide un `gulpfile.js` que no existe) |
+| Node y npm                    | Paquetes `nodejs` y `npm` del sistema de la imagen          | Los que traiga la imagen                                                                |
+| Fuentes                       | Bricolage Grotesque y Figtree                               | Google Fonts                                                                            |
+| Contenedores                  | Docker Compose, servicios `php` y `mysql`                   | Compose v2                                                                              |
 
 ## 6.2 Estructura del código
 
 ```
-uptask/
+claudetask/
 ├── public/
-│   └── index.php          # Controlador frontal: define todas las rutas
-├── Router.php             # Clase MVC\Router (rutas y render de vistas)
+│   └── index.php            # Controlador frontal: define todas las rutas
+├── Router.php               # Clase MVC\Router (rutas y render de vistas)
 ├── controllers/
-│   ├── LoginController.php
-│   ├── DashboardController.php
-│   └── TareaController.php
+│   ├── LoginController.php  # Acceso, registro, confirmación y recuperación
+│   ├── TutorController.php  # Panel del tutor, tutelados y vínculos
+│   ├── TareaController.php  # API de tareas e historial
+│   ├── ParteController.php  # API de partes: añadir, marcar hecha y revisar
+│   ├── AlumnoController.php # «Mis tareas» del tutelado
+│   └── PerfilController.php # Perfil y cambio de contraseña
 ├── models/
-│   ├── ActiveRecord.php   # Clase base con CRUD y consultas
-│   ├── Usuario.php
-│   ├── Proyecto.php
-│   └── Tarea.php
+│   ├── ActiveRecord.php     # Clase base con CRUD y consultas
+│   ├── Usuario.php          # Tutores y tutelados, tokens, alias
+│   ├── Tarea.php
+│   ├── Parte.php            # Estados y transiciones de una parte
+│   ├── Vinculo.php          # Relación tutor-tutelado
+│   ├── Historial.php
+│   └── IntentoLogin.php     # Bloqueo por intentos fallidos
 ├── classes/
-│   └── Email.php          # Envío de correos con PHPMailer
+│   └── Email.php            # Envío de correos con PHPMailer
 ├── includes/
-│   ├── app.php            # Autoload, .env, funciones y conexión
-│   ├── database.php       # Conexión mysqli con variables de entorno
-│   └── funciones.php      # debuguear(), s(), isAuth(), vite_script()
+│   ├── app.php              # Autoload, .env, errores, sesión, cabeceras y conexión
+│   ├── database.php         # Conexión mysqli con variables de entorno
+│   └── funciones.php        # s(), isAuth(), isTutor(), isTutelado(), CSRF, CSP y Vite
 ├── views/
-│   ├── layout.php         # Plantilla base
-│   ├── auth/              # Pantallas de acceso
-│   ├── dashboard/         # Pantallas de la zona privada
-│   └── templates/         # Alertas, barra, sidebar, nombre del sitio
+│   ├── layout.php           # Plantilla base
+│   ├── 404.php
+│   ├── auth/                # Pantallas de acceso
+│   ├── tutor/               # Tareas, nueva tarea y tutelados
+│   ├── alumno/              # Mis tareas
+│   ├── perfil/              # Perfil y cambio de contraseña
+│   └── templates/           # Alertas, barra, sidebar, cabecera y pie del panel
 ├── src/
-│   ├── js/                # app.js y tareas.js
-│   └── scss/              # base, componentes, auth, dashboard, dark
-├── docker/                # Dockerfile y apache.conf
+│   ├── js/                  # app.js, tutor.js, alumno.js, tutelados.js, nueva-tarea.js y modules/comun.js
+│   └── scss/                # base, componentes, auth, dashboard, dark
+├── vite-plugins/
+│   └── scss-auto-index.js   # Mantiene los _index.scss de src/scss
+├── docker/                  # Dockerfile, apache.conf, initdb/, respaldo.sh, restaurar.sh, crear-usuario-bd.sh
 ├── docker-compose.yml
-├── uptask.sql             # Esquema de la base de datos
-├── composer.json / package.json / vite.config.js
+├── claudetask.sql           # Esquema de la base de datos
+├── .env.example             # Plantilla de variables de entorno
+├── README.md                # Instalación y manuales
+└── composer.json / package.json / vite.config.js
 ```
 
-**Convenciones observadas:** espacios de nombres PSR-4 (`MVC`, `Controllers`, `Model`, `Classes`); métodos de controlador estáticos que reciben el `Router`; alertas en `Model\ActiveRecord` como arreglo estático `['error'|'exito'][]`; nombres de métodos en `camelCase` y `snake_case` mezclados (`crear_proyecto`, `validar_perfil`); textos de interfaz en español.
+`src/scss/dashboard/_proyectos.scss` es un resto de UpTask: define `.no-proyectos` y `.listado-proyectos` (esta también aparece en el modo oscuro), pero ninguna vista ni script usa esas clases.
 
-**Variables de entorno usadas por el código** (el archivo `.env` no fue recibido):
+**Convenciones observadas:** espacios de nombres PSR-4 (`MVC`, `Controllers`, `Model`, `Classes`); métodos de controlador estáticos que reciben el `Router`; alertas en `Model\ActiveRecord` como arreglo estático `['error'|'exito'][]`; nombres de métodos en `camelCase` y `snake_case` mezclados (`crear_tutelado`, `marcar_hecha`, `generarAlias`); textos de interfaz en español.
 
-| Variable                                                   | Dónde se usa                  | Descripción                        |
-| ---------------------------------------------------------- | ----------------------------- | ---------------------------------- |
-| `DB_HOST`, `DB_USER`, `DB_PASS`, `DB_NAME`                 | `includes/database.php`       | Conexión MySQL                     |
-| `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD` | `classes/Email.php`           | SMTP                               |
-| `APP_URL`                                                  | `classes/Email.php`           | Base de los enlaces de los correos |
-| `ENVIRONMENT`                                              | `layout.php`, `funciones.php` | `development` o `production`       |
+**Variables de entorno usadas por el código** (la plantilla es `.env.example`):
+
+| Variable                                                   | Dónde se usa                                                          | Descripción                                                                                       |
+| ---------------------------------------------------------- | --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| `DB_HOST`, `DB_USER`, `DB_PASS`, `DB_NAME`                 | `includes/database.php`; `docker-compose.yml` e `initdb/02-usuario.sh` | Conexión MySQL. `DB_USER` es `claudetask_app`, con permisos solo de datos                         |
+| `MYSQL_ROOT_PASSWORD`                                      | `docker-compose.yml` y los scripts de `docker/`                       | Contraseña de root de MySQL, para administración y respaldos; la aplicación no la usa            |
+| `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD` | `classes/Email.php`                                                   | SMTP                                                                                              |
+| `MAIL_FROM`                                                | `classes/Email.php`                                                   | Remitente de los correos (opcional; por omisión `cuentas@claudetask.com`)                        |
+| `APP_URL`                                                  | `classes/Email.php`, `includes/app.php`                               | Base de los enlaces de los correos; si empieza por `https://`, la cookie de sesión lleva `Secure` |
+| `ENVIRONMENT`                                              | `includes/app.php`, `includes/funciones.php` (`esDesarrollo()`)       | `development` o `production`; cualquier otro valor se trata como producción                      |
 
 ## 6.3 Decisiones técnicas importantes
 
-| N.º   | Decisión                                                      | Motivo                                                      |
-| ----- | ------------------------------------------------------------- | ----------------------------------------------------------- |
-| DT-01 | URL del proyecto con `md5(uniqid())` en lugar del id numérico | Evita exponer ids consecutivos                              |
-| DT-02 | Confirmación de cuenta por token enviado por correo           | Verifica que el email pertenece al usuario                  |
-| DT-03 | Las tareas se cargan con `fetch` y se pintan con JavaScript   | Evita recargar la página                                    |
-| DT-04 | Cambio de estado, edición y borrado con doble clic            | Evita acciones accidentales con un solo clic                |
-| DT-05 | `layout.php` y `vite_script()` cambian según `ENVIRONMENT`    | Usar Vite en desarrollo y archivos compilados en producción |
-| DT-06 | Borrado en cascada en la base de datos                        | Mantener integridad al eliminar usuarios o proyectos        |
+| N.º   | Decisión                                                                                                              | Motivo                                                                                                          |
+| ----- | --------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| DT-01 | La API identifica cada tarea por `url` (`md5(uniqid())`) en lugar del id numérico                                     | Evita exponer ids consecutivos. El permiso no depende de ocultar la URL: el servidor comprueba el vínculo en cada petición |
+| DT-02 | Dos clases de token en `usuarios.token`: confirmación (sin caducidad) y recuperación (caduca en 1 hora); cada ruta rechaza el del otro | Verifica el correo del tutor y limita la vida del enlace de recuperación. No existe «reenviar confirmación» (LIM-05) |
+| DT-03 | Los paneles cargan las tareas una vez como JSON desde `/api/tareas` y se actualizan con la respuesta de cada acción   | Evita recargar la página (RNF-14)                                                                               |
+| DT-04 | Los permisos se deciden en el servidor por rol y por vínculo; la API responde JSON 403 sin sesión o sin permiso       | El cliente no decide nada; los endpoints API no llaman a `isAuth()` antes de `isTutor(true)` o `isTutelado(true)` para que, sin sesión, den JSON y no una redirección |
+| DT-05 | El tutelado no tiene correo: el sistema genera su alias y el tutor fija su contraseña inicial y la restablece         | Los tutelados no usan correo (ver 3.3)                                                                          |
+| DT-06 | Una parte pasa por tres estados (`pendiente`, `hecha`, `aprobada`) y solo el tutor la aprueba                          | La tarea está completa cuando el tutor aprobó todas sus partes                                                  |
+| DT-07 | Cada marca, aprobación, devolución o reapertura se guarda en `historial`                                              | Saber quién hizo qué y cuándo                                                                                   |
+| DT-08 | Bloqueo de 30 segundos tras 5 intentos fallidos, llevado por correo o alias en `intentos_login`                       | Dificulta adivinar contraseñas                                                                                  |
+| DT-09 | Token CSRF en cada POST y una sola regla de entorno, `esDesarrollo()`, que decide la CSP, el uso de Vite y los errores | En desarrollo Vite necesita una CSP más abierta; en producción la CSP es estricta, con nonce, y se usan los archivos compilados |
+| DT-10 | La aplicación usa un usuario de base propio (`claudetask_app`) con solo `SELECT`, `INSERT`, `UPDATE` y `DELETE`        | La aplicación no puede crear ni borrar tablas                                                                   |
+| DT-11 | Borrado en cascada en la base de datos                                                                                | Mantener la integridad: al borrar una tarea caen sus partes y su historial (RNF-06)                            |
 
 ---
 
