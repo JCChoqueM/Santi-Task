@@ -115,4 +115,100 @@
       color: v.$grisClaro;
     }
   }
+
+  // ---------------------------------------------------------------
+  // Paso 7b: componentes del panel (tareas, partes, modales, avisos)
+  // ---------------------------------------------------------------
+  $tarjeta: #34344a;
+  $linea: #4a4a63;
+  $suave: #c5c9d3;      // texto secundario
+  $campo: color.scale($grisOscuro, $lightness: 20%);
+  $borde-campo: #8a8aa8;
+  $placeholder: #d1d5db;
+
+  // Controles nativos (selector desplegable, calendario, barras) en oscuro
+  :root {
+    color-scheme: dark;
+  }
+
+  .dashboard {
+    h3 { color: v.$grisClaro; }
+    p { color: $suave; }
+    .nota,
+    .etiqueta { color: $suave; }
+
+    // Mismo aspecto para input, textarea y select (la regla anterior de input
+    // usaba un gris claro con un placeholder casi invisible)
+    .formulario input:not([type='submit']),
+    .formulario textarea,
+    .formulario select {
+      background-color: $campo;
+      border: 1px solid $borde-campo;
+      color: v.$blanco;
+      &::placeholder { color: $placeholder; }
+    }
+  }
+
+  .barra .rol {
+    background: $linea;
+    color: v.$grisClaro;
+  }
+
+  .filtros-tutor {
+    label,
+    .check { color: v.$grisClaro; }
+    select {
+      background: $campo;
+      border-color: $borde-campo;
+      color: v.$blanco;
+    }
+  }
+
+  .tarea-card,
+  .tarjeta,
+  .modal-dialogo {
+    background: $tarjeta;
+    color: v.$grisClaro;
+    .desc,
+    .comentario,
+    .meta { color: $suave; }
+  }
+
+  .parte { border-bottom-color: $linea; }
+  .parte .parte-acc .com {
+    background: $campo;
+    border-color: $borde-campo;
+    color: v.$blanco;
+    &::placeholder { color: $placeholder; }
+  }
+
+  .est {
+    &.est-pendiente { background: $linea; color: v.$grisClaro; }
+    &.est-hecha     { background: rgba(245, 158, 11, 0.22); color: #fbbf24; }
+    &.est-aprobada  { background: rgba(74, 222, 128, 0.18); color: #86efac; }
+  }
+  .badge-done { color: #4ade80; }
+  .prog { color: $suave; }
+  .venc { color: #fca5a5; }
+  .seg i { background: $linea; }
+
+  .aviso-devuelta {
+    background: #4a2c2c;
+    border-left-color: #f87171;
+  }
+  .tarea-card.vencida { border-left-color: #f87171; }
+
+  .chip { background: $linea; color: v.$grisClaro; }
+  .btn-link {
+    color: #93b4ff;
+    &.peligro { color: #fca5a5; }
+  }
+
+  .modal-dialogo .historial li {
+    border-bottom-color: $linea;
+    small { color: $suave; }
+  }
+
+  // El aviso negro se perdería sobre el fondo oscuro; el de error sigue en rojo
+  .toast { background: v.$grisClaro; color: #1f2937; }
 }
