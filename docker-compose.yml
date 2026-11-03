@@ -40,13 +40,21 @@ services:
     image: mysql:8.0
     container_name: claudetask_mysql
     environment:
-      MYSQL_ROOT_PASSWORD: 1234
+      # Los valores salen de .env (Compose lo lee solo). Sin ellos, Compose se detiene con el mensaje.
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Falta MYSQL_ROOT_PASSWORD en .env}
       MYSQL_DATABASE: claudetask
+      # Los usa docker/initdb/02-usuario.sh para crear el usuario de la aplicacion
+      DB_USER: ${DB_USER:?Falta DB_USER en .env}
+      DB_PASS: ${DB_PASS:?Falta DB_PASS en .env}
     volumes:
       - claudetask_mysql_data:/var/lib/mysql
-      - .:/docker-entrypoint-initdb.d/host
+      # Solo estos dos archivos (antes se montaba todo el proyecto, con el .env). Se ejecutan
+      # una sola vez, cuando el volumen esta vacio, en orden alfabetico.
+      - ./claudetask.sql:/docker-entrypoint-initdb.d/01-claudetask.sql:ro
+      - ./docker/initdb/02-usuario.sh:/docker-entrypoint-initdb.d/02-usuario.sh:ro
     ports:
-      - "3308:3306"
+      # Solo desde este equipo
+      - "127.0.0.1:3308:3306"
     networks:
       - claudetask_network
     restart: unless-stopped
