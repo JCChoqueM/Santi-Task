@@ -3,6 +3,7 @@
 namespace Controllers;
 
 use Classes\Email;
+use Model\IntentoLogin;
 use Model\Usuario;
 use MVC\Router;
 
@@ -15,51 +16,51 @@ class LoginController
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             verificarCsrf();
             $usuario = new Usuario($_POST);
+            $alertas = $usuario->validarLoginDual();
 
-            $alertas = $usuario->validarLogin();
-            // debuguear($usuario);
             if (empty($alertas)) {
-                //Verificar que exista el usuario
-                $usuario = Usuario::where('email', $usuario->email);
+                $ident = trim($_POST['email']);
+                $intento = IntentoLogin::deClave($ident);
 
-                if (!$usuario || !$usuario->confirmado) {
-                    Usuario::setAlerta('error', 'El Usuario no existe o no esta confirmado');
+                if ($intento->segundosRestantes() > 0) {
+                    Usuario::setAlerta('error', 'Demasiados intentos. Espera ' . $intento->segundosRestantes() . ' segundos.');
                 } else {
-                    //el usuario existe
-                    if (password_verify($_POST['password'], $usuario->password)) {
-                        //Iniciar la sesion
+                    // Con "@" es tutor (correo); si no, tutelado (alias)
+                    $encontrado = str_contains($ident, '@')
+                        ? Usuario::where('email', $ident)
+                        : Usuario::where('alias', $ident);
+                    $rolEsperado = str_contains($ident, '@') ? 'tutor' : 'tutelado';
+
+                    $valido = $encontrado
+                        && $encontrado->rol === $rolEsperado
+                        && $encontrado->confirmado
+                        && password_verify($_POST['password'], $encontrado->password);
+
+                    if ($valido) {
+                        $intento->limpiar();
                         session_regenerate_id(true);
-                        $_SESSION['id'] = $usuario->id;
-                        $_SESSION['nombre'] = $usuario->nombre;
-                        $_SESSION['email'] = $usuario->email;
+                        $_SESSION['id'] = $encontrado->id;
+                        $_SESSION['nombre'] = $encontrado->nombre;
+                        $_SESSION['rol'] = $encontrado->rol;
                         $_SESSION['login'] = true;
-                        //  debuguear($_SESSION);
-
-                        //redirect
-                        header('Location: /dashboard'); exit;
-
-                    } else {
-                        Usuario::setAlerta('error', 'Password incorrecto');
+                        header('Location: ' . ($encontrado->rol === 'tutor' ? '/dashboard' : '/mis-tareas'));
+                        exit;
                     }
+                    $intento->fallar();
+                    Usuario::setAlerta('error', 'Usuario o contraseña incorrectos');
                 }
-                // debuguear($usuario);
-
             }
-
         }
         $alertas = Usuario::getAlertas();
         //Render a la vista
         $router->render(
             'auth/login',
             [
-                'titulo' => 'Iniciar Sesión',
+                'titulo' => 'Iniciar Sesión',
                 'alertas' => $alertas
             ]
         );
     }
-
-
-
 
     public static function logout()
     {
@@ -78,6 +79,13 @@ class LoginController
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             verificarCsrf();
             $usuario->sincronizar($_POST);
+            // El cliente no decide estos campos
+            $usuario->id = null;
+            $usuario->rol = 'tutor';
+            $usuario->alias = null;
+            $usuario->curso = null;
+            $usuario->creado_por = null;
+            $usuario->confirmado = 0;
             //debuguear($usuario);
             $alertas = $usuario->validarNuevaCuenta();
             // debuguear($alertas);
@@ -138,7 +146,7 @@ class LoginController
                 //buscar el usuario
                 $usuario = Usuario::where('email', $usuario->email);
                 // debuguear($usuario);
-                if ($usuario && $usuario->confirmado === "1") {
+                if ($usuario && $usuario->rol === 'tutor' && $usuario->confirmado === "1") {
                     //generar token
                     $usuario->crearToken();
                     unset($usuario->password2);

@@ -11,12 +11,13 @@
         <input type="hidden" name="csrf" value="<?= csrf_token() ?>">
             <!-- subBloque  email[inicio]-->
             <div class="campo">
-                <label for="email">Email</label>
+                <label for="email">Correo o alias</label>
                 <input
-                    type="email"
+                    type="text"
                     id="email"
-                    placeholder="Tu Email"
-                    name="email">
+                    placeholder="Tu correo o tu alias"
+                    name="email"
+                    autocomplete="username">
             </div>
             <!-- !subBloque fin email - [fin]-->
 

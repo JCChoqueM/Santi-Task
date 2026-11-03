@@ -5,29 +5,98 @@ namespace Model;
 class Usuario extends ActiveRecord
 {
     protected static $tabla = 'usuarios';
-    protected static $columnasDB = ['id', 'nombre', 'email', 'password', 'token', 'confirmado'];
+    protected static $columnasDB = [
+        'id', 'rol', 'nombre', 'email', 'alias', 'curso',
+        'password', 'token', 'confirmado', 'creado_por'
+    ];
 
     public $id = null;
+    public $rol = 'tutor';
     public $nombre = '';
-    public $email = '';
+    public $email = null;
+    public $alias = null;
+    public $curso = null;
     public $password = '';
     public $password2 = '';
     public $password_actual = '';
     public $password_nuevo = '';
     public $token = '';
     public $confirmado = 0;
+    public $creado_por = null;
 
     public function __construct($args = [])
     {
         $this->id = $args['id'] ?? null;
+        $this->rol = $args['rol'] ?? 'tutor';
         $this->nombre = $args['nombre'] ?? '';
-        $this->email = $args['email'] ?? '';
+        $this->email = $args['email'] ?? null;
+        $this->alias = $args['alias'] ?? null;
+        $this->curso = $args['curso'] ?? null;
+        $this->creado_por = $args['creado_por'] ?? null;
         $this->password = $args['password'] ?? '';
         $this->password2 = $args['password2'] ?? '';
         $this->password_actual = $args['password_actual'] ?? '';
         $this->password_nuevo = $args['password_nuevo'] ?? '';
         $this->token = $args['token'] ?? '';
         $this->confirmado = $args['confirmado'] ?? 0;
+    }
+
+    // El login acepta correo o alias
+    public function validarLoginDual(): array
+    {
+        $id = trim((string) ($this->email ?? ''));
+        if ($id === '') {
+            self::$alertas['error'][] = 'Escribe tu correo o tu alias';
+        }
+        if (!$this->password) {
+            self::$alertas['error'][] = 'El Password no puede ir vacio';
+        }
+        return self::$alertas;
+    }
+
+    public function validarTutelado(): array
+    {
+        if (!trim($this->nombre)) {
+            self::$alertas['error'][] = 'Escribe el nombre del tutelado';
+        }
+        if (strlen($this->password) < 6) {
+            self::$alertas['error'][] = 'La contraseña necesita al menos 6 caracteres';
+        }
+        return self::$alertas;
+    }
+
+    // Alias único: Nombre + número que no sea predecible
+    public static function generarAlias(string $nombre): string
+    {
+        $primero = explode(' ', trim($nombre))[0] ?? '';
+        $ascii = iconv('UTF-8', 'ASCII//TRANSLIT', $primero) ?: '';
+        $base = ucfirst(strtolower(preg_replace('/[^A-Za-z]/', '', $ascii)));
+        if ($base === '') {
+            throw new \Exception('Escribe un nombre con letras.');
+        }
+
+        foreach ([[2, 25], [3, 40], [4, 80]] as [$digitos, $intentos]) {
+            for ($i = 0; $i < $intentos; $i++) {
+                $n = (string) random_int(10 ** ($digitos - 1), 10 ** $digitos - 1);
+                if (self::numeroPrevisible($n)) continue;
+                $alias = $base . $n;
+                if (!self::where('alias', $alias)) return $alias;
+            }
+        }
+        throw new \Exception('No se pudo generar un alias único. Prueba con otro nombre.');
+    }
+
+    private static function numeroPrevisible(string $s): bool
+    {
+        $malos = ['00', '12', '19', '20', '000', '123', '321', '100', '1234', '4321'];
+        if (in_array($s, $malos, true)) return true;
+        if (strlen($s) === 4) {
+            if (preg_match('/^(19|20)/', $s)) return true;
+            $dd = (int) substr($s, 0, 2);
+            $mm = (int) substr($s, 2);
+            if ($dd >= 1 && $dd <= 31 && $mm >= 1 && $mm <= 12) return true;
+        }
+        return false;
     }
 
     /* section4 validar el login de Usuario[inicio] */
