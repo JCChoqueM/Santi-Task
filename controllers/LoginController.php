@@ -172,7 +172,7 @@ class LoginController
                 // debuguear($usuario);
                 if ($usuario && $usuario->rol === 'tutor' && $usuario->confirmado === "1") {
                     //generar token
-                    $usuario->crearToken();
+                    $usuario->crearTokenRecuperacion();
                     unset($usuario->password2);
 
                     //actualizar el usuario
@@ -215,8 +215,14 @@ class LoginController
         //Identificar el usuario con este token
         $usuario = Usuario::where('token', $token);
 
-        if (empty($usuario)) {
+        if (empty($usuario) || !$usuario->esTokenRecuperacion()) {
+            // Inexistente, o token de confirmación (sin caducidad): no sirve para reestablecer
+            $usuario = null;
             Usuario::setAlerta('error', 'Token no valido');
+            $mostrar = false;
+        } elseif ($usuario->tokenCaducado()) {
+            $usuario = null;
+            Usuario::setAlerta('error', 'El enlace ha caducado. Pide uno nuevo.');
             $mostrar = false;
         }
         // Sin usuario (token no válido) no hay nada que guardar
@@ -237,6 +243,7 @@ class LoginController
 
                 //Eliminar el token
                 $usuario->token = null;
+                $usuario->token_expira = null;
 
                 //Guardar el usuario en la BD
                 $resultado = $usuario->guardar();

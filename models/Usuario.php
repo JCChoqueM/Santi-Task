@@ -7,7 +7,7 @@ class Usuario extends ActiveRecord
     protected static $tabla = 'usuarios';
     protected static $columnasDB = [
         'id', 'rol', 'nombre', 'email', 'alias', 'curso',
-        'password', 'token', 'confirmado', 'creado_por'
+        'password', 'token', 'token_expira', 'confirmado', 'creado_por'
     ];
 
     public $id = null;
@@ -21,6 +21,8 @@ class Usuario extends ActiveRecord
     public $password_actual = '';
     public $password_nuevo = '';
     public $token = '';
+    // Hora Unix en que caduca el token de recuperar contraseña; NULL en el de confirmar cuenta (no caduca)
+    public $token_expira = null;
     public $confirmado = 0;
     public $creado_por = null;
 
@@ -247,6 +249,23 @@ class Usuario extends ActiveRecord
         // uniqid() se deriva de la hora y es adivinable; el token de confirmar/reestablecer debe ser aleatorio.
         // usuarios.token es VARCHAR(255): caben los 32 caracteres.
         $this->token = bin2hex(random_bytes(16));
+    }
+    // Token de recuperar contraseña: aleatorio y con caducidad (por defecto 1 hora)
+    public function crearTokenRecuperacion(int $segundos = 3600): void
+    {
+        $this->crearToken();
+        $this->token_expira = time() + $segundos;
+    }
+
+    // Un token de recuperación siempre lleva caducidad; sin ella es de confirmación y no sirve para reestablecer
+    public function esTokenRecuperacion(): bool
+    {
+        return $this->token_expira !== null && $this->token_expira !== '';
+    }
+
+    public function tokenCaducado(): bool
+    {
+        return $this->esTokenRecuperacion() && (int) $this->token_expira < time();
     }
     /* !section1 fin - generar un token[fin] */
 }

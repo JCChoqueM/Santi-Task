@@ -11,6 +11,7 @@ CREATE TABLE usuarios (
   curso VARCHAR(60) DEFAULT NULL,
   password VARCHAR(255) NOT NULL,
   token VARCHAR(255) DEFAULT NULL,
+  token_expira INT UNSIGNED DEFAULT NULL,
   confirmado TINYINT(1) NOT NULL DEFAULT 0,
   creado_por INT UNSIGNED DEFAULT NULL,
   UNIQUE KEY uq_email (email),
