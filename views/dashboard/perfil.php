@@ -13,6 +13,7 @@
       method="POST"
       action="/perfil"
    >
+        <input type="hidden" name="csrf" value="<?= csrf_token() ?>">
       <?php
       /** @var \Model\Usuario $usuario */
       ?>

@@ -34,7 +34,8 @@ class Router
             // Call user fn va a llamar una función cuando no sabemos cual sera
             call_user_func($fn, $this); // This es para pasar argumentos
         } else {
-            echo "Página No Encontrada o Ruta no válida";
+            http_response_code(404);
+            $this->render('404', ['titulo' => 'No encontrada']);
         }
     }
 

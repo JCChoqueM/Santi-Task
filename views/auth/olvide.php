@@ -7,6 +7,7 @@
         <?php include_once __DIR__ . '/../templates/alertas.php'; ?>
         <!-- BLOQUE formulario[inicio]-->
         <form action="/olvide" method="POST" class="formulario" novalidate>
+        <input type="hidden" name="csrf" value="<?= csrf_token() ?>">
 
             <!-- subBloque2  email[inicio]-->
             <div class="campo">

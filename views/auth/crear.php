@@ -13,6 +13,7 @@
 
         <!-- BLOQUE formulario[inicio]-->
         <form action="/crear" method="POST" class="formulario">
+        <input type="hidden" name="csrf" value="<?= csrf_token() ?>">
             <!-- subBloque 1 nombre[inicio]-->
             <div class="campo">
                 <label for="nombre">Nombre</label>

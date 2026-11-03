@@ -11,12 +11,11 @@ class TareaController
     {
         $proyectoId = $_GET['id'];
         if (!$proyectoId)
-            header('Location: /dashboard');
+            header('Location: /dashboard'); exit;
         $proyecto = Proyecto::where('url', $proyectoId);
 
-        session_start();
         if (!$proyecto || $proyecto->propietarioId !== $_SESSION['id']) {
-            header('Location: /404');
+            header('Location: /404'); exit;
         }
 
         $tareas = Tarea::belongsTo('proyectoId', $proyecto->id);
@@ -30,7 +29,6 @@ class TareaController
     {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
-            session_start();
 
             $proyectoId = $_POST['proyectoId'];
             $proyecto = Proyecto::where('url', $proyectoId);
@@ -65,7 +63,6 @@ class TareaController
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Validar que el proyecto exista
             $proyecto = Proyecto::where('url', $_POST['proyectoId']);
-            session_start();
             if (!$proyecto || $proyecto->propietarioId !== $_SESSION['id']) {
                 $respuesta = [
                     'tipo' => 'error',
@@ -100,7 +97,6 @@ class TareaController
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Validar que el proyecto exista
             $proyecto = Proyecto::where('url', $_POST['proyectoId']);
-            session_start();
             if (!$proyecto || $proyecto->propietarioId !== $_SESSION['id']) {
                 $respuesta = [
                     'tipo' => 'error',

@@ -13,6 +13,7 @@ class LoginController
     {
         $alertas = [];
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            verificarCsrf();
             $usuario = new Usuario($_POST);
 
             $alertas = $usuario->validarLogin();
@@ -27,7 +28,7 @@ class LoginController
                     //el usuario existe
                     if (password_verify($_POST['password'], $usuario->password)) {
                         //Iniciar la sesion
-                        session_start();
+                        session_regenerate_id(true);
                         $_SESSION['id'] = $usuario->id;
                         $_SESSION['nombre'] = $usuario->nombre;
                         $_SESSION['email'] = $usuario->email;
@@ -35,7 +36,7 @@ class LoginController
                         //  debuguear($_SESSION);
 
                         //redirect
-                        header('Location: /dashboard');
+                        header('Location: /dashboard'); exit;
 
                     } else {
                         Usuario::setAlerta('error', 'Password incorrecto');
@@ -62,9 +63,8 @@ class LoginController
 
     public static function logout()
     {
-        session_start();
         $_SESSION = [];
-        header('Location: /');
+        header('Location: /'); exit;
 
 
     }
@@ -76,6 +76,7 @@ class LoginController
         $usuario = new Usuario;
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            verificarCsrf();
             $usuario->sincronizar($_POST);
             //debuguear($usuario);
             $alertas = $usuario->validarNuevaCuenta();
@@ -106,7 +107,7 @@ class LoginController
                     // debuguear($email);
                     $email->enviarConfirmacion();
                     if ($resultado) {
-                        header('Location: /mensaje');
+                        header('Location: /mensaje'); exit;
                     }
                 }
             }
@@ -130,6 +131,7 @@ class LoginController
 
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            verificarCsrf();
             $usuario = new Usuario($_POST);
             $alertas = $usuario->validarEmail();
             if (empty($alertas)) {
@@ -187,6 +189,7 @@ class LoginController
             $mostrar = false;
         }
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            verificarCsrf();
 
             //añadir nuevo pasword
             $usuario->sincronizar($_POST);
@@ -205,7 +208,7 @@ class LoginController
                 $resultado = $usuario->guardar();
                 //Redireccionar
                 if ($resultado) {
-                    header('Location: /');
+                    header('Location: /'); exit;
                 }
 
                 // debuguear($usuario);

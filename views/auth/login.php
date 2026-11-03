@@ -8,6 +8,7 @@
 
         <!-- BLOQUE formulario[inicio]-->
         <form action="/" method="POST" class="formulario" novalidate>
+        <input type="hidden" name="csrf" value="<?= csrf_token() ?>">
             <!-- subBloque  email[inicio]-->
             <div class="campo">
                 <label for="email">Email</label>

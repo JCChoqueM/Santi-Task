@@ -10,6 +10,7 @@
         <?php if ($mostrar) { ?>
             <!-- BLOQUE formulario[inicio]-->
             <form  method="POST" class="formulario">
+        <input type="hidden" name="csrf" value="<?= csrf_token() ?>">
 
 
                 <!-- subBloque2  Password[inicio] -->

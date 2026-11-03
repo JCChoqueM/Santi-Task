@@ -34,6 +34,21 @@ class ActiveRecord
         return static::$alertas;
     }
 
+    // Solo letras, números y guion bajo en nombres de columna (C-01)
+    protected static function columnaSegura(string $columna): string
+    {
+        if (!preg_match('/^[A-Za-z_][A-Za-z0-9_]*$/', $columna)) {
+            throw new \InvalidArgumentException('Columna no válida');
+        }
+        return $columna;
+    }
+
+    // Valor SQL: NULL real o texto entre comillas (A-01). El valor ya viene escapado.
+    protected static function literal($valor): string
+    {
+        return is_null($valor) ? 'NULL' : "'{$valor}'";
+    }
+
     // Registros - CRUD
     public function guardar()
     {
@@ -61,6 +76,7 @@ class ActiveRecord
      */
     public static function find($id)
     {
+        $id = (int) $id;
         $query = "SELECT * FROM " . static::$tabla . " WHERE id = {$id}";
         $resultado = self::consultarSQL($query);
         return array_shift($resultado);
@@ -82,6 +98,8 @@ class ActiveRecord
     //Busqueda Where con Columna
     public static function where($columna, $valor)
     {
+        $columna = static::columnaSegura($columna);
+        $valor = self::$db->escape_string((string) $valor);
         $query = "SELECT * FROM " . static::$tabla . " WHERE {$columna} = '{$valor}'";
         $resultado = self::consultarSQL($query);
         return array_shift($resultado);
@@ -90,6 +108,8 @@ class ActiveRecord
     //Busca todos los registros que pertenecen a un ID
     public static function belongsTo($columna, $valor)
     {
+        $columna = static::columnaSegura($columna);
+        $valor = self::$db->escape_string((string) $valor);
         $query = "SELECT * FROM " . static::$tabla . " WHERE {$columna} = '{$valor}'";
         $resultado = self::consultarSQL($query);
         return ($resultado);
@@ -105,43 +125,26 @@ class ActiveRecord
     // crea un nuevo registro
     public function crear()
     {
-        // Sanitizar los datos
         $atributos = $this->sanitizarAtributos();
+        $valores = array_map([static::class, 'literal'], array_values($atributos));
 
-        // Insertar en la base de datos
-        $query = " INSERT INTO " . static::$tabla . " ( ";
-        $query .= join(', ', array_keys($atributos));
-        $query .= " ) VALUES (' ";
-        $query .= join("', '", array_values($atributos));
-        $query .= " ') ";
+        $query = "INSERT INTO " . static::$tabla . " (" . join(', ', array_keys($atributos)) . ") ";
+        $query .= "VALUES (" . join(', ', $valores) . ")";
 
-        // Resultado de la consulta
         $resultado = self::$db->query($query);
-
-        return [
-            'resultado' => $resultado,
-            'id' => self::$db->insert_id
-        ];
+        return ['resultado' => $resultado, 'id' => self::$db->insert_id];
     }
 
     public function actualizar()
     {
-        // Sanitizar los datos
         $atributos = $this->sanitizarAtributos();
-
-        // Iterar para ir agregando cada campo de la BD
         $valores = [];
         foreach ($atributos as $key => $value) {
-            $valores[] = "{$key}='{$value}'";
+            $valores[] = "{$key} = " . static::literal($value);
         }
-
-        $query = "UPDATE " . static::$tabla . " SET ";
-        $query .= join(', ', $valores);
-        $query .= " WHERE id = '" . self::$db->escape_string($this->id) . "' ";
-        $query .= " LIMIT 1 ";
-
-        $resultado = self::$db->query($query);
-        return $resultado;
+        $id = self::$db->escape_string((string) $this->id);
+        $query = "UPDATE " . static::$tabla . " SET " . join(', ', $valores) . " WHERE id = '{$id}' LIMIT 1";
+        return self::$db->query($query);
     }
 
     // Eliminar un registro - Toma el ID de Active Record
@@ -200,7 +203,7 @@ class ActiveRecord
         $atributos = $this->atributos();
         $sanitizado = [];
         foreach ($atributos as $key => $value) {
-            $sanitizado[$key] = self::$db->escape_string((string) ($value ?? ''));
+            $sanitizado[$key] = is_null($value) ? null : self::$db->escape_string((string) $value);
         }
         return $sanitizado;
     }

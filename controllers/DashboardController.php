@@ -10,7 +10,6 @@ class DashboardController
 {
     public static function index(Router $router)
     {
-        session_start();
 
         isAuth();
         $id = $_SESSION['id'];
@@ -24,13 +23,13 @@ class DashboardController
     }
     public static function crear_proyecto(Router $router)
     {
-        session_start();
 
         isAuth();
 
         $alertas = [];
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            verificarCsrf();
             $proyecto = new Proyecto($_POST);
             // debuguear($proyecto);
             // Validar
@@ -51,7 +50,7 @@ class DashboardController
                 $proyecto->guardar();
 
                 // Redireccionar
-                header('Location: /proyecto?id=' . $proyecto->url);
+                header('Location: /proyecto?id=' . $proyecto->url); exit;
             }
 
         }
@@ -65,14 +64,13 @@ class DashboardController
 
     public static function proyecto(Router $router)
     {
-        session_start();
 
         isAuth();
         $token = $_GET['id'] ?? null;
         // debuguear($token);
 
         if (!$token)
-            header('Location: /dashboard');
+            header('Location: /dashboard'); exit;
 
         // debuguear($_SESSION);
         //Revisar que la persona que visita el proyecto, es quien lo creo
@@ -80,7 +78,7 @@ class DashboardController
         // debuguear($proyecto);
 
         if (!$proyecto || $proyecto->propietarioId !== $_SESSION['id']) {
-            header('Location: /dashboard');
+            header('Location: /dashboard'); exit;
         }
 
         // debuguear($proyecto);
@@ -94,11 +92,11 @@ class DashboardController
 
     public static function perfil(Router $router)
     {
-        session_start();
         isAuth();
         $alertas = [];
         $usuario = Usuario::find($_SESSION['id']);
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            verificarCsrf();
 
             $usuario->sincronizar($_POST);
 
@@ -134,11 +132,11 @@ class DashboardController
 
     public static function cambiar_password(Router $router)
     {
-        session_start();
         isAuth();
 
         $alertas = [];
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            verificarCsrf();
 
             $usuario = Usuario::find($_SESSION['id']);
             //sincronizar con los datos del usuario
