@@ -22,7 +22,7 @@
 | **Autor / Equipo**        | Julio Cesar Choque Mamani                            |
 | **Institución**           | CaesarDev                                            |
 | **Fecha**                 | 03/11/2026                                           |
-| **Versión del documento** | 1.0                                                  |
+| **Versión del documento** | 1.1                                                  |
 | **Versión del sistema**   | 1.0.0 (según `package.json`)                         |
 
 ## Control de versiones
@@ -30,6 +30,7 @@
 | Versión | Fecha      | Autor       | Cambios                                            |
 | ------- | ---------- | ----------- | -------------------------------------------------- |
 | 1.0     | 02/11/2026 | Julio Cesar Choque Mamani | Primera documentación completa a partir del código |
+| 1.1     | 03/11/2026 | Julio Cesar Choque Mamani | Documentación alineada con ClaudeTask (Pasos 10a a 10c): requisitos, diseño, calidad, cierre, gestión y trazabilidad según el sistema y las pruebas P-01 a P-35 |
 
 ---
 
@@ -1353,7 +1354,7 @@ Estado al 2026-11-03. Las pruebas son las de la sección 13.
 | ------------------------ | ------------------------------------------------------------------------- |
 | Para ejecutar con Docker | Docker con Docker Compose v2 (`docker compose`)                           |
 | Puertos libres           | 8082 (aplicación), 5173 (Vite, solo en desarrollo) y 3308 (MySQL, solo desde el propio equipo) |
-| Navegador                | Chrome, Firefox, Edge o Safari actuales                                   |
+| Navegador                | Probado en Brave y Mozilla Firefox (7.2); otros navegadores actuales no se probaron, Safari tampoco |
 | Internet                 | Descarga de imágenes y dependencias la primera vez; fuentes de Google en el navegador |
 | Servidor de correo       | Cuenta SMTP **obligatoria**: sin correo de confirmación no se crea la cuenta de un tutor |
 
@@ -1389,7 +1390,7 @@ Hay dos roles. El manual completo está en [`README.md`](README.md): sección 2 
 | Cambiar de modo              | `ENVIRONMENT` en `.env` entre `development` y `production`; después, `docker restart claudetask_php`     |
 | Tras editar `.env` o `docker/apache.conf` | Reiniciar `claudetask_php` (el contenedor puede ver una copia antigua)                         |
 | Cambiar las claves de la base | Con una base ya creada, el `.env` no cambia el usuario de MySQL: usar `docker/crear-usuario-bd.sh` o `ALTER USER` |
-| Optimizar imágenes           | `npm run imagen` (usa Gulp; la configuración no fue recibida)                                           |
+| Optimizar imágenes           | `npm run imagen` no funciona: `package.json` lo define con Gulp, pero no existe `gulpfile.js`            |
 
 ---
 
@@ -1647,4 +1648,4 @@ Abiertos:
 - [x] Cada error ERR-01 a ERR-20 confirmado, resuelto o descartado (sección 7.3, 2026-11-03)
 - [x] El plan de corrección de UpTask está aplicado y registrado en la sección 10; quedan las limitaciones de 7.3
 - [x] Revisar el texto `Sopilote22` de `views/templates/nombre-sitio.php` (quitado en `941e8d1`)
-- [ ] Confirmar que lo documentado coincide con el sistema
+- [x] Confirmar que lo documentado coincide con el sistema (2026-11-03, leyendo el código: rutas, accesos, parámetros de la API, tablas, puertos y sección 8; no se volvió a ejecutar el sistema)
