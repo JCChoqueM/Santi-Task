@@ -169,7 +169,7 @@ Hay dos roles, `tutor` y `tutelado` (`usuarios.rol`). El permiso sobre cada tare
 | RNF-01 | Seguridad      | Contraseñas almacenadas con hash                                 | `Usuario::hashPassword` usa `password_hash` con `PASSWORD_BCRYPT`                                                               |
 | RNF-02 | Seguridad      | Acceso por rol y por vínculo                                     | `isAuth`, `isTutor`, `isTutelado` y `Vinculo::existe`; la API responde JSON 403 sin sesión o sin permiso                         |
 | RNF-03 | Seguridad      | Entradas y consultas controladas                                 | Token CSRF en cada POST (`verificarCsrf`); campos leídos solo como texto; `escape_string` y columnas en lista blanca (`columnaSegura`) |
-| RNF-04 | Seguridad      | Protección del navegador y de la sesión                          | CSP por entorno con nonce, `nosniff`, `Referrer-Policy`, cookie de sesión `HttpOnly` y `SameSite=Lax`; en producción los errores van al registro |
+| RNF-04 | Seguridad      | Protección del navegador y de la sesión                          | CSP por entorno con nonce, `nosniff`, `Referrer-Policy`, cookie de sesión `HttpOnly` y `SameSite=Lax`; en producción los errores van al registro. En DOM Cloud faltan `nosniff` y `Referrer-Policy` (LIM-16) |
 | RNF-05 | Seguridad      | Base de datos con el mínimo permiso                              | La aplicación usa `claudetask_app`, con solo `SELECT`, `INSERT`, `UPDATE` y `DELETE`; MySQL solo escucha en `127.0.0.1`          |
 | RNF-06 | Integridad     | Borrado en cascada                                               | Claves foráneas `ON DELETE CASCADE`: al borrar una tarea caen sus partes y su historial; al borrar un usuario, sus vínculos      |
 | RNF-07 | Portabilidad   | Entorno reproducible                                             | `docker-compose.yml` con PHP/Apache y MySQL; instalación desde cero comprobada (P-34)                                           |
@@ -1086,9 +1086,9 @@ Git registra los 30 commits del proyecto hasta `272405a` con la misma fecha, 202
 | 8    | Lista de pruebas P-01 a P-25                                                       | `a3f03d4`, `97a16f7`                                                                  |
 | 9    | Errores y correo, tokens, usuario de base, CSP, respaldo, README, P-26 a P-35      | `c978a1f`, `c1a2919`, `2f334a3`, `7bfa426`, `f7414b2`, `6aa6283`, `5b581aa`, `941e8d1`, `563e2ff`, `6a96305` |
 | 10   | Documentación alineada con el sistema real (10a a 10d)                         | `6f9a8b9`, `1fe904c`, `73e90ac`, `5b54f42`, `56c8534`, `eb67270`, `272405a`                                |
-| 11   | P-36 a P-43 (11a) y publicación en DOM Cloud (11b)                                  | `244d0f5` (11a)                                                                       |
+| 11   | P-36 a P-43 (11a), publicación en DOM Cloud (11b) y P-44 con LIM-16 y LIM-17 (11c) | `244d0f5` (11a), `d428585` (11b), 11c (hash por añadir) |
 
-**Pendiente para la Versión 1.0:** que otra persona haga el ciclo solo con el `README.md` (7.2), insertar las capturas (4.10) y terminar la publicación en DOM Cloud: ya está desplegado, y faltan las pruebas en el servidor, el SMTP y los respaldos (5.4, R6 y R7).
+**Pendiente para la Versión 1.0:** que otra persona haga el ciclo solo con el `README.md` (7.2), insertar las capturas (4.10) y terminar la publicación en DOM Cloud: ya está desplegado y P-44 probó las cabeceras y los archivos públicos (faltan `nosniff` y `Referrer-Policy`, LIM-16, y la cadena del certificado, LIM-17); faltan P-27 adaptada, P-30 completa y un recorrido tipo P-34 en el servidor, el SMTP y los respaldos (5.4, R6 y R7).
 
 ## 5.3 Roles y responsabilidades
 
@@ -1104,7 +1104,7 @@ Probabilidad e impacto son una estimación del autor al 2026-11-03, no una medic
 
 | ID  | Riesgo                                                                                                    | Probabilidad | Impacto | Mitigación                                                                                                          |
 | --- | --------------------------------------------------------------------------------------------------------- | ------------ | ------- | ------------------------------------------------------------------------------------------------------------------- |
-| R1  | Uso malicioso por fallos de seguridad que no se hayan encontrado (los conocidos están resueltos, sección 10) | Baja         | Alto    | Las 43 pruebas pasan; quedan LIM-01, LIM-02 y LIM-11 a LIM-13 (7.3); falta una prueba numerada del ciclo de revisión con éxito (7.1)                         |
+| R1  | Uso malicioso por fallos de seguridad que no se hayan encontrado (los conocidos están resueltos, sección 10) | Baja         | Alto    | 43 pruebas pasan y P-44 pasa en parte; quedan LIM-01, LIM-02, LIM-11 a LIM-13 y LIM-16 (7.3); falta una prueba numerada del ciclo de revisión con éxito (7.1)                         |
 | R2  | Los correos de confirmación y recuperación tardan o no salen (SMTP síncrono, LIM-07)                      | Media        | Alto    | Un SMTP real antes de publicar; probar el envío en el servidor; en DOM Cloud ver R7            |
 | R3  | Pérdida de datos si se borra el volumen de MySQL o la cuenta del servidor                                 | Media        | Alto    | `docker/respaldo.sh` y `docker/restaurar.sh` (P-32) en Docker; en el servidor de publicación definir otro método   |
 | R4  | Versiones de dependencias que cambien o no existan                                                        | Media        | Medio   | `composer.lock` y `package-lock.json` fijan los paquetes; el `Dockerfile` fija `php:8.5.12-apache` y la base es `mysql:8.0` |
@@ -1123,10 +1123,12 @@ Probabilidad e impacto son una estimación del autor al 2026-11-03, no una medic
 - En local, el mismo SQL cargó sin errores en MariaDB 10.11.19 y 11.4.13, y los rechazos (ENUM inválido, alias de 61 caracteres, correo repetido y `CREATE TABLE` sin permiso) dieron los errores 1265, 1406, 1062 y 1142, como en MySQL 8. Las diferencias vistas son de informe (`default_generated`; `no action` frente a `restrict`) y de `sql_mode` (MariaDB no trae `ONLY_FULL_GROUP_BY`).
 - El NGINX generado tiene la reescritura a `index.php`, el 404 para rutas con punto (salvo `.well-known`) y el 404 para archivos con extensión que no existen.
 - En `https://santi-task.domcloud.dev` una sesión de tutor llegó a `/dashboard` (visto en la barra de direcciones de Brave; no se anotó el contenido de la página).
+- P-44 (2026-11-04, `curl` contra el sitio publicado): portada 200; cookie `PHPSESSID` con `Secure`, `HttpOnly` y `SameSite=Lax`; CSP de producción estricta; `/build/.vite/manifest.json`, `/.env`, `/.git/config`, una ruta inexistente y `/phpinfo.php` dan 404; `/build/` y `/build/assets/` dan 403; el CSS y los seis scripts dan 200 con su tipo; `http://` da 301 a `https://`.
+- Lo que P-44 encontró y no pasa: no salen `X-Content-Type-Options` ni `Referrer-Policy` (LIM-16), y el servidor envía un solo certificado, sin el intermedio (LIM-17); Brave y Firefox abren el sitio.
 
-*No verificado:* P-27 (adaptada a un usuario único), P-29, P-30 y P-33 en el servidor; las cabeceras `nosniff` y `Referrer-Policy`, que en Docker pone `docker/apache.conf` y no se portaron; que no haya listado de directorios (NGINX no lo activa por defecto, pero no se probó); por qué `curl` rechaza el certificado («unable to get local issuer certificate»); la versión de MariaDB del servidor; y si alguna consulta usa `GROUP BY` y se comporta distinto sin `ONLY_FULL_GROUP_BY`.
+*No verificado:* P-27 (adaptada a un usuario único), P-30 completa (las 10 páginas sin estilos ni scripts en línea y el registro de PHP vacío) y un recorrido tipo P-34 en el servidor; el registro de errores de PHP del servidor; que el nonce de la cabecera coincida con el del HTML (P-44 solo vio la cabecera); listado de directorios fuera de `/build/` y `/build/assets/`; si la pestaña NGINX del panel admite `add_header` (la documentación de DOM Cloud no lo documenta para las ubicaciones de la receta); si con dominio propio y `ssl letsencrypt` cambia la cadena del certificado; la versión de MariaDB del servidor; y si alguna consulta usa `GROUP BY` y se comporta distinto sin `ONLY_FULL_GROUP_BY`.
 
-Mitigación: repetir P-27 (adaptada), P-29, P-30 y P-33 en el servidor; llevar `nosniff` y `Referrer-Policy` a NGINX o a PHP; sustituir `docker/respaldo.sh`, `docker/restaurar.sh` y `docker/crear-usuario-bd.sh` por métodos propios del servidor (LIM-10, R3).
+Mitigación: repetir P-27 (adaptada) y P-30 en el servidor y hacer un recorrido tipo P-34; mirar la pestaña NGINX del panel por si admite `nosniff` y `Referrer-Policy` (LIM-16; no se parchea PHP); sustituir `docker/respaldo.sh`, `docker/restaurar.sh` y `docker/crear-usuario-bd.sh` por métodos propios del servidor (LIM-10, R3).
 
 **R7.** El sitio está en el plan Lite de DOM Cloud: 1,5 USD al mes, según el autor y el blog oficial de DOM Cloud, que también da un tope de 20 GB de transferencia al mes. Otras cifras (5 GiB de almacenamiento, 6 sitios y 3 usuarios) salen de un sitio de terceros (freetier.co) y no se confirmaron en la documentación oficial. Lo que la documentación consultada el 2026-11-03 decía del plan gratuito (cortafuegos de salida permanente que bloquea las conexiones salientes salvo una lista de sitios, puerto 25 bloqueado con relay por el 587 o una API REST, aviso en `*.dom.my.id` y caducidad a los 60 días) no se verificó para el Lite. La lista de sitios permitidos no se revisó, así que no se sabe si el SMTP elegido cabe en ella. Mitigación: confirmar los límites del Lite en el portal, probar el SMTP desde el servidor antes de elegirlo, hacer respaldos fuera del servidor y usar un dominio propio si no se quiere el dominio `domcloud.dev`.
 
@@ -1250,9 +1252,9 @@ claudetask/
 
 ## 7.1 Plan de pruebas
 
-Las pruebas de ClaudeTask son las **P-01 a P-43** de la sección 13, con su método, su fecha (2026-11-03) y su resultado. Los CP-01 a CP-24 que tenía esta sección eran de UpTask (proyectos, `tareas.js`, `/proyecto?id=`): no se ejecutaron y se retiraron. La relación de cada requisito con sus pruebas está en la sección 11.
+Las pruebas de ClaudeTask son las **P-01 a P-44** de la sección 13, con su método, su fecha (2026-11-03; P-43 y P-44, 2026-11-04) y su resultado. Los CP-01 a CP-24 que tenía esta sección eran de UpTask (proyectos, `tareas.js`, `/proyecto?id=`): no se ejecutaron y se retiraron. La relación de cada requisito con sus pruebas está en la sección 11.
 
-**Resultado:** las 43 pasan. P-14, P-15 y P-16 fallaron, se corrigieron y se repitieron; P-35 mostró el fallo con el guion antes del cambio. P-33 pasó tras reiniciar el contenedor. En P-26 y P-34 falló el procedimiento de prueba, no el código. P-31 consta «según lo indicado por el usuario», sin resultado por acción. P-36 a P-43 no encontraron fallos ni cambiaron código; dejaron registradas tres limitaciones nuevas (LIM-11 a LIM-13).
+**Resultado:** 43 pasan y P-44 pasa en parte (faltan `nosniff` y `Referrer-Policy`, LIM-16, y la cadena del certificado está incompleta, LIM-17). P-14, P-15 y P-16 fallaron, se corrigieron y se repitieron; P-35 mostró el fallo con el guion antes del cambio. P-33 pasó tras reiniciar el contenedor. En P-26 y P-34 falló el procedimiento de prueba, no el código. P-31 consta «según lo indicado por el usuario», sin resultado por acción. P-36 a P-43 no encontraron fallos ni cambiaron código; dejaron registradas tres limitaciones nuevas (LIM-11 a LIM-13). P-44 no cambió código y dejó dos limitaciones nuevas (LIM-16 y LIM-17).
 
 **Cobertura por área**
 
@@ -1268,7 +1270,7 @@ Las pruebas de ClaudeTask son las **P-01 a P-43** de la sección 13, con su mét
 | Código                    | P-22                          | Ninguna llamada real a `new X($_POST)` ni a `sincronizar($_POST)`                                                  |
 | Cuenta y tokens           | P-23 a P-26, P-35             | Registro, confirmación, recuperación, caducidad y uso único de los tokens                                          |
 | Base de datos e instalación | P-27, P-28, P-34            | Usuario de base con solo `SELECT`, `INSERT`, `UPDATE` y `DELETE`; instalación desde cero y ciclo completo          |
-| Cabeceras y producción    | P-29 a P-31, P-33             | CSP por entorno con nonce, cookie de sesión, sin `.map`, `/build/` sin listado, manifest de Vite no público        |
+| Cabeceras y producción | P-29 a P-31, P-33, P-44 | CSP por entorno con nonce, cookie de sesión, sin `.map`, `/build/` sin listado, manifest de Vite no público; en DOM Cloud (P-44): CSP, cookie, rutas públicas, `http` a `https` y cadena del certificado |
 | Respaldo                  | P-32                          | Respaldo y restauración conservan los datos y el hash de las contraseñas                                           |
 | Inicio de sesión          | P-36, P-37                    | Bloqueo tras 5 intentos y desbloqueo a los 30 s; una cuenta sin confirmar no entra y no se revela el motivo        |
 | Tutelados y vínculos      | P-38 a P-40                   | Restablecer la clave de un tutelado, vincular y desvincular, y crear un tutelado con su alias                      |
@@ -1303,7 +1305,7 @@ Además, el ciclo de revisión con éxito (reabrir una parte y el cierre de la t
 | Tipo           | Método                                                                                                                         | Estado                                                    |
 | -------------- | ------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------- |
 | Funcionales    | Pruebas por área con `curl` y dos navegadores (uno por rol) y el recorrido completo de P-34                                    | Hecho; falta el ciclo de revisión con éxito (7.1)         |
-| Seguridad      | P-01 a P-20, P-22, P-27 a P-30, P-32, P-33 y P-35 a P-43: `curl` con sesión y token CSRF reales, y revisión del código                | Hecho                                                     |
+| Seguridad      | P-01 a P-20, P-22, P-27 a P-30, P-32, P-33 y P-35 a P-44: `curl` con sesión y token CSRF reales, y revisión del código                | Hecho                                                     |
 | Usabilidad     | El recorrido de P-34 lo hizo el autor; falta que otra persona lo haga solo con `README.md`                                     | Pendiente (Versión 1.0)                                   |
 | Compatibilidad | Pruebas manuales en Brave (motor Chromium) y Mozilla Firefox (Gecko); menú móvil a 375 px en modo claro y oscuro (P-21); consola de DevTools sin avisos de CSP en producción (P-31) | Parcial: sin Safari (WebKit) y sin registro de qué prueba se hizo en cada navegador |
 | Automáticas    | No existen; todas las pruebas son manuales o con `curl`                                                                        | No hay                                                    |
@@ -1356,10 +1358,12 @@ Los ERR-01 a ERR-20 se redactaron al leer el código de UpTask, la base de Claud
 | LIM-13 | El tutor cambia su correo en el perfil sin reconfirmarlo ni pedir la contraseña (P-43)                                                         | Aceptada |
 | LIM-14 | En DOM Cloud la aplicación usa el usuario de la cuenta (`DB_USER=${USERNAME}`), no un usuario limitado a datos como `claudetask_app`. Se verificó que puede crear y borrar tablas; no se probó crear un usuario secundario | Abierta  |
 | LIM-15 | En el sitio publicado el correo no está configurado (`MAIL_HOST` vacío): sin SMTP no se puede registrar un tutor por correo ni recuperar contraseñas (5.5) | Abierta  |
+| LIM-16 | En DOM Cloud faltan `X-Content-Type-Options` y `Referrer-Policy` (P-44): en Docker las pone `docker/apache.conf` y, según la documentación de DOM Cloud, las ubicaciones de NGINX de la receta no admiten `add_header` (si la pestaña NGINX del panel lo permite, no se verificó). No se parchea en PHP: no cubriría los archivos estáticos y exigiría pruebas en los dos entornos | Abierta  |
+| LIM-17 | El servidor de DOM Cloud envía un solo certificado (CN `domcloud.dev`, Let's Encrypt YR2, válido del 2026-10-30 al 2027-01-28), sin el intermedio: `openssl` da «21 unable to verify the first certificate» y `curl` lo rechaza; Brave y Firefox abren el sitio (P-44). No lo controla el proyecto; con dominio propio y `ssl letsencrypt` podría cambiar (no probado) | Abierta  |
 
 ## 7.4 Seguridad
 
-Estado al 2026-11-03. Las pruebas son las de la sección 13.
+Estado al 2026-11-04. Las pruebas son las de la sección 13.
 
 | Aspecto           | Estado actual                                                                                                                                                       | Pruebas                 | Pendiente                                              |
 | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------- | ------------------------------------------------------ |
@@ -1372,10 +1376,10 @@ Estado al 2026-11-03. Las pruebas son las de la sección 13.
 | Tokens            | 32 caracteres hexadecimales aleatorios; el de recuperación caduca en 1 hora; el de confirmación no caduca y cada ruta rechaza el del otro                            | P-24, P-26, P-35        | «Reenviar confirmación» (LIM-05)                       |
 | Sesión            | Cookie `HttpOnly` y `SameSite=Lax` (`Secure` si `APP_URL` es https); `logout` solo vacía `$_SESSION` (LIM-02)                                                       | P-13, P-29, P-43      | Cerrar otras sesiones al cambiar la contraseña (LIM-12) |
 | Secretos          | `.env` fuera del repositorio; claves propias de cada instalación; MySQL solo en `127.0.0.1`                                                                         | P-27, P-28, P-34        | Ninguno                                                |
-| Cabeceras         | CSP por entorno, `nosniff` y `Referrer-Policy`; sin sourcemaps; `/build/` sin listado; manifest de Vite no público                                                  | P-29, P-30, P-33        | Revisar la CSP si hay un proxy (LIM-08)                |
+| Cabeceras | CSP por entorno; `nosniff` y `Referrer-Policy` solo en Docker (`docker/apache.conf`); sin sourcemaps; `/build/` sin listado; manifest de Vite no público. En DOM Cloud (P-44): CSP y cookie correctas, pero sin `nosniff` ni `Referrer-Policy` (LIM-16) | P-29, P-30, P-33, P-44 | Revisar la CSP si hay un proxy (LIM-08); `nosniff` y `Referrer-Policy` en DOM Cloud (LIM-16) |
 | Errores           | En producción los errores van al registro y no a la pantalla; el registro de PHP quedó vacío en las 10 páginas probadas                                             | P-30                    | Ninguno                                                |
 | Respaldo          | `docker/respaldo.sh` y `docker/restaurar.sh`                                                                                                                        | P-32                    | Ninguno                                                |
-| Transporte        | HTTP en desarrollo; en producción se supone HTTPS en un proxy delante del puerto 8082                                                                               | Sin prueba              | HTTPS y proxy en producción (LIM-08)                   |
+| Transporte | HTTP en desarrollo; en DOM Cloud, HTTPS con 301 desde `http://` y cookie `Secure` (P-44), pero el servidor envía un solo certificado, sin el intermedio (LIM-17); con Docker en producción se supone HTTPS en un proxy delante del puerto 8082 | P-44 (solo DOM Cloud) | HTTPS y proxy en producción con Docker (LIM-08); cadena del certificado (LIM-17) |
 
 ---
 
@@ -1481,7 +1485,7 @@ Hay dos roles. El manual completo está en [`README.md`](README.md): sección 2 
 
 ## 9.1 Resultados frente a los objetivos
 
-Evaluación al 2026-11-03 de los objetivos de la sección 2.1, contra las pruebas P-01 a P-43 (sección 13). «Verificado en el código» significa que se leyó el código y no hay una prueba numerada que lo registre.
+Evaluación al 2026-11-03 de los objetivos de la sección 2.1, contra las pruebas P-01 a P-43 (sección 13); P-44 (2026-11-04) es del servidor y no cambia ningún objetivo. «Verificado en el código» significa que se leyó el código y no hay una prueba numerada que lo registre.
 
 | Objetivo                                        | Estado                    | Evidencia                                                                                                                                                                                                                               |
 | ----------------------------------------------- | ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -1496,7 +1500,7 @@ Evaluación al 2026-11-03 de los objetivos de la sección 2.1, contra las prueba
 
 ## 9.2 Limitaciones
 
-- Las limitaciones de seguridad y operación están en 7.3 (LIM-01 a LIM-15).
+- Las limitaciones de seguridad y operación están en 7.3 (LIM-01 a LIM-17).
 - Lo que el alcance excluye (sección 2.2): correo y recuperación propia para los tutelados, reenviar la confirmación, notificaciones por correo de tareas o revisiones, rol de administrador, prioridades y etiquetas, pruebas automáticas y HTTPS configurado por la aplicación.
 - Pruebas: todas son manuales o con `curl`; no se probó en Safari (WebKit); falta la prueba de usabilidad con otra persona (7.2).
 
@@ -1534,7 +1538,7 @@ Son propuestas que salen de lo que el alcance excluye (2.2) y de las limitacione
 | ----- | --------------------------------------------------------------------------------------------------- |
 | A     | Capturas de pantalla [Completar]                                                                    |
 | B     | Código crítico: `ActiveRecord::where`, `TareaController::actualizar`, `PerfilController::perfil`    |
-| C     | Resultados de las pruebas: sección 13 (P-01 a P-43)                                                 |
+| C     | Resultados de las pruebas: sección 13 (P-01 a P-44)                                                 |
 
 ---
 
@@ -1553,7 +1557,7 @@ Esta sección reemplaza el «Plan de corrección y endurecimiento» que se redac
 | 7. Correo al destinatario real                  | ERR-08        | `c978a1f`                                     | P-23, P-25          | Resuelto |
 | 8. CSRF y sesión                                | ERR-06, ERR-09 | `c1b2931`, `7bfa426`                         | P-07, P-13, P-29    | ERR-06 resuelto; ERR-09 parcial (LIM-02) |
 | 9. Docker y producción                          | ERR-16, ERR-19 | `2f334a3`, `7bfa426`                         | P-27 a P-31, P-34   | Resuelto |
-| 10. Ejecutar las pruebas tras corregir          | -             | -                                             | P-01 a P-43         | Hecho: las 43 pasan (7.1) |
+| 10. Ejecutar las pruebas tras corregir          | -             | -                                             | P-01 a P-44         | Hecho: 43 pasan y P-44 pasa en parte (7.1) |
 
 **Lo que no es un paso del plan y también se cerró:** ERR-10 (`98a7151`), ERR-11 (`c3401ed`), ERR-12 (`c1b2931`), ERR-17 (`5b581aa`) y ERR-20 (`c1b2931`). ERR-14 y ERR-15 quedaron obsoletos al reescribir el cliente en el Paso 4; se atribuyen a `d9850e0` por su mensaje, sin haber comprobado el hash exacto.
 
@@ -1567,7 +1571,7 @@ Esta sección reemplaza el «Plan de corrección y endurecimiento» que se redac
 | `ActiveRecord::get($limite)` no escapa; ningún código lo llama                                         | Residuo de ERR-01                   |
 | Consultas preparadas en lugar de escape de valores                                                     | Mejora futura (7.4)                 |
 | Antes de publicar: `ENVIRONMENT=production`, `APP_URL` con https y revisar la CSP si hay un proxy      | LIM-08 (abierta)                    |
-| Publicar en DOM Cloud: ya desplegado; faltan las pruebas en el servidor, las cabeceras, el SMTP y los respaldos | LIM-10, LIM-14, LIM-15, 5.4 R6 y R7  |
+| Publicar en DOM Cloud: ya desplegado; P-44 probó cabeceras y archivos públicos (faltan `nosniff` y `Referrer-Policy`; certificado sin el intermedio); faltan P-27 adaptada, P-30 completa, el SMTP y los respaldos | LIM-10, LIM-14 a LIM-17, 5.4 R6 y R7  |
 
 ---
 
@@ -1605,7 +1609,7 @@ La columna «Prueba» remite a la sección 13. «Sin P» significa que ninguna p
 | RNF-01 Contraseñas con hash      | Fig. 5          | `Usuario::hashPassword`                                                 | P-25, P-26, P-32                |
 | RNF-02 Acceso por rol y vínculo  | Fig. 11         | `isAuth`, `isTutor`, `isTutelado`, `Vinculo::existe`                    | P-01 a P-06, P-08 a P-13        |
 | RNF-03 Entradas y consultas      | Fig. 11         | `verificarCsrf`, `escape_string`, `columnaSegura`                       | P-07, P-14 a P-20, P-22         |
-| RNF-04 Navegador y sesión        | Fig. 11, 13     | `enviarCabecerasSeguridad`, `cspNonce`, `includes/app.php`              | P-13, P-29, P-30, P-31          |
+| RNF-04 Navegador y sesión        | Fig. 11, 13     | `enviarCabecerasSeguridad`, `cspNonce`, `includes/app.php`              | P-13, P-29, P-30, P-31, P-44    |
 | RNF-05 Base con el mínimo permiso | Fig. 12, 13    | Usuario `claudetask_app`, `docker/`                                     | P-27, P-28, P-34                |
 | RNF-06 Borrado en cascada        | Fig. 5          | Claves foráneas de `claudetask.sql`                                     | P-17                            |
 | RNF-07 Entorno reproducible      | Fig. 12         | `docker-compose.yml`                                                    | P-28, P-34                      |
@@ -1695,7 +1699,7 @@ Misma fecha (2026-11-03) y mismo método que el Paso 8. Los commits son los del 
 
 ## Pruebas del Paso 11a
 
-Misma fecha (2026-11-03) y mismo método que los Pasos 8 y 9: `curl` con sesión y token CSRF reales sobre la instalación local, un solo bloque por prueba, contadores antes y después y restauración al final. No hubo fallos ni cambios de código. Usuarios: tutores Ana (id 1) y Beto (id 4), tutelados Lucia47 (2), Pedro52 (3), Lucia36 (5, de Beto) y Lucia52 (6, de Ana).
+Misma fecha (2026-11-03) y mismo método que los Pasos 8 y 9, salvo P-43, cuya fecha de ejecución es 2026-11-04 según el autor: `curl` con sesión y token CSRF reales sobre la instalación local, un solo bloque por prueba, contadores antes y después y restauración al final. No hubo fallos ni cambios de código. Usuarios: tutores Ana (id 1) y Beto (id 4), tutelados Lucia47 (2), Pedro52 (3), Lucia36 (5, de Beto) y Lucia52 (6, de Ana).
 
 | Id   | Área                         | Prueba                                                                                                                                                                                                 | Esperado                                                                                                                                                                                                                       | Resultado |
 | ---- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------- |
@@ -1717,6 +1721,23 @@ Observaciones de P-36 a P-43, que no son fallos:
 - El `AUTO_INCREMENT` ya avanzó: los ids nuevos de prueba empiezan en 14 o más y no afectan a los contadores.
 - El cliente `mysql` del contenedor muestra «�» con las tildes. Es una hipótesis sin verificar que imprime en latin1; la respalda que P-17 guardó y mostró emojis.
 - «Vencida» con una tarea de 0 partes no se probó.
+
+## Pruebas del Paso 11c
+
+Fecha de ejecución: 2026-11-04 (indicada por el autor). Método: `curl` contra el sitio publicado en DOM Cloud, `https://santi-task.domcloud.dev`, con `-k` solo para diagnosticar, porque el `curl` del autor rechaza el certificado (LIM-17); `openssl` para el certificado y Brave y Firefox para abrir el sitio. No hubo cambios de código.
+
+| Id   | Área                                    | Prueba                                                                                                                                                                                                                                              | Esperado                                                                                                                                                                                                                                                | Resultado |
+| ---- | --------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------- |
+| P-44 | Cabeceras y archivos públicos en DOM Cloud (adapta P-29, P-30 y P-33) | Portada, cabeceras y cookie; `/build/.vite/manifest.json`, `/.env`, `/.git/config`, `/ruta-que-no-existe`, `/phpinfo.php`, `/build/` y `/build/assets/`; el CSS y los seis scripts (app, comun, tutor, alumno, nueva-tarea, tutelados); `http://`; certificado con `openssl` | Como en Docker: portada 200; cookie `Secure`, `HttpOnly` y `SameSite=Lax`; CSP de producción estricta; `nosniff` y `Referrer-Policy`; 404 en manifest, `.env`, `.git`, ruta inexistente y `phpinfo`; 403 en `/build/` y `/build/assets/`; estáticos 200 con su tipo; `http` redirige a `https`; cadena de certificado verificable | Pasa en parte: todo lo anterior salvo `nosniff` y `Referrer-Policy` (LIM-16) y la cadena del certificado (LIM-17) |
+
+Observaciones de P-44:
+
+- Cookie `PHPSESSID` con `Secure`, `HttpOnly` y `SameSite=Lax`. CSP de la portada: `default-src 'self'`; `script-src 'self'` con nonce; `style-src 'self'` y `fonts.googleapis.com`; `font-src 'self'`, `data:` y `fonts.gstatic.com`; `img-src 'self'` y `data:`; `connect-src 'self'`; `object-src 'none'`; `base-uri 'self'`; `form-action 'self'`; `frame-ancestors 'none'`; sin `unsafe-inline`, `unsafe-eval` ni `localhost:5173`.
+- `X-Content-Type-Options` y `Referrer-Policy` no salen ni en la portada ni en el CSS (`styles-Dlx6b6ja.css`: 200 `text/css`). Los seis scripts dan 200 `application/javascript`. `http://` da 301 a `https://santi-task.domcloud.dev/`. `/build/` y `/build/assets/` dan 403, como en P-30 con Docker.
+- Certificado: el servidor envía uno solo (CN `domcloud.dev`, SAN `*.domcloud.dev` y `domcloud.dev`, emisor Let's Encrypt YR2, del 2026-10-30 al 2027-01-28), sin el intermedio. `openssl` da «21 unable to verify the first certificate». Bajando el intermedio YR2 desde la URL «CA Issuers», `openssl verify` sigue fallando («error 20 at 1 depth lookup»).
+- Inferencias del autor, no verificadas: que el certificado sea el compartido de DOM Cloud (su documentación dice que `ssl` usa el dominio compartido si existe) y que a su Linux también le falte la raíz de esa cadena (se comprobaría con `sudo apt install --only-upgrade ca-certificates` y repitiendo).
+- Según la documentación de DOM Cloud (página Deployment System), las ubicaciones de NGINX de la receta solo admiten `match`, `root`, `alias`, `rewrite`, `try_files`, `return`, `fastcgi` y `passenger`, sin `add_header`; `set_header_list` solo se documenta para Passenger. Si la pestaña NGINX del panel lo permite, no se verificó.
+- No se repitieron en el servidor P-27 (adaptada), P-30 (las 10 páginas sin estilos ni scripts en línea y el registro de PHP vacío) ni el ciclo de P-34. El registro de errores de PHP del servidor no se revisó. De la CSP solo se leyó la cabecera: no se comparó el nonce con el del HTML.
 
 ## Decisiones de diseño aceptadas
 
@@ -1754,10 +1775,11 @@ Abiertos:
 
 - [x] Completar autor, institución, metodología y roles (la metodología y los roles son descripciones del proceso real, confirmar con el autor)
 - [ ] Insertar capturas de pantalla
-- [x] Los CP-01 a CP-24 (UpTask) se retiraron; los resultados están en P-01 a P-43 (secciones 7.1, 11 y 13)
+- [x] Los CP-01 a CP-24 (UpTask) se retiraron; los resultados están en P-01 a P-44 (secciones 7.1, 11 y 13)
 - [x] Cada error ERR-01 a ERR-20 confirmado, resuelto o descartado (sección 7.3, 2026-11-03)
 - [x] El plan de corrección de UpTask está aplicado y registrado en la sección 10; quedan las limitaciones de 7.3
 - [x] Revisar el texto `Sopilote22` de `views/templates/nombre-sitio.php` (quitado en `941e8d1`)
-- [x] P-36 a P-43 ejecutadas y registradas (Paso 11a, 2026-11-03): bloqueo, cuenta sin confirmar, restablecer clave de tutelado, vincular y desvincular, crear tutelado, duplicar, filtros y vencidas, perfil y contraseña
-- [ ] Publicar en DOM Cloud: desplegado y con la base cargada (Paso 11b); faltan repetir P-27 (adaptada), P-29, P-30 y P-33 en el servidor, el SMTP y los respaldos (R6, R7, LIM-10, LIM-14, LIM-15)
+- [x] P-36 a P-43 ejecutadas y registradas (Paso 11a, 2026-11-03; la fecha de P-43 es 2026-11-04, ver 13): bloqueo, cuenta sin confirmar, restablecer clave de tutelado, vincular y desvincular, crear tutelado, duplicar, filtros y vencidas, perfil y contraseña
+- [x] P-44 ejecutada y registrada (Paso 11c, 2026-11-04): cabeceras y archivos públicos en DOM Cloud; faltan `nosniff` y `Referrer-Policy` (LIM-16) y la cadena del certificado está incompleta (LIM-17)
+- [ ] Publicar en DOM Cloud: desplegado y con la base cargada (Paso 11b) y con P-44 ejecutada (Paso 11c); faltan repetir P-27 (adaptada) y P-30 en el servidor, el recorrido tipo P-34, el SMTP y los respaldos (R6, R7, LIM-10, LIM-14 a LIM-17)
 - [x] Confirmar que lo documentado coincide con el sistema (2026-11-03, leyendo el código: rutas, accesos, parámetros de la API, tablas, puertos y sección 8; no se volvió a ejecutar el sistema)
