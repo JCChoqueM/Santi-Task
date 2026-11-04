@@ -996,6 +996,19 @@ flowchart LR
 
 *En el primer arranque, con el volumen vacío, MySQL ejecuta `01-claudetask.sql` (esquema) y `02-usuario.sh` (crea `claudetask_app` con permisos solo de datos). Las claves salen de `.env`.*
 
+**Despliegue en DOM Cloud (sin Docker).** La figura 12 es el entorno de desarrollo. En DOM Cloud no hay contenedores; la tabla compara los dos entornos con lo que se verificó en el despliegue (5.4, R6; receta en 8.2).
+
+| Elemento              | Docker (desarrollo)                          | DOM Cloud (verificado en el despliegue)                                                   |
+| --------------------- | -------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| PHP y servidor web    | PHP 8.5.12 con Apache                        | PHP 8.4.27 con php-fpm bajo NGINX                                                         |
+| Base de datos         | MySQL 8.0, base `claudetask`                 | MariaDB, base `santi_task_db`; sin `CREATE DATABASE` ni `USE` en la carga                 |
+| Usuario de la base    | `claudetask_app`, solo datos                 | El usuario de la cuenta, con permisos sobre su base (LIM-14)                              |
+| Reglas de rutas       | `docker/apache.conf`                         | Bloque `nginx` de la receta: reescritura a `index.php`, 404 para rutas con punto y para archivos con extensión inexistentes |
+| Recursos de Vite      | Servidor de desarrollo en el puerto 5173     | `npm ci` y `npm run build` en cada despliegue (Node 18 por defecto)                       |
+| Variables de entorno  | `.env` creado a mano                         | `.env` generado por la receta (`DB_*`, `MAIL_*`, `APP_URL`, `ENVIRONMENT=production`)     |
+| HTTPS                 | Proxy externo, no incluido                   | `ssl` y `ssl always` de DOM Cloud                                                         |
+| Respaldos             | `docker/respaldo.sh` y `restaurar.sh`        | Sin resolver (R3, LIM-10)                                                                 |
+
 ## 4.9 Diagrama de red
 
 **Figura 13. Puertos y comunicaciones.**
@@ -1073,8 +1086,9 @@ Git registra los 30 commits del proyecto hasta `272405a` con la misma fecha, 202
 | 8    | Lista de pruebas P-01 a P-25                                                       | `a3f03d4`, `97a16f7`                                                                  |
 | 9    | Errores y correo, tokens, usuario de base, CSP, respaldo, README, P-26 a P-35      | `c978a1f`, `c1a2919`, `2f334a3`, `7bfa426`, `f7414b2`, `6aa6283`, `5b581aa`, `941e8d1`, `563e2ff`, `6a96305` |
 | 10   | Documentación alineada con el sistema real (10a a 10d)                         | `6f9a8b9`, `1fe904c`, `73e90ac`, `5b54f42`, `56c8534`, `eb67270`, `272405a`                                |
+| 11   | P-36 a P-43 (11a) y publicación en DOM Cloud (11b)                                  | `244d0f5` (11a)                                                                       |
 
-**Pendiente para la Versión 1.0:** que otra persona haga el ciclo solo con el `README.md` (7.2), insertar las capturas (4.10) y publicar el sistema (5.4, R6 y R7).
+**Pendiente para la Versión 1.0:** que otra persona haga el ciclo solo con el `README.md` (7.2), insertar las capturas (4.10) y terminar la publicación en DOM Cloud: ya está desplegado, y faltan las pruebas en el servidor, el SMTP y los respaldos (5.4, R6 y R7).
 
 ## 5.3 Roles y responsabilidades
 
@@ -1091,16 +1105,30 @@ Probabilidad e impacto son una estimación del autor al 2026-11-03, no una medic
 | ID  | Riesgo                                                                                                    | Probabilidad | Impacto | Mitigación                                                                                                          |
 | --- | --------------------------------------------------------------------------------------------------------- | ------------ | ------- | ------------------------------------------------------------------------------------------------------------------- |
 | R1  | Uso malicioso por fallos de seguridad que no se hayan encontrado (los conocidos están resueltos, sección 10) | Baja         | Alto    | Las 43 pruebas pasan; quedan LIM-01, LIM-02 y LIM-11 a LIM-13 (7.3); falta una prueba numerada del ciclo de revisión con éxito (7.1)                         |
-| R2  | Los correos de confirmación y recuperación tardan o no salen (SMTP síncrono, LIM-07)                      | Media        | Alto    | Un SMTP real antes de publicar; probar el envío en el servidor; en el plan gratuito de DOM Cloud ver R7            |
+| R2  | Los correos de confirmación y recuperación tardan o no salen (SMTP síncrono, LIM-07)                      | Media        | Alto    | Un SMTP real antes de publicar; probar el envío en el servidor; en DOM Cloud ver R7            |
 | R3  | Pérdida de datos si se borra el volumen de MySQL o la cuenta del servidor                                 | Media        | Alto    | `docker/respaldo.sh` y `docker/restaurar.sh` (P-32) en Docker; en el servidor de publicación definir otro método   |
 | R4  | Versiones de dependencias que cambien o no existan                                                        | Media        | Medio   | `composer.lock` y `package-lock.json` fijan los paquetes; el `Dockerfile` fija `php:8.5.12-apache` y la base es `mysql:8.0` |
 | R5  | Un solo desarrollador conoce el sistema                                                                   | Media        | Medio   | Mantener esta documentación actualizada y la prueba de usabilidad con otra persona (7.2)                            |
 | R6  | El servidor de publicación (DOM Cloud) no usa Docker, Apache ni MySQL 8, y el sistema depende de ellos      | Alta         | Alto    | Ver abajo                                                                                                           |
-| R7  | Límites del plan gratuito de DOM Cloud                                                                    | Media        | Medio   | Ver abajo                                                                                                           |
+| R7  | Límites del plan Lite de DOM Cloud (transferencia, almacenamiento, cortafuegos de salida)                                                                    | Media        | Medio   | Ver abajo                                                                                                           |
 
-**R6.** Según la documentación de DOM Cloud (consultada el 2026-11-03), sus servidores no usan Docker, funcionan con NGINX y Passenger e instalan MariaDB, no MySQL. En ClaudeTask, la reescritura de todas las rutas a `index.php`, el 404 para rutas que empiezan por punto, `nosniff`, `Referrer-Policy` y el bloqueo del listado de directorios están en `docker/apache.conf`, y `public/` no tiene `.htaccess` (solo `index.php`). Esas reglas hay que llevarlas a la configuración de NGINX del servidor. Lo que no se verificó: que haya PHP 8.5 en DOM Cloud y que `claudetask.sql` cargue sin cambios en MariaDB. Mitigación: repetir P-27, P-29, P-30 y P-33 en el servidor real antes de dar por publicado el sistema, y los scripts `docker/respaldo.sh`, `docker/restaurar.sh` y `docker/crear-usuario-bd.sh` no sirven allí tal cual (LIM-10).
+**R6.** DOM Cloud no usa Docker: según su documentación (consultada el 2026-11-03) sirve con NGINX y php-fpm y trae MariaDB, no MySQL 8. ClaudeTask se desplegó allí (el registro del despliegue del runner lleva fecha 2026-11-03; la receta está en 8.2).
 
-**R7.** Según la misma documentación, el plan gratuito: pide un código de invitación (o una cuenta de GitHub con más de 6 meses y un seguidor, o una mejora de pago de 4,5 USD una sola vez); da 1,5 GB de almacenamiento y 2 GB de transferencia mensual; muestra un aviso en el dominio gratuito `*.dom.my.id`; borra los datos si la cuenta caduca y no se entra en 14 días más (se renueva al iniciar sesión al menos cada 60 días); y mantiene siempre activo un cortafuegos que bloquea las conexiones salientes salvo a una lista de sitios. Esa lista no se revisó, así que no se sabe si el SMTP elegido cabe en ella; el puerto 25 está bloqueado para todos, y el aviso de DOM Cloud recomienda un relay por el puerto 587 o una API REST. Mitigación: dominio propio, entrar al menos cada 60 días, respaldos fuera del servidor y, si el cortafuegos bloquea el SMTP, pasar a un plan de pago.
+*Verificado en el registro del despliegue y en phpMyAdmin:*
+
+- PHP 8.4.27. `php -l` no dio fallos en `controllers`, `models`, `classes`, `includes`, `Router.php` y `public`. El `Dockerfile` usa 8.5.12; `composer.lock` pide `^8.0`.
+- `composer install --no-dev` y `vite build` (5.4.21, con el Node 18 por defecto) terminan sin errores.
+- `claudetask.sql` no carga tal cual: empieza con `CREATE DATABASE claudetask` y `USE claudetask`, y en el servidor la base es `santi_task_db`. Se quitan esas líneas con `sed` y se fija `utf8mb4_unicode_ci` con `ALTER DATABASE`, porque las tablas solo declaran `ENGINE=InnoDB` y heredan el charset de la base. Resultado: 6 tablas `InnoDB` y `utf8mb4_unicode_ci`.
+- Un volcado de la base local (usuarios 6, tareas 3, partes 6, historial 7, vínculos 4 e `intentos_login` 0) se importó con phpMyAdmin después de quitar el prefijo `claudetask.` de sus `DROP TABLE`, porque el usuario del servidor solo tiene permisos sobre su propia base. Los contadores coinciden.
+- En local, el mismo SQL cargó sin errores en MariaDB 10.11.19 y 11.4.13, y los rechazos (ENUM inválido, alias de 61 caracteres, correo repetido y `CREATE TABLE` sin permiso) dieron los errores 1265, 1406, 1062 y 1142, como en MySQL 8. Las diferencias vistas son de informe (`default_generated`; `no action` frente a `restrict`) y de `sql_mode` (MariaDB no trae `ONLY_FULL_GROUP_BY`).
+- El NGINX generado tiene la reescritura a `index.php`, el 404 para rutas con punto (salvo `.well-known`) y el 404 para archivos con extensión que no existen.
+- En `https://santi-task.domcloud.dev` una sesión de tutor llegó a `/dashboard` (visto en la barra de direcciones de Brave; no se anotó el contenido de la página).
+
+*No verificado:* P-27 (adaptada a un usuario único), P-29, P-30 y P-33 en el servidor; las cabeceras `nosniff` y `Referrer-Policy`, que en Docker pone `docker/apache.conf` y no se portaron; que no haya listado de directorios (NGINX no lo activa por defecto, pero no se probó); por qué `curl` rechaza el certificado («unable to get local issuer certificate»); la versión de MariaDB del servidor; y si alguna consulta usa `GROUP BY` y se comporta distinto sin `ONLY_FULL_GROUP_BY`.
+
+Mitigación: repetir P-27 (adaptada), P-29, P-30 y P-33 en el servidor; llevar `nosniff` y `Referrer-Policy` a NGINX o a PHP; sustituir `docker/respaldo.sh`, `docker/restaurar.sh` y `docker/crear-usuario-bd.sh` por métodos propios del servidor (LIM-10, R3).
+
+**R7.** El sitio está en el plan Lite de DOM Cloud: 1,5 USD al mes, según el autor y el blog oficial de DOM Cloud, que también da un tope de 20 GB de transferencia al mes. Otras cifras (5 GiB de almacenamiento, 6 sitios y 3 usuarios) salen de un sitio de terceros (freetier.co) y no se confirmaron en la documentación oficial. Lo que la documentación consultada el 2026-11-03 decía del plan gratuito (cortafuegos de salida permanente que bloquea las conexiones salientes salvo una lista de sitios, puerto 25 bloqueado con relay por el 587 o una API REST, aviso en `*.dom.my.id` y caducidad a los 60 días) no se verificó para el Lite. La lista de sitios permitidos no se revisó, así que no se sabe si el SMTP elegido cabe en ella. Mitigación: confirmar los límites del Lite en el portal, probar el SMTP desde el servidor antes de elegirlo, hacer respaldos fuera del servidor y usar un dominio propio si no se quiere el dominio `domcloud.dev`.
 
 ## 5.5 Recursos y costos
 
@@ -1108,7 +1136,8 @@ Probabilidad e impacto son una estimación del autor al 2026-11-03, no una medic
 | ----------------------------------------- | ------------------------------------------------------------------------------------------------------ |
 | Desarrollo local con Docker               | 0 USD                                                                                                  |
 | Pruebas de correo (Ethereal)              | 0 USD                                                                                                  |
-| Alojamiento: DOM Cloud, plan gratuito     | 0 USD, con los límites de R7; la mejora de pago única indicada en su documentación es de 4,5 USD       |
+| Alojamiento: DOM Cloud, plan Lite         | 1,5 USD al mes (dato del autor; coincide con el blog oficial de DOM Cloud)                             |
+| Dominio actual: `santi-task.domcloud.dev` | El de DOM Cloud; sin costo adicional anotado                                                           |
 | Servidor SMTP para publicar               | [Completar]                                                                                            |
 | Dominio propio (opcional)                 | [Completar]                                                                                            |
 
@@ -1120,9 +1149,9 @@ Probabilidad e impacto son una estimación del autor al 2026-11-03, no una medic
 
 | Componente                    | Tecnología                                                  | Versión (según los archivos)                                                            |
 | ----------------------------- | ----------------------------------------------------------- | --------------------------------------------------------------------------------------- |
-| Lenguaje servidor             | PHP                                                         | 8.5.12 (imagen `php:8.5.12-apache`)                                                     |
+| Lenguaje servidor             | PHP                                                         | 8.5.12 (imagen `php:8.5.12-apache`); 8.4.27 en DOM Cloud (5.4, R6)                    |
 | Servidor web                  | Apache con `mod_rewrite` y `mod_headers`                    | De la imagen                                                                            |
-| Base de datos                 | MySQL, InnoDB, `utf8mb4_unicode_ci`                         | 8.0 (`mysql:8.0`)                                                                       |
+| Base de datos                 | MySQL, InnoDB, `utf8mb4_unicode_ci`                         | 8.0 (`mysql:8.0`); MariaDB en DOM Cloud (cargada también en 10.11.19 y 11.4.13 en local)|
 | Acceso a datos                | `mysqli`                                                    | Extensión de PHP (el Dockerfile instala también `pdo` y `pdo_mysql`, que el código no usa) |
 | Dependencias de PHP           | Composer                                                    | Imagen `composer:latest`                                                                |
 | Correo                        | `phpmailer/phpmailer`                                       | ^7.1                                                                                    |
@@ -1321,10 +1350,12 @@ Los ERR-01 a ERR-20 se redactaron al leer el código de UpTask, la base de Claud
 | LIM-07 | El envío SMTP es síncrono: registrar y recuperar contraseña tardan de 3 a 5 segundos                                                          | Abierta  |
 | LIM-08 | Antes de publicar: `ENVIRONMENT=production`, `APP_URL` con https y, si hay un proxy, revisar la CSP (`form-action` y `connect-src` están en `'self'`) | Abierta  |
 | LIM-09 | Tras editar `.env` o `docker/apache.conf` hay que reiniciar `claudetask_php`; con `apache2ctl graceful` no basta                              | Conocida |
-| LIM-10 | El destino previsto, DOM Cloud, no usa Docker ni Apache y trae MariaDB: las reglas de `docker/apache.conf` y los scripts de `docker/` no se aplican allí (5.4, R6) | Abierta  |
+| LIM-10 | El destino de publicación, DOM Cloud, no usa Docker ni Apache y trae MariaDB. Ya está desplegado, pero las reglas de `docker/apache.conf` solo se portaron en parte y los scripts de `docker/` (`respaldo.sh`, `restaurar.sh`, `crear-usuario-bd.sh`) no se aplican allí (5.4, R6) | Abierta  |
 | LIM-11 | Cambiar la contraseña no limita los intentos con una contraseña actual incorrecta: el bloqueo de 5 intentos es solo del inicio de sesión (P-43)  | Aceptada |
 | LIM-12 | Al cambiar la contraseña no se cierran otras sesiones del mismo usuario (leído en el código); la sesión abierta sigue válida (P-43)            | Aceptada |
 | LIM-13 | El tutor cambia su correo en el perfil sin reconfirmarlo ni pedir la contraseña (P-43)                                                         | Aceptada |
+| LIM-14 | En DOM Cloud la aplicación usa el usuario de la cuenta (`DB_USER=${USERNAME}`), no un usuario limitado a datos como `claudetask_app`. Se verificó que puede crear y borrar tablas; no se probó crear un usuario secundario | Abierta  |
+| LIM-15 | En el sitio publicado el correo no está configurado (`MAIL_HOST` vacío): sin SMTP no se puede registrar un tutor por correo ni recuperar contraseñas (5.5) | Abierta  |
 
 ## 7.4 Seguridad
 
@@ -1358,6 +1389,7 @@ Estado al 2026-11-03. Las pruebas son las de la sección 13.
 | Puertos libres           | 8082 (aplicación), 5173 (Vite, solo en desarrollo) y 3308 (MySQL, solo desde el propio equipo) |
 | Navegador                | Probado en Brave y Mozilla Firefox (7.2); otros navegadores actuales no se probaron, Safari tampoco |
 | Internet                 | Descarga de imágenes y dependencias la primera vez; fuentes de Google en el navegador |
+| Para publicar sin Docker | Probado en DOM Cloud: PHP 8.4.27, MariaDB, Node 18 y Composer (8.2); en Docker, PHP 8.5.12 |
 | Servidor de correo       | Cuenta SMTP **obligatoria**: sin correo de confirmación no se crea la cuenta de un tutor |
 
 ## 8.2 Guía de instalación y configuración
@@ -1370,6 +1402,55 @@ La guía paso a paso está en [`README.md`](README.md), sección 1 (así no se m
 4. Abrir `http://localhost:8082`.
 
 Para una base ya creada con `root`: `bash docker/crear-usuario-bd.sh`. Para producción: README, sección 7.
+
+**Publicar en DOM Cloud (sin Docker).** Receta con la que se desplegó en el plan Lite (el registro del despliegue terminó sin errores; 5.4, R6). Va en el portal de DOM Cloud, en el sitio ya creado, con el repositorio de GitHub público:
+
+```yaml
+source: https://github.com/JCChoqueM/Santi-Task
+features:
+  - 'php 8.4'
+  - mysql
+  - ssl
+  - 'ssl always'
+root: public_html/public
+nginx:
+  fastcgi: 'on'
+  locations:
+    -
+      match: '~ /\.(?!well-known)'
+      return: 404
+    -
+      match: '~ \.[^\/]+(?<!\.php)$'
+      try_files: '$uri =404'
+    -
+      match: /
+      try_files: '$uri $uri/ /index.php$is_args$args'
+commands:
+  - 'php -v | head -1'
+  - 'for f in $(find controllers models classes includes Router.php public -name "*.php"); do php -l $f >/dev/null || echo "FALLO $f"; done'
+  - 'echo "DB_HOST=localhost" > .env'
+  - 'echo "DB_USER=${USERNAME}" >> .env'
+  - 'echo "DB_PASS=\"${PASSWORD}\"" >> .env'
+  - 'echo "DB_NAME=${DATABASE}" >> .env'
+  - 'echo "MAIL_HOST=" >> .env'
+  - 'echo "MAIL_PORT=587" >> .env'
+  - 'echo "MAIL_USERNAME=" >> .env'
+  - 'echo "MAIL_PASSWORD=" >> .env'
+  - 'echo "APP_URL=https://${DOMAIN}" >> .env'
+  - 'echo "ENVIRONMENT=production" >> .env'
+  - 'composer install --no-dev --optimize-autoloader'
+  - 'npm ci'
+  - 'npm run build'
+  - 'MYSQL_PWD="$PASSWORD" mysql -u"$USERNAME" -e "ALTER DATABASE \`$DATABASE\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"'
+  - 'sed "/^CREATE DATABASE/,/^USE claudetask;/d" claudetask.sql | MYSQL_PWD="$PASSWORD" mysql -u"$USERNAME" "$DATABASE"'
+  - 'MYSQL_PWD="$PASSWORD" mysql -u"$USERNAME" "$DATABASE" -e "SELECT COUNT(*) FROM usuarios; SHOW TABLE STATUS WHERE Collation <> \"utf8mb4_unicode_ci\""'
+```
+
+- `source` reemplaza el contenido de `public_html` en cada despliegue; por eso la receta vuelve a crear el `.env` y compila `public/build/`. `$USERNAME`, `$PASSWORD`, `$DATABASE` y `$DOMAIN` los rellena DOM Cloud.
+- Las tres últimas líneas cargan `claudetask.sql` y **solo se ejecutan la primera vez**: sin `CREATE TABLE IF NOT EXISTS`, repetirlas da error por tablas existentes. Para actualizar el código, usar la misma receta sin esas tres líneas (no se probó).
+- Para cargar datos de un volcado propio con phpMyAdmin, hay que quitar el prefijo `` `claudetask`. `` de sus `DROP TABLE`; se hizo así con el volcado local.
+- `MAIL_HOST`, `MAIL_USERNAME` y `MAIL_PASSWORD` quedan vacíos: falta decidir el SMTP (LIM-15). Un servidor de pruebas como Ethereal recibe los correos pero no los entrega, y que el cortafuegos de salida de DOM Cloud permita llegar a él no se probó.
+- Se dejaron fuera de la receta `phpinfo.php` y `display_errors`: con `ENVIRONMENT=production` los errores van al registro y no a la pantalla.
 
 ## 8.3 Manual de usuario
 
@@ -1415,7 +1496,7 @@ Evaluación al 2026-11-03 de los objetivos de la sección 2.1, contra las prueba
 
 ## 9.2 Limitaciones
 
-- Las limitaciones de seguridad y operación están en 7.3 (LIM-01 a LIM-13).
+- Las limitaciones de seguridad y operación están en 7.3 (LIM-01 a LIM-15).
 - Lo que el alcance excluye (sección 2.2): correo y recuperación propia para los tutelados, reenviar la confirmación, notificaciones por correo de tareas o revisiones, rol de administrador, prioridades y etiquetas, pruebas automáticas y HTTPS configurado por la aplicación.
 - Pruebas: todas son manuales o con `curl`; no se probó en Safari (WebKit); falta la prueba de usabilidad con otra persona (7.2).
 
@@ -1443,6 +1524,7 @@ Son propuestas que salen de lo que el alcance excluye (2.2) y de las limitacione
 - Documentación de phpdotenv. [GitHub - vlucas/phpdotenv](https://github.com/vlucas/phpdotenv)
 - Documentación de PHPMailer. [GitHub - PHPMailer/PHPMailer: The classic email sending library for PHP · GitHub](https://github.com/PHPMailer/PHPMailer)
 - Documentación de DOM Cloud: [Our Free Plan](https://domcloud.co/docs/intro/free-plan), [Security Services](https://domcloud.co/docs/features/security) y [Self Hosting](https://domcloud.co/docs/intro/self-hosting) (consultadas el 2026-11-03).
+- Documentación de DOM Cloud: [Deployment System](https://domcloud.co/docs/features/deploy) y entradas de su blog sobre planes y precios ([Producing a Cost-Effective Service](https://domcloud.co/blog/producing-cost-effective-service), [Updating OS Across Servers](https://domcloud.co/blog/updating-os-across-servers)) (consultadas durante la publicación; [Completar fecha]).
 - Documentación de Docker Compose. [Docker Compose | Docker Docs](https://docs.docker.com/compose)
 - Documentación de Mermaid. [Mermaid | Diagramming and charting tool](https://mermaid.js.org)
 
@@ -1485,7 +1567,7 @@ Esta sección reemplaza el «Plan de corrección y endurecimiento» que se redac
 | `ActiveRecord::get($limite)` no escapa; ningún código lo llama                                         | Residuo de ERR-01                   |
 | Consultas preparadas en lugar de escape de valores                                                     | Mejora futura (7.4)                 |
 | Antes de publicar: `ENVIRONMENT=production`, `APP_URL` con https y revisar la CSP si hay un proxy      | LIM-08 (abierta)                    |
-| Publicar en DOM Cloud: reglas de NGINX, MariaDB, respaldos y SMTP                                      | LIM-10 (abierta), 5.4 R6 y R7       |
+| Publicar en DOM Cloud: ya desplegado; faltan las pruebas en el servidor, las cabeceras, el SMTP y los respaldos | LIM-10, LIM-14, LIM-15, 5.4 R6 y R7  |
 
 ---
 
@@ -1677,4 +1759,5 @@ Abiertos:
 - [x] El plan de corrección de UpTask está aplicado y registrado en la sección 10; quedan las limitaciones de 7.3
 - [x] Revisar el texto `Sopilote22` de `views/templates/nombre-sitio.php` (quitado en `941e8d1`)
 - [x] P-36 a P-43 ejecutadas y registradas (Paso 11a, 2026-11-03): bloqueo, cuenta sin confirmar, restablecer clave de tutelado, vincular y desvincular, crear tutelado, duplicar, filtros y vencidas, perfil y contraseña
+- [ ] Publicar en DOM Cloud: desplegado y con la base cargada (Paso 11b); faltan repetir P-27 (adaptada), P-29, P-30 y P-33 en el servidor, el SMTP y los respaldos (R6, R7, LIM-10, LIM-14, LIM-15)
 - [x] Confirmar que lo documentado coincide con el sistema (2026-11-03, leyendo el código: rutas, accesos, parámetros de la API, tablas, puertos y sección 8; no se volvió a ejecutar el sistema)

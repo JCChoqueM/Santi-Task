@@ -141,6 +141,16 @@ Problemas frecuentes:
 
 Para volver a desarrollo: `ENVIRONMENT=development` en `.env`, `docker restart claudetask_php` y `docker exec -it claudetask_php npm run dev`.
 
+### 7.1 Sin Docker: DOM Cloud
+
+ClaudeTask también se desplegó en DOM Cloud (plan Lite), que no usa Docker: NGINX con php-fpm y MariaDB.
+
+1. Sube el proyecto a un repositorio público de GitHub y crea el sitio en DOM Cloud.
+2. En el portal, en el despliegue del sitio, pega la receta de `docs_santitask.md`, sección 8.2, con la dirección de tu repositorio en `source`. Instala PHP 8.4, compila los recursos con Vite, crea el `.env` y carga `claudetask.sql` quitando sus líneas `CREATE DATABASE` y `USE`.
+3. Para actualizar el código, usa la misma receta sin las tres últimas líneas, que cargan la base solo la primera vez (no se probó).
+4. El correo queda sin configurar: completa `MAIL_HOST`, `MAIL_USERNAME` y `MAIL_PASSWORD` en el `.env` del servidor. Sin ellos no se puede registrar un tutor por correo.
+5. En ese entorno la aplicación usa el usuario de la cuenta y no `claudetask_app`, y `docker/respaldo.sh` no sirve: usa respaldos propios del servidor.
+
 ## 8. Estructura
 
 ```
