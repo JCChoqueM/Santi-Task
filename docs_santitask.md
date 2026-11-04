@@ -1086,7 +1086,7 @@ Git registra los 30 commits del proyecto hasta `272405a` con la misma fecha, 202
 | 8    | Lista de pruebas P-01 a P-25                                                       | `a3f03d4`, `97a16f7`                                                                  |
 | 9    | Errores y correo, tokens, usuario de base, CSP, respaldo, README, P-26 a P-35      | `c978a1f`, `c1a2919`, `2f334a3`, `7bfa426`, `f7414b2`, `6aa6283`, `5b581aa`, `941e8d1`, `563e2ff`, `6a96305` |
 | 10   | Documentación alineada con el sistema real (10a a 10d)                         | `6f9a8b9`, `1fe904c`, `73e90ac`, `5b54f42`, `56c8534`, `eb67270`, `272405a`                                |
-| 11 | P-36 a P-43 (11a), publicación en DOM Cloud (11b), P-44 con LIM-16 y LIM-17 (11c), P-45, ciclo de revisión (11d), P-46 en el servidor (11e), P-47, recorrido en el servidor (11f) LIM-18, cuentas de prueba en el servidor (11g) y P-48, rechazos en el servidor (11h) | `244d0f5` (11a), `d428585` (11b), `d8852dd` (11c), `4782b14` (11d), `207dc2c` (11e), `19e805f` (11f), `a3909fe` (11g), 11h (hash por añadir) |
+| 11 | P-36 a P-43 (11a), publicación en DOM Cloud (11b), P-44 con LIM-16 y LIM-17 (11c), P-45, ciclo de revisión (11d), P-46 en el servidor (11e), P-47, recorrido en el servidor (11f) LIM-18, cuentas de prueba en el servidor (11g) y P-48, rechazos en el servidor (11h) y LIM-19, zona horaria del servidor (11i) | `244d0f5` (11a), `d428585` (11b), `d8852dd` (11c), `4782b14` (11d), `207dc2c` (11e), `19e805f` (11f), `a3909fe` (11g), `dcbcdf0` (11h), 11i (hash por añadir) |
 
 **Pendiente para la Versión 1.0:** que otra persona haga el ciclo solo con el `README.md` (7.2), insertar las capturas (4.10) y terminar la publicación en DOM Cloud: ya está desplegado y P-44, P-46, P-47 y P-48 probaron las cabeceras, los archivos públicos, el inicio de sesión, las 10 páginas y el ciclo de una tarea con dos usuarios (faltan `nosniff` y `Referrer-Policy`, LIM-16, y la cadena del certificado, LIM-17); faltan el recorrido con un tutelado creado desde la interfaz, una prueba de control del registro de errores de PHP (consta vacío, sin control positivo), el SMTP y los respaldos (5.4, R6 y R7).
 
@@ -1365,6 +1365,7 @@ Los ERR-01 a ERR-20 se redactaron al leer el código de UpTask, la base de Claud
 | LIM-16 | En DOM Cloud faltan `X-Content-Type-Options` y `Referrer-Policy` (P-44): en Docker las pone `docker/apache.conf` y, según la documentación de DOM Cloud, las ubicaciones de NGINX de la receta no admiten `add_header` (si la pestaña NGINX del panel lo permite, no se verificó). No se parchea en PHP: no cubriría los archivos estáticos y exigiría pruebas en los dos entornos | Abierta  |
 | LIM-17 | El servidor de DOM Cloud envía un solo certificado (CN `domcloud.dev`, Let's Encrypt YR2, válido del 2026-10-30 al 2027-01-28), sin el intermedio: `openssl` da «21 unable to verify the first certificate» y `curl` lo rechaza; Brave y Firefox abren el sitio (P-44). No lo controla el proyecto; con dominio propio y `ssl letsencrypt` podría cambiar (no probado) | Abierta  |
 | LIM-18 | El sitio publicado en DOM Cloud conserva las 6 cuentas del volcado local importado (phpMyAdmin, 2026-11-04: 2 tutores, Ana y Beto, y 4 tutelados, ids 2, 3, 5 y 6) con las claves de prueba, que son débiles. P-46, P-47 y P-48 comprobaron que Ana, Lucia47 y Beto entran con ellas; que los tutelados de los ids 3, 5 y 6 sigan con su clave de prueba se supone por ser el mismo volcado y no se probó. El autor decidió el 2026-11-04 dejarlas por ahora; deben cambiarse o borrarse antes de compartir la dirección | Abierta  |
+| LIM-19 | En DOM Cloud MySQL está en UTC (phpMyAdmin, 2026-11-04: `@@system_time_zone` UTC, zona global y de sesión `SYSTEM`; 06:22:42 en MySQL frente a las 02:22 de La Paz). El historial guarda `creado_en` con `CURRENT_TIMESTAMP` y se muestra sin convertir (`TareaController::historial`, `comun.js`), así que sus horas salen 4 horas por delante de La Paz (lo mismo se vio en P-47, 05:42 a la 01:42 local). No se verificó la zona de PHP (`Tarea::vencida()` usa `date('Y-m-d')` y el código no fija `date_default_timezone_set`) ni la de MySQL en local. Posibles salidas, sin decidir: convertir la hora en `comun.js` o fijar la zona en PHP y en la conexión (exige prueba en los dos entornos) | Abierta  |
 
 ## 7.4 Seguridad
 
@@ -1505,9 +1506,10 @@ Evaluación al 2026-11-04 de los objetivos de la sección 2.1, contra las prueba
 
 ## 9.2 Limitaciones
 
-- Las limitaciones de seguridad y operación están en 7.3 (LIM-01 a LIM-18).
+- Las limitaciones de seguridad y operación están en 7.3 (LIM-01 a LIM-19).
 - Lo que el alcance excluye (sección 2.2): correo y recuperación propia para los tutelados, reenviar la confirmación, notificaciones por correo de tareas o revisiones, rol de administrador, prioridades y etiquetas, pruebas automáticas y HTTPS configurado por la aplicación.
 - Pruebas: todas son manuales o con `curl`; no se probó en Safari (WebKit); falta la prueba de usabilidad con otra persona (7.2).
+- No probado en el servidor: que el registro de errores de PHP capture errores (sin prueba de control), un recorrido que empiece creando un tutelado desde la interfaz, reabrir, los rechazos de actualizar, duplicar y marcar_hecha con una tarea o parte ajena existente (en local los cubren P-01, P-02 y P-08), la zona de PHP y los botones en el navegador.
 
 ## 9.3 Mejoras futuras
 
