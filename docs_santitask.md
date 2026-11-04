@@ -1086,7 +1086,7 @@ Git registra los 30 commits del proyecto hasta `272405a` con la misma fecha, 202
 | 8    | Lista de pruebas P-01 a P-25                                                       | `a3f03d4`, `97a16f7`                                                                  |
 | 9    | Errores y correo, tokens, usuario de base, CSP, respaldo, README, P-26 a P-35      | `c978a1f`, `c1a2919`, `2f334a3`, `7bfa426`, `f7414b2`, `6aa6283`, `5b581aa`, `941e8d1`, `563e2ff`, `6a96305` |
 | 10   | Documentación alineada con el sistema real (10a a 10d)                         | `6f9a8b9`, `1fe904c`, `73e90ac`, `5b54f42`, `56c8534`, `eb67270`, `272405a`                                |
-| 11 | P-36 a P-43 (11a), publicación en DOM Cloud (11b), P-44 con LIM-16 y LIM-17 (11c), P-45, ciclo de revisión (11d), P-46 en el servidor (11e) y P-47, recorrido en el servidor (11f) | `244d0f5` (11a), `d428585` (11b), `d8852dd` (11c), `4782b14` (11d), `207dc2c` (11e), 11f (hash por añadir) |
+| 11 | P-36 a P-43 (11a), publicación en DOM Cloud (11b), P-44 con LIM-16 y LIM-17 (11c), P-45, ciclo de revisión (11d), P-46 en el servidor (11e), P-47, recorrido en el servidor (11f), y LIM-18, cuentas de prueba en el servidor (11g) | `244d0f5` (11a), `d428585` (11b), `d8852dd` (11c), `4782b14` (11d), `207dc2c` (11e), `19e805f` (11f), 11g (hash por añadir) |
 
 **Pendiente para la Versión 1.0:** que otra persona haga el ciclo solo con el `README.md` (7.2), insertar las capturas (4.10) y terminar la publicación en DOM Cloud: ya está desplegado y P-44, P-46 y P-47 probaron las cabeceras, los archivos públicos, el inicio de sesión, las 10 páginas y el ciclo de una tarea con dos usuarios (faltan `nosniff` y `Referrer-Policy`, LIM-16, y la cadena del certificado, LIM-17); faltan el recorrido con un tutelado creado desde la interfaz, una prueba de control del registro de errores de PHP (consta vacío, sin control positivo), el SMTP y los respaldos (5.4, R6 y R7).
 
@@ -1130,7 +1130,7 @@ Probabilidad e impacto son una estimación del autor al 2026-11-03, no una medic
 
 *No verificado:* que el registro de errores de PHP del servidor capture errores (consta vacío tras P-47, sin una prueba de control que lo haga escribir; P-46 solo vio que no salgan errores en pantalla); un recorrido en el servidor que empiece creando un tutelado desde la interfaz (P-47 usó los usuarios y el vínculo ya existentes); listado de directorios fuera de `/build/` y `/build/assets/`; si la pestaña NGINX del panel admite `add_header` (la documentación de DOM Cloud no lo documenta para las ubicaciones de la receta); si con dominio propio y `ssl letsencrypt` cambia la cadena del certificado; el origen de la tarea 16 («C naturales»), que no estaba en el volcado importado; la versión de MariaDB del servidor; y si alguna consulta usa `GROUP BY` y se comporta distinto sin `ONLY_FULL_GROUP_BY`.
 
-Mitigación: comprobar que el registro de errores de PHP del servidor escribe (una prueba de control) y hacer un recorrido con un tutelado creado desde la interfaz; mirar la pestaña NGINX del panel por si admite `nosniff` y `Referrer-Policy` (LIM-16; no se parchea PHP); sustituir `docker/respaldo.sh`, `docker/restaurar.sh` y `docker/crear-usuario-bd.sh` por métodos propios del servidor (LIM-10, R3).
+Mitigación: comprobar que el registro de errores de PHP del servidor escribe (una prueba de control) hacer un recorrido con un tutelado creado desde la interfaz; cambiar o borrar las cuentas de prueba del servidor antes de compartir la dirección (LIM-18); mirar la pestaña NGINX del panel por si admite `nosniff` y `Referrer-Policy` (LIM-16; no se parchea PHP); sustituir `docker/respaldo.sh`, `docker/restaurar.sh` y `docker/crear-usuario-bd.sh` por métodos propios del servidor (LIM-10, R3).
 
 **R7.** El sitio está en el plan Lite de DOM Cloud: 1,5 USD al mes, según el autor y el blog oficial de DOM Cloud, que también da un tope de 20 GB de transferencia al mes. Otras cifras (5 GiB de almacenamiento, 6 sitios y 3 usuarios) salen de un sitio de terceros (freetier.co) y no se confirmaron en la documentación oficial. Lo que la documentación consultada el 2026-11-03 decía del plan gratuito (cortafuegos de salida permanente que bloquea las conexiones salientes salvo una lista de sitios, puerto 25 bloqueado con relay por el 587 o una API REST, aviso en `*.dom.my.id` y caducidad a los 60 días) no se verificó para el Lite. La lista de sitios permitidos no se revisó, así que no se sabe si el SMTP elegido cabe en ella. Mitigación: confirmar los límites del Lite en el portal, probar el SMTP desde el servidor antes de elegirlo, hacer respaldos fuera del servidor y usar un dominio propio si no se quiere el dominio `domcloud.dev`.
 
@@ -1363,6 +1363,7 @@ Los ERR-01 a ERR-20 se redactaron al leer el código de UpTask, la base de Claud
 | LIM-15 | En el sitio publicado el correo no está configurado (`MAIL_HOST` vacío): sin SMTP no se puede registrar un tutor por correo ni recuperar contraseñas (5.5) | Abierta  |
 | LIM-16 | En DOM Cloud faltan `X-Content-Type-Options` y `Referrer-Policy` (P-44): en Docker las pone `docker/apache.conf` y, según la documentación de DOM Cloud, las ubicaciones de NGINX de la receta no admiten `add_header` (si la pestaña NGINX del panel lo permite, no se verificó). No se parchea en PHP: no cubriría los archivos estáticos y exigiría pruebas en los dos entornos | Abierta  |
 | LIM-17 | El servidor de DOM Cloud envía un solo certificado (CN `domcloud.dev`, Let's Encrypt YR2, válido del 2026-10-30 al 2027-01-28), sin el intermedio: `openssl` da «21 unable to verify the first certificate» y `curl` lo rechaza; Brave y Firefox abren el sitio (P-44). No lo controla el proyecto; con dominio propio y `ssl letsencrypt` podría cambiar (no probado) | Abierta  |
+| LIM-18 | El sitio publicado en DOM Cloud conserva las 6 cuentas del volcado local importado (phpMyAdmin, 2026-11-04: 2 tutores, Ana y Beto, y 4 tutelados, ids 2, 3, 5 y 6) con las claves de prueba, que son débiles. P-46 y P-47 comprobaron que Ana y Lucia47 entran con ellas; que las demás sigan con su clave de prueba se supone por ser el mismo volcado y no se probó. El autor decidió el 2026-11-04 dejarlas por ahora; deben cambiarse o borrarse antes de compartir la dirección | Abierta  |
 
 ## 7.4 Seguridad
 
@@ -1503,7 +1504,7 @@ Evaluación al 2026-11-04 de los objetivos de la sección 2.1, contra las prueba
 
 ## 9.2 Limitaciones
 
-- Las limitaciones de seguridad y operación están en 7.3 (LIM-01 a LIM-17).
+- Las limitaciones de seguridad y operación están en 7.3 (LIM-01 a LIM-18).
 - Lo que el alcance excluye (sección 2.2): correo y recuperación propia para los tutelados, reenviar la confirmación, notificaciones por correo de tareas o revisiones, rol de administrador, prioridades y etiquetas, pruebas automáticas y HTTPS configurado por la aplicación.
 - Pruebas: todas son manuales o con `curl`; no se probó en Safari (WebKit); falta la prueba de usabilidad con otra persona (7.2).
 
@@ -1573,7 +1574,7 @@ Esta sección reemplaza el «Plan de corrección y endurecimiento» que se redac
 | `ActiveRecord::get($limite)` no escapa; ningún código lo llama                                         | Residuo de ERR-01                   |
 | Consultas preparadas en lugar de escape de valores                                                     | Mejora futura (7.4)                 |
 | Antes de publicar: `ENVIRONMENT=production`, `APP_URL` con https y revisar la CSP si hay un proxy      | LIM-08 (abierta)                    |
-| Publicar en DOM Cloud: ya desplegado; P-44, P-46 y P-47 probaron cabeceras, archivos públicos, inicio de sesión, las 10 páginas y el ciclo de una tarea (faltan `nosniff` y `Referrer-Policy`; certificado sin el intermedio); faltan el recorrido con un tutelado creado desde la interfaz, una prueba de control del registro de errores de PHP, el SMTP y los respaldos | LIM-10, LIM-14 a LIM-17, 5.4 R6 y R7  |
+| Publicar en DOM Cloud: ya desplegado; P-44, P-46 y P-47 probaron cabeceras, archivos públicos, inicio de sesión, las 10 páginas y el ciclo de una tarea (faltan `nosniff` y `Referrer-Policy`; certificado sin el intermedio); faltan el recorrido con un tutelado creado desde la interfaz, una prueba de control del registro de errores de PHP, el SMTP y los respaldos | LIM-10, LIM-14 a LIM-18, 5.4 R6 y R7  |
 
 ---
 
@@ -1835,5 +1836,6 @@ Abiertos:
 - [x] P-45 ejecutada y registrada (Paso 11d, 2026-11-04): ciclo de revisión con éxito (hecha, devolver, aprobar, reabrir, cierre de la tarea e historial con autor y fecha); OE3 y OE4 pasan a «Cumplido»
 - [x] P-46 ejecutada y registrada (Paso 11e, 2026-11-04): sesión y 10 páginas en DOM Cloud (adapta P-12, P-27 y P-30); pasa, con `nosniff` ausente (LIM-16)
 - [x] P-47 ejecutada y registrada (Paso 11f, 2026-11-04): ciclo de una tarea con dos usuarios en DOM Cloud (hecha, devolver, aprobar y cierre); el registro de errores de PHP del panel estaba vacío, sin prueba de control
-- [ ] Publicar en DOM Cloud: desplegado y con la base cargada (Paso 11b) y con P-44, P-46 y P-47 ejecutadas (Pasos 11c, 11e y 11f); faltan el recorrido con un tutelado creado desde la interfaz, una prueba de control del registro de errores de PHP, el SMTP y los respaldos (R6, R7, LIM-10, LIM-14 a LIM-17)
+- [ ] Publicar en DOM Cloud: desplegado y con la base cargada (Paso 11b) y con P-44, P-46 y P-47 ejecutadas (Pasos 11c, 11e y 11f); faltan el recorrido con un tutelado creado desde la interfaz, una prueba de control del registro de errores de PHP, el SMTP y los respaldos (R6, R7, LIM-10, LIM-14 a LIM-18)
+- [ ] Cambiar o borrar las cuentas de prueba del servidor antes de compartir la dirección (LIM-18; el autor decidió el 2026-11-04 dejarlas por ahora)
 - [x] Confirmar que lo documentado coincide con el sistema (2026-11-03, leyendo el código: rutas, accesos, parámetros de la API, tablas, puertos y sección 8; no se volvió a ejecutar el sistema)
