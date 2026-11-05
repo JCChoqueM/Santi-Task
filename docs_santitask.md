@@ -1066,7 +1066,7 @@ flowchart LR
 
 ## 5.1 Metodología
 
-No se aplicó una metodología formal. El proceso real fue un desarrollo incremental de una sola persona: cada paso (del Paso 1 al Paso 10) cambió una parte del sistema, se probó y se cerró con un commit, y las pruebas quedaron registradas en la sección 13. De las metodologías conocidas, la más parecida es un Kanban personal, sin sprints ni estimaciones.
+No se aplicó una metodología formal. El proceso real fue un desarrollo incremental de una sola persona: cada paso (del Paso 1 al Paso 11) cambió una parte del sistema, se probó y se cerró con un commit, y las pruebas quedaron registradas en la sección 13. De las metodologías conocidas, la más parecida es un Kanban personal, sin sprints ni estimaciones.
 
 ## 5.2 Plan y cronograma
 
@@ -2008,7 +2008,7 @@ Abiertos:
 
 ## Lista de verificación final
 
-- [x] Completar autor, institución, metodología y roles (la metodología y los roles son descripciones del proceso real, confirmar con el autor)
+- [x] Completar autor, institución, metodología y roles (la metodología y los roles son descripciones del proceso real; el autor las confirmó el 2026-11-05)
 - [ ] Insertar capturas de pantalla
 - [x] Los CP-01 a CP-24 (UpTask) se retiraron; los resultados están en P-01 a P-59 (secciones 7.1, 11 y 13)
 - [x] Cada error ERR-01 a ERR-20 confirmado, resuelto o descartado (sección 7.3, 2026-11-03)
