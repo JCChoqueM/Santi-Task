@@ -116,6 +116,9 @@ function enviarCabecerasSeguridad(): void
             . "object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none';";
     }
     header('Content-Security-Policy: ' . $csp);
+    // Mismas cabeceras que pone docker/apache.conf; en DOM Cloud (NGINX) no salian (LIM-16)
+    header('X-Content-Type-Options: nosniff');
+    header('Referrer-Policy: strict-origin-when-cross-origin');
 }
 
 function vite_script($archivo)
