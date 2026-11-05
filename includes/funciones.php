@@ -119,6 +119,8 @@ function enviarCabecerasSeguridad(): void
     // Mismas cabeceras que pone docker/apache.conf; en DOM Cloud (NGINX) no salian (LIM-16)
     header('X-Content-Type-Options: nosniff');
     header('Referrer-Policy: strict-origin-when-cross-origin');
+    // No revelar la version de PHP (A8)
+    header_remove('X-Powered-By');
 }
 
 function vite_script($archivo)
