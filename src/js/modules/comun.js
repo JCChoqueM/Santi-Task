@@ -61,6 +61,18 @@ export function fmtFecha(f) {
   return d.toLocaleDateString('es', { day: 'numeric', month: 'short' }).replace('.', '');
 }
 
+// Hora del servidor "2026-11-05 05:15:12" (MySQL la guarda en UTC en DOM Cloud, LIM-19)
+// -> la misma hora en la zona del navegador, mismo formato. Si no se entiende, se deja igual.
+export function fmtHora(h) {
+  const m = /^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})$/.exec(h || '');
+  if (!m) return h || '';
+  const d = new Date(Date.UTC(+m[1], m[2] - 1, +m[3], +m[4], +m[5], +m[6]));
+  if (Number.isNaN(d.getTime())) return h;
+  const z = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${z(d.getMonth() + 1)}-${z(d.getDate())} ` +
+    `${z(d.getHours())}:${z(d.getMinutes())}:${z(d.getSeconds())}`;
+}
+
 // Barra segmentada: una celda por parte
 export function barra(partes) {
   return '<div class="seg" aria-hidden="true">' +
@@ -84,7 +96,7 @@ export async function abrirHistorial(url) {
   ul.innerHTML = historial.length
     ? historial.map((h) =>
         `<li><strong>${esc(h.por)}</strong> ${ACCIONES[h.accion] || esc(h.accion)} «${esc(h.parte)}»
-         <small>${esc(h.cuando)}</small></li>`).join('')
+         <small>${esc(fmtHora(h.cuando))}</small></li>`).join('')
     : '<li>Sin movimientos todavía.</li>';
   dlg.showModal();
 }
