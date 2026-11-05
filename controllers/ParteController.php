@@ -60,26 +60,4 @@ class ParteController
         Historial::registrar((int) $tarea->id, $parte->titulo, $accion, (int) $_SESSION['id']);
         responderJson(['tipo' => 'exito', 'progreso' => $tarea->progreso()]);
     }
-
-    // POST /api/parte   url, titulo  (añade una parte a una tarea existente)
-    public static function crear()
-    {
-        isTutor(true);
-        verificarCsrf(true);
-
-        $tarea = Tarea::where('url', self::texto('url'));
-        if (!$tarea || !Vinculo::existe((int) $_SESSION['id'], (int) $tarea->tutelado_id)) {
-            responderJson(['tipo' => 'error', 'mensaje' => 'No tienes permiso sobre esta tarea.'], 403);
-        }
-        $titulo = trim(self::texto('titulo'));
-        if ($titulo === '') {
-            responderJson(['tipo' => 'error', 'mensaje' => 'Escribe el nombre de la parte.'], 400);
-        }
-        if (mb_strlen($titulo) > 255) {
-            responderJson(['tipo' => 'error', 'mensaje' => 'El nombre de la parte es demasiado largo (máximo 255 caracteres).'], 400);
-        }
-        $p = new Parte(['tarea_id' => $tarea->id, 'titulo' => $titulo, 'orden' => count($tarea->partes())]);
-        $r = $p->guardar();
-        responderJson(['tipo' => 'exito', 'id' => $r['id']]);
-    }
 }

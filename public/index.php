@@ -57,7 +57,6 @@ $router->post('/api/tarea/duplicar', [TareaController::class, 'duplicar']);
 $router->get('/api/historial', [TareaController::class, 'historial']);
 
 // API de partes
-$router->post('/api/parte', [ParteController::class, 'crear']);
 $router->post('/api/parte/hecha', [ParteController::class, 'marcar_hecha']);
 $router->post('/api/parte/revisar', [ParteController::class, 'revisar']);
 
