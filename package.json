@@ -8,17 +8,13 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "imagen": "gulp imagen",
     "start": "sed -i 's/ENVIRONMENT=production/ENVIRONMENT=development/' .env && vite",
     "prod": "sed -i 's/ENVIRONMENT=development/ENVIRONMENT=production/' .env && vite build"
   },
   "license": "ISC",
   "devDependencies": {
     "fast-glob": "^3.3.3",
-    "glob": "^13.0.0",
-    "gulp": "^5.0.0",
     "sass": "^1.75.0",
-    "sharp": "^0.34.5",
     "vite": "^5.0.0",
     "vite-plugin-full-reload": "^1.1.0"
   }

@@ -1086,7 +1086,7 @@ Git registra los 30 commits del proyecto hasta `272405a` con la misma fecha, 202
 | 8    | Lista de pruebas P-01 a P-25                                                       | `a3f03d4`, `97a16f7`                                                                  |
 | 9    | Errores y correo, tokens, usuario de base, CSP, respaldo, README, P-26 a P-35      | `c978a1f`, `c1a2919`, `2f334a3`, `7bfa426`, `f7414b2`, `6aa6283`, `5b581aa`, `941e8d1`, `563e2ff`, `6a96305` |
 | 10   | Documentación alineada con el sistema real (10a a 10d)                         | `6f9a8b9`, `1fe904c`, `73e90ac`, `5b54f42`, `56c8534`, `eb67270`, `272405a`                                |
-| 11 | P-36 a P-43 (11a), publicación en DOM Cloud (11b), P-44 con LIM-16 y LIM-17 (11c), P-45, ciclo de revisión (11d), P-46 en el servidor (11e), P-47, recorrido en el servidor (11f) LIM-18, cuentas de prueba en el servidor (11g) y P-48, rechazos en el servidor (11h) y LIM-19, zona horaria del servidor (11i) | `244d0f5` (11a), `d428585` (11b), `d8852dd` (11c), `4782b14` (11d), `207dc2c` (11e), `19e805f` (11f), `a3909fe` (11g), `dcbcdf0` (11h), 11i (hash por añadir) |
+| 11 | P-36 a P-43 (11a), publicación en DOM Cloud (11b), P-44 con LIM-16 y LIM-17 (11c), P-45, ciclo de revisión (11d), P-46 en el servidor (11e), P-47, recorrido en el servidor (11f) LIM-18, cuentas de prueba en el servidor (11g) y P-48, rechazos en el servidor (11h) y LIM-19, zona horaria del servidor (11i) y limpieza de código con P-49 (11j) | `244d0f5` (11a), `d428585` (11b), `d8852dd` (11c), `4782b14` (11d), `207dc2c` (11e), `19e805f` (11f), `a3909fe` (11g), `dcbcdf0` (11h), `3aa234f` (11i), 11j (hash por añadir) |
 
 **Pendiente para la Versión 1.0:** que otra persona haga el ciclo solo con el `README.md` (7.2), insertar las capturas (4.10) y terminar la publicación en DOM Cloud: ya está desplegado y P-44, P-46, P-47 y P-48 probaron las cabeceras, los archivos públicos, el inicio de sesión, las 10 páginas y el ciclo de una tarea con dos usuarios (faltan `nosniff` y `Referrer-Policy`, LIM-16, y la cadena del certificado, LIM-17); faltan el recorrido con un tutelado creado desde la interfaz, una prueba de control del registro de errores de PHP (consta vacío, sin control positivo), el SMTP y los respaldos (5.4, R6 y R7).
 
@@ -1104,7 +1104,7 @@ Probabilidad e impacto son una estimación del autor al 2026-11-03, no una medic
 
 | ID  | Riesgo                                                                                                    | Probabilidad | Impacto | Mitigación                                                                                                          |
 | --- | --------------------------------------------------------------------------------------------------------- | ------------ | ------- | ------------------------------------------------------------------------------------------------------------------- |
-| R1  | Uso malicioso por fallos de seguridad que no se hayan encontrado (los conocidos están resueltos, sección 10) | Baja         | Alto    | 47 pruebas pasan y P-44 pasa en parte; quedan LIM-01, LIM-02, LIM-11 a LIM-13 y LIM-16 (7.3)                         |
+| R1  | Uso malicioso por fallos de seguridad que no se hayan encontrado (los conocidos están resueltos, sección 10) | Baja         | Alto    | 48 pruebas pasan y P-44 pasa en parte; quedan LIM-01, LIM-02, LIM-11 a LIM-13 y LIM-16 (7.3)                         |
 | R2  | Los correos de confirmación y recuperación tardan o no salen (SMTP síncrono, LIM-07)                      | Media        | Alto    | Un SMTP real antes de publicar; probar el envío en el servidor; en DOM Cloud ver R7            |
 | R3  | Pérdida de datos si se borra el volumen de MySQL o la cuenta del servidor                                 | Media        | Alto    | `docker/respaldo.sh` y `docker/restaurar.sh` (P-32) en Docker; en el servidor de publicación definir otro método   |
 | R4  | Versiones de dependencias que cambien o no existan                                                        | Media        | Medio   | `composer.lock` y `package-lock.json` fijan los paquetes; el `Dockerfile` fija `php:8.5.12-apache` y la base es `mysql:8.0` |
@@ -1163,7 +1163,6 @@ Mitigación: comprobar que el registro de errores de PHP del servidor escribe (u
 | Empaquetado                   | Vite, con `vite-plugin-full-reload` y un plugin propio (`vite-plugins/scss-auto-index.js`) | ^5.0.0; ^1.1.0                                                  |
 | Estilos                       | Sass (SCSS)                                                 | ^1.75.0                                                                                 |
 | Utilidad de compilación       | `fast-glob`                                                 | ^3.3.3                                                                                  |
-| Declaradas y sin uso          | `glob`, `gulp` y `sharp`                                    | ^13.0.0, ^5.0.0, ^0.34.5 (el script `npm run imagen` pide un `gulpfile.js` que no existe) |
 | Node y npm                    | Paquetes `nodejs` y `npm` del sistema de la imagen          | Los que traiga la imagen                                                                |
 | Fuentes                       | Bricolage Grotesque y Figtree                               | Google Fonts                                                                            |
 | Contenedores                  | Docker Compose, servicios `php` y `mysql`                   | Compose v2                                                                              |
@@ -1217,7 +1216,7 @@ claudetask/
 └── composer.json / package.json / vite.config.js
 ```
 
-`src/scss/dashboard/_proyectos.scss` es un resto de UpTask: define `.no-proyectos` y `.listado-proyectos` (esta también aparece en el modo oscuro), pero ninguna vista ni script usa esas clases.
+`src/scss/dashboard/_proyectos.scss` era un resto de UpTask (`.no-proyectos` y `.listado-proyectos`, esta también en el modo oscuro) que ninguna vista ni script usaba; se quitó en el Paso 11j junto con su `@forward` y su regla del modo oscuro. Con Sass 1.75, el CSS compilado solo perdió esas reglas (P-49).
 
 **Convenciones observadas:** espacios de nombres PSR-4 (`MVC`, `Controllers`, `Model`, `Classes`); métodos de controlador estáticos que reciben el `Router`; alertas en `Model\ActiveRecord` como arreglo estático `['error'|'exito'][]`; nombres de métodos en `camelCase` y `snake_case` mezclados (`crear_tutelado`, `marcar_hecha`, `generarAlias`); textos de interfaz en español.
 
@@ -1254,9 +1253,9 @@ claudetask/
 
 ## 7.1 Plan de pruebas
 
-Las pruebas de ClaudeTask son las **P-01 a P-48** de la sección 13, con su método, su fecha (2026-11-03; P-43 a P-48, 2026-11-04) y su resultado. Los CP-01 a CP-24 que tenía esta sección eran de UpTask (proyectos, `tareas.js`, `/proyecto?id=`): no se ejecutaron y se retiraron. La relación de cada requisito con sus pruebas está en la sección 11.
+Las pruebas de ClaudeTask son las **P-01 a P-49** de la sección 13, con su método, su fecha (2026-11-03; P-43 a P-49, 2026-11-04) y su resultado. Los CP-01 a CP-24 que tenía esta sección eran de UpTask (proyectos, `tareas.js`, `/proyecto?id=`): no se ejecutaron y se retiraron. La relación de cada requisito con sus pruebas está en la sección 11.
 
-**Resultado:** 47 pasan y P-44 pasa en parte (faltan `nosniff` y `Referrer-Policy`, LIM-16, y la cadena del certificado está incompleta, LIM-17). P-14, P-15 y P-16 fallaron, se corrigieron y se repitieron; P-35 mostró el fallo con el guion antes del cambio. P-33 pasó tras reiniciar el contenedor. En P-26 y P-34 falló el procedimiento de prueba, no el código. P-31 consta «según lo indicado por el usuario», sin resultado por acción. P-36 a P-43 no encontraron fallos ni cambiaron código; dejaron registradas tres limitaciones nuevas (LIM-11 a LIM-13). P-44 no cambió código y dejó dos limitaciones nuevas (LIM-16 y LIM-17). P-45, P-46, P-47 y P-48 no encontraron fallos ni cambiaron código.
+**Resultado:** 48 pasan y P-44 pasa en parte (faltan `nosniff` y `Referrer-Policy`, LIM-16, y la cadena del certificado está incompleta, LIM-17). P-14, P-15 y P-16 fallaron, se corrigieron y se repitieron; P-35 mostró el fallo con el guion antes del cambio. P-33 pasó tras reiniciar el contenedor. En P-26 y P-34 falló el procedimiento de prueba, no el código. P-31 consta «según lo indicado por el usuario», sin resultado por acción. P-36 a P-43 no encontraron fallos ni cambiaron código; dejaron registradas tres limitaciones nuevas (LIM-11 a LIM-13). P-44 no cambió código y dejó dos limitaciones nuevas (LIM-16 y LIM-17). P-45, P-46, P-47 y P-48 no encontraron fallos ni cambiaron código. P-49 comprobó la limpieza de código del Paso 11j (paquetes y estilos sin uso) y no encontró fallos.
 
 **Cobertura por área**
 
@@ -1269,7 +1268,7 @@ Las pruebas de ClaudeTask son las **P-01 a P-48** de la sección 13, con su mét
 | Entradas                  | P-14, P-15                    | Títulos largos, arreglos en lugar de texto y fechas inválidas dan error controlado                                 |
 | Salida y textos peligrosos | P-16 a P-20                  | HTML, `<script>`, comillas e inyección SQL se guardan y se muestran como texto literal                             |
 | Interfaz                  | P-21                          | Menú móvil a 375 px en modo claro y oscuro                                                                         |
-| Código                    | P-22                          | Ninguna llamada real a `new X($_POST)` ni a `sincronizar($_POST)`                                                  |
+| Código                    | P-22, P-49                    | Ninguna llamada real a `new X($_POST)` ni a `sincronizar($_POST)`; tras quitar paquetes y estilos sin uso, el build compila y el CSS solo pierde esas reglas |
 | Cuenta y tokens           | P-23 a P-26, P-35             | Registro, confirmación, recuperación, caducidad y uso único de los tokens                                          |
 | Base de datos e instalación | P-27, P-28, P-34            | Usuario de base con solo `SELECT`, `INSERT`, `UPDATE` y `DELETE`; instalación desde cero y ciclo completo          |
 | Cabeceras y producción | P-29 a P-31, P-33, P-44, P-46 | CSP por entorno con nonce, cookie de sesión, sin `.map`, `/build/` sin listado, manifest de Vite no público; en DOM Cloud (P-44 y P-46): CSP y nonces, cookie, 10 páginas sin estilos ni scripts en línea, rutas públicas, `http` a `https` y cadena del certificado |
@@ -1483,7 +1482,7 @@ Hay dos roles. El manual completo está en [`README.md`](README.md): sección 2 
 | Cambiar de modo              | `ENVIRONMENT` en `.env` entre `development` y `production`; después, `docker restart claudetask_php`     |
 | Tras editar `.env` o `docker/apache.conf` | Reiniciar `claudetask_php` (el contenedor puede ver una copia antigua)                         |
 | Cambiar las claves de la base | Con una base ya creada, el `.env` no cambia el usuario de MySQL: usar `docker/crear-usuario-bd.sh` o `ALTER USER` |
-| Optimizar imágenes           | `npm run imagen` no funciona: `package.json` lo define con Gulp, pero no existe `gulpfile.js`            |
+| Optimizar imágenes           | No hay herramienta: el script `npm run imagen` (Gulp y Sharp) se quitó en el Paso 11j porque no existía `gulpfile.js` |
 
 ---
 
@@ -1491,7 +1490,7 @@ Hay dos roles. El manual completo está en [`README.md`](README.md): sección 2 
 
 ## 9.1 Resultados frente a los objetivos
 
-Evaluación al 2026-11-04 de los objetivos de la sección 2.1, contra las pruebas P-01 a P-48 (sección 13); P-44, P-46, P-47 y P-48 son del servidor y no cambian ningún objetivo. «Verificado en el código» significa que se leyó el código y no hay una prueba numerada que lo registre.
+Evaluación al 2026-11-04 de los objetivos de la sección 2.1, contra las pruebas P-01 a P-49 (sección 13); P-44, P-46, P-47 y P-48 son del servidor y P-49 es una limpieza de código; ninguna cambia un objetivo. «Verificado en el código» significa que se leyó el código y no hay una prueba numerada que lo registre.
 
 | Objetivo                                        | Estado                    | Evidencia                                                                                                                                                                                                                               |
 | ----------------------------------------------- | ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -1544,7 +1543,7 @@ Son propuestas que salen de lo que el alcance excluye (2.2) y de las limitacione
 | ----- | --------------------------------------------------------------------------------------------------- |
 | A     | Capturas de pantalla [Completar]                                                                    |
 | B     | Código crítico: `ActiveRecord::where`, `TareaController::actualizar`, `PerfilController::perfil`    |
-| C     | Resultados de las pruebas: sección 13 (P-01 a P-48)                                                 |
+| C     | Resultados de las pruebas: sección 13 (P-01 a P-49)                                                 |
 
 ---
 
@@ -1563,7 +1562,7 @@ Esta sección reemplaza el «Plan de corrección y endurecimiento» que se redac
 | 7. Correo al destinatario real                  | ERR-08        | `c978a1f`                                     | P-23, P-25          | Resuelto |
 | 8. CSRF y sesión                                | ERR-06, ERR-09 | `c1b2931`, `7bfa426`                         | P-07, P-13, P-29    | ERR-06 resuelto; ERR-09 parcial (LIM-02) |
 | 9. Docker y producción                          | ERR-16, ERR-19 | `2f334a3`, `7bfa426`                         | P-27 a P-31, P-34   | Resuelto |
-| 10. Ejecutar las pruebas tras corregir          | -             | -                                             | P-01 a P-48         | Hecho: 47 pasan y P-44 pasa en parte (7.1) |
+| 10. Ejecutar las pruebas tras corregir          | -             | -                                             | P-01 a P-49         | Hecho: 48 pasan y P-44 pasa en parte (7.1) |
 
 **Lo que no es un paso del plan y también se cerró:** ERR-10 (`98a7151`), ERR-11 (`c3401ed`), ERR-12 (`c1b2931`), ERR-17 (`5b581aa`) y ERR-20 (`c1b2931`). ERR-14 y ERR-15 quedaron obsoletos al reescribir el cliente en el Paso 4; se atribuyen a `d9850e0` por su mensaje, sin haber comprobado el hash exacto.
 
@@ -1808,6 +1807,22 @@ Observaciones de P-48:
 - El caso 8 usa una url que no existe: el mensaje es el mismo que para una tarea ajena, así que no prueba el vínculo en `eliminar`. Ese rechazo, y los de `actualizar`, `duplicar` y `marcar_hecha` con una tarea o parte ajena existente, no se repitieron en el servidor porque cambiarían datos si el servidor fallara; los cubren las pruebas locales (P-01, P-02 y P-08).
 - El inicio de sesión de Beto con la clave de prueba funcionó en el servidor (302 a `/dashboard`), lo que confirma una tercera cuenta de LIM-18.
 
+## Pruebas del Paso 11j
+
+Fecha de ejecución: 2026-11-04. Método: cambios de código sin efecto visible (quitar `glob`, `gulp`, `sharp` y el script `imagen` de `package.json`, y los estilos de `_proyectos.scss` con su `@forward` y su regla del modo oscuro), `npm install` y `npm run build` dentro del contenedor `claudetask_php` (Node v20.19.2, npm 9.2.0), comparación del `package-lock.json` y del CSS compilado, y `curl` con sesión real contra `http://localhost:8082` (`ENVIRONMENT=production`, que carga el CSS de `public/build/`). Sin cambios de datos.
+
+| Id   | Área | Prueba | Esperado | Resultado |
+| ---- | ---- | ------ | -------- | --------- |
+| P-49 | Limpieza de código (hallazgos A2 y A3) | Lock antes y después (script que compara los paquetes de `HEAD:package-lock.json` con los del lock nuevo); `npm run build`; compilar `src/scss/app.scss` con Sass 1.75 antes y después y comparar con `diff`; contar «proyecto» en el CSS de `public/build/`; pedir 11 páginas (`/`, `/crear`, `/olvide`, y como Ana `/dashboard`, `/crear-tarea`, `/tutelados`, `/perfil`, `/cambiar-password`, y como Lucia47 `/mis-tareas`, `/perfil`, `/cambiar-password`); contadores de la base antes y después | Lock sin `glob`, `gulp` ni `sharp` y sin versiones cambiadas; build sin errores; el CSS solo pierde las reglas de proyectos; 11 páginas con 200 y la hoja de estilos nueva; contadores iguales | Pasa: el lock pasó de 267 a 99 paquetes (168 quitados, 0 con versión distinta, 0 nuevos); `vite build` terminó (7 módulos, `styles-DHdQa9Ds.css`, 21,48 kB); el `diff` del CSS solo muestra las reglas quitadas; 0 apariciones de «proyecto» en el CSS compilado; 11 páginas con 200 y el mismo CSS; los dos inicios de sesión dieron 302 (a `/dashboard` y a `/mis-tareas`); usuarios 6, tareas 3, historial 7 e intentos_login 0, antes y después |
+
+Observaciones de P-49:
+
+- La comparación del CSS con `diff` se hizo con Sass 1.75.0 sobre `src/scss/app.scss`; el CSS que sirve el sitio es el de `vite build`, que no se comparó byte a byte con el anterior. Lo que sí se comprobó en ese CSS es que compila y no contiene «proyecto».
+- No se hizo revisión visual en Brave ni en Firefox: ninguna vista ni script usa las clases quitadas (`grep` en `src`, `views`, `includes`, `controllers` y `public`), y la comparación del CSS no muestra ningún otro cambio.
+- Solo se comprobó que cada página enlace una hoja de estilos `.css`; no se descargó cada archivo. No se pidieron `/mensaje`, `/reestablecer` ni `/confirmar`, que necesitan un token.
+- `npm install` informó de 2 vulnerabilidades (1 moderada y 1 alta) en las dependencias que quedan; no se investigaron (el informe de `npm audit` queda para el Paso 11k) y no se ejecutó `npm audit fix`.
+- El build mostró un aviso de Sass (`legacy-js-api`, que se quitará en Dart Sass 2.0); no afecta al resultado.
+
 ## Decisiones de diseño aceptadas
 
 - Vincular por correo revela si el correo existe.
@@ -1844,7 +1859,7 @@ Abiertos:
 
 - [x] Completar autor, institución, metodología y roles (la metodología y los roles son descripciones del proceso real, confirmar con el autor)
 - [ ] Insertar capturas de pantalla
-- [x] Los CP-01 a CP-24 (UpTask) se retiraron; los resultados están en P-01 a P-48 (secciones 7.1, 11 y 13)
+- [x] Los CP-01 a CP-24 (UpTask) se retiraron; los resultados están en P-01 a P-49 (secciones 7.1, 11 y 13)
 - [x] Cada error ERR-01 a ERR-20 confirmado, resuelto o descartado (sección 7.3, 2026-11-03)
 - [x] El plan de corrección de UpTask está aplicado y registrado en la sección 10; quedan las limitaciones de 7.3
 - [x] Revisar el texto `Sopilote22` de `views/templates/nombre-sitio.php` (quitado en `941e8d1`)
@@ -1854,6 +1869,7 @@ Abiertos:
 - [x] P-46 ejecutada y registrada (Paso 11e, 2026-11-04): sesión y 10 páginas en DOM Cloud (adapta P-12, P-27 y P-30); pasa, con `nosniff` ausente (LIM-16)
 - [x] P-47 ejecutada y registrada (Paso 11f, 2026-11-04): ciclo de una tarea con dos usuarios en DOM Cloud (hecha, devolver, aprobar y cierre); el registro de errores de PHP del panel estaba vacío, sin prueba de control
 - [x] P-48 ejecutada y registrada (Paso 11h, 2026-11-04): rechazos y permisos en DOM Cloud (sin sesión, sin token, token falso, rol equivocado y sin vínculo); pasa
+- [x] P-49 ejecutada y registrada (Paso 11j, 2026-11-04): limpieza de código (`glob`, `gulp`, `sharp`, el script `imagen` y los estilos de `_proyectos.scss`); lock, build, CSS compilado y 11 páginas; pasa
 - [ ] Publicar en DOM Cloud: desplegado y con la base cargada (Paso 11b) y con P-44, P-46, P-47 y P-48 ejecutadas (Pasos 11c, 11e, 11f y 11h); faltan el recorrido con un tutelado creado desde la interfaz, una prueba de control del registro de errores de PHP, el SMTP y los respaldos (R6, R7, LIM-10, LIM-14 a LIM-18)
 - [ ] Cambiar o borrar las cuentas de prueba del servidor antes de compartir la dirección (LIM-18; el autor decidió el 2026-11-04 dejarlas por ahora)
 - [x] Confirmar que lo documentado coincide con el sistema (2026-11-03, leyendo el código: rutas, accesos, parámetros de la API, tablas, puertos y sección 8; no se volvió a ejecutar el sistema)

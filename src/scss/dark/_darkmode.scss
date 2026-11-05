@@ -88,12 +88,6 @@
     }
   }
 
-  .listado-proyectos .proyecto {
-    background-color: color.adjust(v.$grisOscuro, $lightness: 20%);
-    &:hover {
-      background-color: color.adjust(v.$grisOscuro, $lightness: 5%);
-    }
-  }
   .listado-tareas .tarea {
     background-color: color.scale(v.$grisOscuro, $lightness: 10%);
     border: none;
