@@ -82,14 +82,6 @@ class ActiveRecord
         return array_shift($resultado);
     }
 
-    // Obtener Registro
-    public static function get($limite)
-    {
-        $query = "SELECT * FROM " . static::$tabla . " LIMIT {$limite}";
-        $resultado = self::consultarSQL($query);
-        return array_shift($resultado);
-    }
-
     // Busqueda Where con Columna 
     /**
      * @return static|false
@@ -150,7 +142,8 @@ class ActiveRecord
     // Eliminar un registro - Toma el ID de Active Record
     public function eliminar()
     {
-        $query = "DELETE FROM " . static::$tabla . " WHERE id = " . self::$db->escape_string($this->id) . " LIMIT 1";
+        $id = (int) $this->id;
+        $query = "DELETE FROM " . static::$tabla . " WHERE id = {$id} LIMIT 1";
         $resultado = self::$db->query($query);
         return $resultado;
     }
