@@ -77,7 +77,22 @@ class Usuario extends ActiveRecord
     public static function generarAlias(string $nombre): string
     {
         $primero = explode(' ', trim($nombre))[0] ?? '';
-        $ascii = iconv('UTF-8', 'ASCII//TRANSLIT', $primero) ?: '';
+        // Tabla fija: iconv //TRANSLIT depende del idioma del servidor (en php-fpm de DOM Cloud es C
+        // y devuelve «?» para las tildes, con lo que «Ángel» daba «Ngel»)
+        $ascii = strtr($primero, [
+            'á' => 'a', 'à' => 'a', 'ä' => 'a', 'â' => 'a', 'ã' => 'a', 'å' => 'a',
+            'é' => 'e', 'è' => 'e', 'ë' => 'e', 'ê' => 'e',
+            'í' => 'i', 'ì' => 'i', 'ï' => 'i', 'î' => 'i',
+            'ó' => 'o', 'ò' => 'o', 'ö' => 'o', 'ô' => 'o', 'õ' => 'o', 'ø' => 'o',
+            'ú' => 'u', 'ù' => 'u', 'ü' => 'u', 'û' => 'u',
+            'ñ' => 'n', 'ç' => 'c', 'ý' => 'y', 'ÿ' => 'y', 'ß' => 'ss', 'æ' => 'ae', 'œ' => 'oe',
+            'Á' => 'A', 'À' => 'A', 'Ä' => 'A', 'Â' => 'A', 'Ã' => 'A', 'Å' => 'A',
+            'É' => 'E', 'È' => 'E', 'Ë' => 'E', 'Ê' => 'E',
+            'Í' => 'I', 'Ì' => 'I', 'Ï' => 'I', 'Î' => 'I',
+            'Ó' => 'O', 'Ò' => 'O', 'Ö' => 'O', 'Ô' => 'O', 'Õ' => 'O', 'Ø' => 'O',
+            'Ú' => 'U', 'Ù' => 'U', 'Ü' => 'U', 'Û' => 'U',
+            'Ñ' => 'N', 'Ç' => 'C', 'Ý' => 'Y', 'Æ' => 'AE', 'Œ' => 'OE',
+        ]);
         $base = substr(ucfirst(strtolower(preg_replace('/[^A-Za-z]/', '', $ascii))), 0, 30); // alias <= 34 de 60
         if ($base === '') {
             throw new \Exception('Escribe un nombre con letras.');
