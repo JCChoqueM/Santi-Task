@@ -2008,7 +2008,7 @@ Abiertos:
 
 ## Lista de verificación final
 
-- [x] Completar autor, institución, metodología y roles (la metodología y los roles son descripciones del proceso real; el autor las confirmó el 2026-11-05)
+- [x] Completar autor, institución, metodología y roles (la metodología y los roles son descripciones del proceso real, confirmar con el autor)
 - [ ] Insertar capturas de pantalla
 - [x] Los CP-01 a CP-24 (UpTask) se retiraron; los resultados están en P-01 a P-59 (secciones 7.1, 11 y 13)
 - [x] Cada error ERR-01 a ERR-20 confirmado, resuelto o descartado (sección 7.3, 2026-11-03)
